@@ -1,5 +1,7 @@
 # CMKL Thesis Research
 
+**[Privacy Policy](PRIVACY.md)** · **[Terms of Service](TERMS.md)** · Uses YouTube API Services under the [YouTube Terms of Service](https://www.youtube.com/t/terms)
+
 Code for an undergraduate honors thesis at CMKL University (Bangkok, Thailand), supervised by Dr. Fawad Asadi.
 
 ## What the thesis asks
@@ -13,7 +15,8 @@ Listening outcomes come from public figures for public-domain audiobooks on Libr
 | File | Purpose |
 |---|---|
 | `collect/youtube_collect.py` | Reads public YouTube data about each book, published before its audiobook's release |
-| `PRIVACY.md` | How data is collected, stored and deleted |
+| [`PRIVACY.md`](PRIVACY.md) | How data is collected, stored and deleted |
+| [`TERMS.md`](TERMS.md) | Terms of use, including the YouTube Terms of Service |
 | `requirements.txt` | Python packages needed |
 
 ## How the YouTube collection works
