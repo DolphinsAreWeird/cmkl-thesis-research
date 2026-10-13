@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-13",
+  "demand_data_seen": true,
+  "demand_data_seen_note": "descriptive monthly series of the four sanity categories (the same four disclosed in the record) were viewed again by the taxonomy v3 build; size-rule pass or fail per control was seen",
+  "changes": {
+    "taxonomy.v3_control_fixes": [
+      "General violence removed from the sexual violence and domestic violence control: the value 'violence' (from the heading 'Violence' and from 'Crimes against' in mystery headings such as 'Women Crimes against Fiction') moved to a new narrow node B12.M01.N04 'Violence and violent crime' under the same middle node.",
+      "Headings of the form '<place> Ethnic relations' (1,010 works) assigned to multicultural / diversity instead of race and racism."
+    ],
+    "positive_controls.metoo_status": "with the fix, the sexual violence and domestic violence control has 2,147 works and fails the minimum-size rule in every format (median weighted checkouts 49 audiobook, 106 ebook, 184 print), so under the record it is not tested; it is reported as untestable, with a descriptive view only. The title-word backup does not apply (it is for controls with fewer than 50 works). The control is not widened."
+  },
+  "reason": "Both were mapping errors found by reading the lists of values inside the control nodes (general violence and ethnic relations abroad are not the control concepts). Widening the sexual violence control again after seeing its size would choose its definition after the fact, so it is left untested."
+}

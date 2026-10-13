@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-13",
+  "demand_data_seen": false,
+  "changes": {
+    "ranking_study.outcomes_add": "next-month LibriVox listening (Internet Archive views per recording) for classics",
+    "ranking_study.baselines_add": "attention to the book's own Wikipedia article",
+    "ranking_study.shrinkage": "checkout and listening rates of young or thinly read titles shrunk toward their genre average before modelling (Efron & Morris, 1975); shrinkage strength fitted on training months only"
+  },
+  "reason": "Omitted from the record; already stated in thesis Chapter 7."
+}

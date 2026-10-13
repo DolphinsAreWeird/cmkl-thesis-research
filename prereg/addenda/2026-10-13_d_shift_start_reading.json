@@ -1,0 +1,9 @@
+{
+ "date": "2026-10-13",
+ "demand_data_seen": false,
+ "interest_data_seen": true,
+ "changes": {
+  "shift_definitions.shift_start_reading": "armed: after at least 8 consecutive weeks with ratio < 1.5 the series is armed, and the next rising week starts a shift even if some weeks with ratio >= 1.5 that were not yet rising came in between; the arming is lost on a missing week or when a shift ends. The strict reading (the 8 quiet weeks directly before the start) is kept as the column strict_start and used as a robustness check."
+ },
+ "reason": "An 8-week Mann-Kendall test only passes in the second or third week of a sudden jump, so the strict reading would drop sudden jumps (239 of 1,488 shifts), the clearest shifts. 'After' in the record does not require 'directly after'. Decided on interest data only."
+}

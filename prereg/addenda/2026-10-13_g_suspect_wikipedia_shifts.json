@@ -1,0 +1,11 @@
+{
+  "date": "2026-10-13",
+  "demand_data_seen": false,
+  "interest_data_seen": true,
+  "changes": {
+    "shift_definitions.quality_screen": "Wikipedia shifts flagged by the interest side's quality check are left out of the tested set in the main analysis: 'one_day' (one day carries the week), 'desktop_only' (the rise is in desktop views only, a sign of automated traffic), or 'title_confusion' (a hand check, on the large main-set shifts and the 50 largest other main-set shifts, finds that a TV series, film, game, song or person sharing the page title drove the rise). Flagged shifts still count in the donor and placebo-year screens, and a robustness run tests them too (12_shift_effects.py --include-flagged). The flag rules are used as written on 13 October 2026, not tuned.",
+    "interest_mapping.no_change_after_controls": "No interest page or code is added for the #MeToo or climate categories after seeing their interest series: 'Sexual harassment' is not added to the sexual violence category, and the GDELT climate node keeps its weather codes, as its approved label covers weather.",
+    "interest_mapping.figurative_codes": "GDELT codes whose rises are driven mostly by figurative use (for example TAX_RELIGION_WITCHCRAFT with 'witch hunt'), found by checking the top contributing code of each tested GDELT shift, are dropped; each verdict is logged in data/db/interest/gdelt/review_gdelt_mappings.csv."
+  },
+  "reason": "Automated traffic and same-name media are not public interest in the theme, and 157 of 984 tested Wikipedia shifts (42 of 105 large ones) carry the automated-traffic flags. Decided on interest data only, before any demand comparison."
+}

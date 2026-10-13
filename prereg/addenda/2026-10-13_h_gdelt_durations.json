@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-13",
+  "demand_data_seen": false,
+  "interest_data_seen": true,
+  "changes": {
+    "shift_definitions.gdelt_durations.values": {
+      "ratio": 1.0,
+      "ratio_of_means": 1.05,
+      "sustained_min": 4,
+      "label_week": 4,
+      "intermediate": 3,
+      "fading_max": 2,
+      "basis": "median shift duration (weeks at ratio >= 1.5 from the start), GDELT 1 week (n = 371) / Wikipedia 1 week (n = 308); main set (narrow and middle, non-seasonal, completed, quality_ok), July 2017 to June 2021; interest data only; data/db/interest/gdelt_duration_scaling.json"
+    }
+  },
+  "reason": "Required by the record before any demand data are read. The ratio is 1.0, so the GDELT thresholds equal the Wikipedia ones."
+}

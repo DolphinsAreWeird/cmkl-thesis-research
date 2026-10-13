@@ -1,2 +1,18 @@
-pandas>=2.0
-requests>=2.31
+# Thesis analysis + collection environment (Python 3.12, created with uv)
+pandas
+pyarrow
+numpy
+scipy
+scikit-learn
+lightgbm
+catboost
+statsmodels
+matplotlib
+requests
+websockets
+google-cloud-bigquery
+db-dtypes
+pymannkendall
+ruptures
+tslearn
+fastembed

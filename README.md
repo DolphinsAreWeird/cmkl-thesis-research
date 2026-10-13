@@ -2,26 +2,63 @@
 
 **[Privacy Policy](PRIVACY.md)** · **[Terms of Service](TERMS.md)** · Uses YouTube API Services under the [YouTube Terms of Service](https://www.youtube.com/t/terms)
 
-Code for an undergraduate honors thesis at CMKL University (Bangkok, Thailand), supervised by Dr. Fawad Asadi.
+Code, fixed analysis settings and result reports for an undergraduate honors thesis at CMKL University (Bangkok, Thailand), supervised by Dr. Fawad Asadi.
 
 ## What the thesis asks
 
-Can public attention to a book before its audiobook is released predict how much that audiobook is listened to? And do patterns found on English titles carry over to Thai titles?
+When public interest in a topic rises, do more people read and listen to books on that topic? When does the rise carry over, and when does it fade without effect? And can public interest help forecast next month's demand for whole categories of books?
 
-Listening outcomes come from public figures for public-domain audiobooks on LibriVox. Attention comes from public sources: Wikipedia page views and edits, YouTube videos and comments, and (if access is granted) Reddit discussion and Google Trends.
+Interest comes from public, historical sources: Wikipedia page views (since 2015) and GDELT news themes and tone (since 2017). Demand comes from Seattle Public Library checkouts by format (audiobook, ebook, print) and from LibriVox listening for public-domain audiobooks. Book categories are built from the books' own subject headings and descriptions, not from the news.
 
-## What this repository contains
+## The studies
 
-| File | Purpose |
-|---|---|
-| `collect/youtube_collect.py` | Reads public YouTube data about each book, published before its audiobook's release |
-| [`PRIVACY.md`](PRIVACY.md) | How data is collected, stored and deleted |
-| [`TERMS.md`](TERMS.md) | Terms of use, including the YouTube Terms of Service |
-| `requirements.txt` | Python packages needed |
+| Study | Question | Status |
+| --- | --- | --- |
+| 1 | Can information available before release predict which LibriVox recordings are listened to most? | Done |
+| 2 | Does attention to a single book or its adaptation move its listening? | Done |
+| 3 | When does a rise in interest in a theme carry over into borrowing of books on that theme? | First results in `results/reports/study3_*` |
+| 4 | Do public-interest signals improve one-month-ahead forecasts of category demand? | Running |
+
+## Fixed settings (pre-registration)
+
+The thresholds, windows, controls, models and metrics for Studies 3 and 4 were fixed and dated on 13 October 2026, before any category's demand was compared with its interest and before any forecast was scored. They are in [`prereg/`](prereg/):
+
+- `study3_settings_2026-10-13.json` and `forecast_settings_2026-10-13.json` are the records. Their SHA-256 fingerprints are in `prereg/README.md`, and the analysis code refuses to run if a record changes.
+- `DEVIATIONS.md` lists every later clarification or change, with its date, its reason and whether any outcome data had been seen. The machine-readable versions are in `prereg/addenda/` and `prereg/addenda_forecast/`.
+
+## Repository layout
+
+| Folder | Contents |
+| --- | --- |
+| `code/` | Collection and analysis scripts. `code/main_study/` holds the category build, the interest timelines, Study 3 (`study3/`) and Study 4 (`study4/`), each with its own README and simulation tests |
+| `collectors/` | Scheduled collectors: New York Times best-seller lists, a daily Bluesky sample (post time, language and text only; account identifiers, handles, links and mentions are removed on arrival, and the text is never published), and weekly GDELT updates |
+| `jobs/` | Helpers that run long jobs in the background and the macOS launchd schedules |
+| `prereg/` | Fixed settings and the deviations log |
+| `results/reports/` | Markdown and CSV reports written by the analysis code |
+| `collect/` | The YouTube collector described below |
+
+## Data
+
+Raw data is not included. Some sources do not allow redistribution, some text comes from people, and the files are large (about 16 GB). Every source is public and the scripts download it again:
+
+| Source | Access |
+| --- | --- |
+| Seattle Public Library checkouts | data.seattle.gov (Socrata API) |
+| Wikipedia page views | Wikimedia REST API and pageview dumps |
+| GDELT Global Knowledge Graph | Google BigQuery |
+| LibriVox and Internet Archive views | Their public APIs |
+| Goodreads and Amazon reviews | UCSD research datasets (counts only are kept) |
+| New York Times best-seller lists | NYT Books API |
+
+No usernames, account IDs, handles or other personal identifiers are stored.
+
+## Reproducing
+
+Python 3.12. Install the pinned versions with `pip install -r requirements.lock` (or `requirements.txt` for the latest). Keys go in a local `.env` file (see `collectors/.env.example`) and are never committed. Each folder's README gives the run order.
 
 ## How the YouTube collection works
 
-For each book, the script:
+For each book, `collect/youtube_collect.py`:
 
 1. Searches for videos about the book that were published **before** the audiobook's release date (`publishedBefore`), so nothing after release is used.
 2. Keeps a video only if its title contains the book's title. Raw search results are mostly unrelated, so this step removes noise.
@@ -29,9 +66,7 @@ For each book, the script:
 4. Reads public comments on the most-viewed kept videos and keeps only those posted before the release date.
 5. Stores comment text, dates and like counts. Commenter names and channel identities are never stored.
 
-These records are later turned into aggregate measures (for example, how many videos and comments existed, and whether activity was rising) and compared with listening figures in statistical models.
-
-## Running it
+These records are turned into aggregate measures (for example, how many videos and comments existed, and whether activity was rising) and compared with listening figures in statistical models.
 
 ```
 pip install -r requirements.txt

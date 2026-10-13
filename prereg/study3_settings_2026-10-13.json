@@ -1,0 +1,105 @@
+{
+  "record": "Study 3 and ranking-study settings, fixed before any category's demand is compared with its interest",
+  "fixed_on": "2026-10-13",
+  "fixed_by": "Khant Phyo Wai (with Claude); approved by Khant in chat on 2026-10-13",
+  "taxonomy": {
+    "structure": "taxonomy v2 nodes as approved 2026-10-13 (19 broad, 86 middle); v3 adds theme values from print subject headings into the same nodes",
+    "assignment": "main assignment without title-word evidence; title-word assignments only as a flagged backup for a positive-control category with fewer than 50 works",
+    "levels_tested": ["narrow", "middle"],
+    "broad_level": "descriptive only"
+  },
+  "period": {
+    "study_start": "2017-01",
+    "study_end": "latest complete month with both interest and demand data",
+    "baseline_history_from": {"wikipedia": "2015-07", "seattle": "2005-09", "gdelt": "2017-01"}
+  },
+  "interest": {
+    "primary_source": "wikipedia",
+    "secondary_source": "gdelt",
+    "wikipedia_measure": "weekly sum of user views of the category's concept articles divided by total English Wikipedia user views that week",
+    "gdelt_volume_measure": "weekly mentions of mapped GKG themes divided by all mentions that week",
+    "gdelt_tone_measure": "mention-weighted mean of GDELT tone, positive and negative per category-week",
+    "minimum_volume": {"wikipedia_normal_views_per_week": 1000, "gdelt_normal_mentions_per_week": 100},
+    "week": "ISO week, Monday start"
+  },
+  "shift_definitions": {
+    "normal_level": "median of the previous 26 weeks (not including the current week)",
+    "ratio_to_normal": "this week's value divided by the normal level",
+    "rising_week": "ratio >= 1.5 and Mann-Kendall trend over the last 8 weeks (including this week) with tau > 0 and one-sided p < 0.10, using the Hamed-Rao variance correction for autocorrelation",
+    "shift_start": "first rising week after at least 8 consecutive weeks with ratio < 1.5",
+    "duration_count": "consecutive weeks from the start with ratio >= 1.5",
+    "sustained": "duration_count >= 4; label assigned in week 4 using no later weeks",
+    "intermediate": "duration_count == 3",
+    "fading": "duration_count <= 2",
+    "size": "peak ratio up to the labelling week (week 4, or the week the shift ends if earlier)",
+    "large_shift": "size >= 3.0",
+    "seasonal_shift": "the same category has a shift start within +/-2 weeks of the same calendar week in at least half of the other years with data; analysed separately, excluded from the main analysis",
+    "gdelt_durations": "the Wikipedia thresholds above are scaled for GDELT by the ratio of median shift durations (GDELT/Wikipedia) computed from interest data alone, rounded, minimum 2 weeks; the computed values are appended to this record before any demand data are read",
+    "real_time_rule": "every label uses only weeks up to the week being judged; whole-course size and duration are secondary and descriptive only"
+  },
+  "demand": {
+    "seattle": "per category, month and format (audiobook, ebook, print): sum over works of checkouts x theme strength, divided by all checkouts in that format that month",
+    "librivox": "per category and month: sum over recordings of Internet Archive views x theme strength, divided by all LibriVox views that month",
+    "missing_months": "May 2024, June 2024 and August 2025 have no digital Seattle rows; they are treated as missing, never as zero",
+    "minimum_size": "a category is tested in a format only if it has >= 20 works with checkouts in that format and a median of >= 200 weighted checkouts per month in the 24 months before the window",
+    "transform": "log of the share"
+  },
+  "tests": {
+    "month_zero": "the calendar month containing the shift start week; month 0 is in the post period",
+    "primary_effect_window": "months 0 to +2",
+    "secondary_effect_window": "months 0 to +5",
+    "event_study": "counterfactual = OLS on log share with a linear trend and month-of-year effects, fitted on the 24 months ending at month -7; effect = mean of log(actual) - log(predicted) over the effect window; months -6 to -1 shown as a pre-trend check",
+    "synthetic_control": "donors = categories at the same level with no shift start in months -6 to +6, not sharing a parent node, and sharing <= 10% of their works with the treated category; non-negative weights summing to 1 fitted on log share for months -24 to -3; effect = mean gap over the effect window; p = rank of the post/pre RMSPE ratio among treated + donors, divided by (number of donors + 1)",
+    "placebo_years": "same category, same calendar months, every other year from 2017 with data and no shift in that window; report the share of placebo effects >= the real effect",
+    "pooled_inference": "bootstrap clustered by category, 2,000 resamples, seed 20261013",
+    "multiple_testing": "Benjamini-Hochberg q-values across all shift-level synthetic-control p-values; q < 0.10 reported as detected",
+    "significance": "one-sided p < 0.05 for single shifts (synthetic-control rank)"
+  },
+  "positive_controls": {
+    "rule": "the controls are run first; no other result is read until they are reported",
+    "controls": [
+      {"name": "COVID-19", "category": "Epidemics and plagues (narrow)", "shift_month": "2020-03", "expected": "positive demand effect in at least one format"},
+      {"name": "George Floyd / Black Lives Matter", "category": "Race and racism (narrow)", "shift_month": "2020-06", "expected": "positive demand effect in at least one format"},
+      {"name": "#MeToo", "category": "Sexual violence and domestic violence (narrow, rebuilt from print headings)", "shift_month": "2017-10", "expected": "positive demand effect in at least one format, if the category passes the minimum size"}
+    ],
+    "covid_mix_note": "for COVID-19 the health-topic rise is expected to be short and the change in the mix of categories longer (Horta Ribeiro et al., 2021); reported descriptively",
+    "if_a_control_fails": "check data and mappings for errors only; any fix is logged in DEVIATIONS.md with date and reason; thresholds are not tuned on the demand of non-control categories"
+  },
+  "power": {
+    "method": "inject multiplicative lifts into the demand of donor (placebo) categories for months 0 to +2 after randomly drawn placebo start months, rerun the synthetic control",
+    "lift_sizes": [0.10, 0.20, 0.24, 0.30, 0.43, 0.50],
+    "draws_per_size": 200,
+    "detection": "one-sided p < 0.05",
+    "minimum_detectable_effect": "smallest size detected in >= 80% of draws",
+    "seed": 20261013
+  },
+  "which_shifts_carry_over": {
+    "outcome": "shift-level effect (log lift, months 0 to +2) from the synthetic control",
+    "model": "OLS of effect on log(size), duration class (reference: fading), broad category fixed effects, format, modern (Seattle) vs classic (LibriVox), with a bootstrap clustered by category",
+    "lag": "month of peak gap within 0 to +6",
+    "all_shifts_reported": true
+  },
+  "tone": {
+    "source": "GDELT tone only (no historical social text exists)",
+    "feature": "mean tone over the first 4 weeks of the shift minus the category's 26-week median tone; same for positive and negative",
+    "test": "added to the carry-over model; compared with placebo tone features from 200 random non-shift 4-week windows of the same category",
+    "lag": "same weeks as the shift (no other lags tested)",
+    "emotions": "not tested historically: no historical social text; lexicon emotions (VADER, NRC) only for the live Bluesky sample, descriptive"
+  },
+  "ranking_study": {
+    "outcome": "next-month Seattle checkouts per work and format",
+    "test_months": "2019-01 to the latest complete month; training uses only months whose outcome is known before each cut-off",
+    "models": ["ridge", "CatBoost (main model)", "LSTM (sequence)", "book-theme graph model if time allows"],
+    "baselines": ["random", "metadata only", "the work's own recent demand where it exists"],
+    "metrics": ["AUC top 20%", "Spearman", "NDCG@50", "precision@50", "hit rate top 10% vs realised base rate"],
+    "helps_rule": "a family helps only if it beats CatBoost in more than half of test months with a bootstrap interval above zero",
+    "cold_start": "results reported separately for works with no demand history"
+  },
+  "thai": "settings to be fixed when Thai data exist, before any Thai demand is compared",
+  "disclosures": [
+    "Study 2 (LibriVox theme tests, adaptations) was run before this record and its results are known.",
+    "During the taxonomy check on 2026-10-13, monthly Seattle checkouts were viewed descriptively for four categories: race and racism (2020), epidemics and plagues (2020), sexual violence (2017) and climate change (2019). Race and epidemics showed visible rises; sexual violence and climate change did not. No other category's demand was viewed, and no setting here was tuned on them.",
+    "The interest-side checkpoint (Wikipedia and GDELT timelines) was started on 2026-10-13 with these same definitions marked provisional; interest data may be used to set the GDELT durations as described."
+  ],
+  "deviations": "any change after this date is recorded in DEVIATIONS.md with date, reason and whether demand data had been seen"
+}

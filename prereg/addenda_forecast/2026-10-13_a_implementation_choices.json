@@ -1,0 +1,26 @@
+{
+ "date": "2026-10-13",
+ "forecast_results_seen": "one origin (2019-01, horizon 1) test MAE for naive, seasonal naive, ridge and CatBoost was printed during timing; no setting changed afterwards",
+ "changes": {
+  "implementation_choices": [
+   "Target form: the models predict the log-share level, as the record's target reads. No change-from-last-month re-parametrisation is used. (If the main session wants one, it needs an addendum before results are read.)",
+   "Horizon 2 year-ago term: for h = 2 the \"target month one year earlier\" feature is y(t-10) and the seasonal naive uses y(t-10) + (mean t-11..t) - (mean t-23..t-12). For h = 1 these are the record's y(t-11) and formula.",
+   "Window means (mean of 6 months; 12-month means in the seasonal naive) use the available months and need at least half of them.",
+   "Interest windows must be complete: the 4-week means, the 8-week Mann-Kendall tau, the 26-week median and the tone windows need all their weeks present and not partial; otherwise the feature is missing. Tone: mean of the weekly values over the last 4 weeks minus the median over the 26 weeks before those 4.",
+   "8-week Mann-Kendall tau is S / 28 on the last 8 weekly shares (no tie correction), computed here, not read from the shifts file.",
+   "Shift features: the label is three 0/1 columns (sustained, intermediate, fading); \"none yet\" is all zeros. A label counts as given only if its labelling week is on or before the last week and it is one of the three classes (interrupted and censored count as none yet). Size so far is the peak ratio to normal over the shift's weeks up to the last week; weeks since start is in whole weeks. If several shifts started in the window, the latest one is used. A node-origin with no shift in the window gets 0 for the five shift columns; they are missing only when the node has no usable interest series.",
+   "The conditional split uses Wikipedia shifts only, with `quality_ok` true, started in the 8 weeks up to the last week.",
+   "Ridge: only numeric columns are standardised; categoricals are one-hot (categories from training rows); 0 plus a 0/1 indicator for every numeric column with a missing value in the training rows. Alpha is chosen by MAE (ties go to the smaller alpha) with models fitted on the training rows whose target month is on or before the first validation origin. With fewer than 36 training origins the validation block is a third of them; with fewer than 3 origins the middle alpha is used.",
+   "CatBoost: all other parameters at CatBoost defaults (l2 leaf regularisation 3, default borders and CTR settings); missing numeric values are left to CatBoost; target month is a categorical string.",
+   "A model is fitted only if the training set has at least 30 rows (LibriVox early on); naive forecasts are always made.",
+   "Training starts at the first eligible origin in each panel (no earliest-origin cut). Early rows have missing W or G values.",
+   "Diebold-Mariano: monthly mean absolute errors, p-value from the standard normal (no small-sample correction), lag-3 Bartlett weights. Bootstrap: overlapping blocks of 3 consecutive test months, not wrapped, resampling the monthly sums of absolute errors of both models together; percentile 95% interval; each comparison starts its own generator from the seed.",
+   "MASE is the model's MAE divided by the seasonal naive MAE on the rows where both exist.",
+   "Spearman, top-10% hit rate: computed within each (month, format) group (and level when a table is by level), groups with fewer than 10 categories skipped; k = ceil(10% of the group). Direction accuracy counts a zero forecast change as wrong.",
+   "Workers: default 3 (record: at most 4); CatBoost threads per worker = 3 // workers.",
+   "Interest flow: lags k = 1..8 and 52 are the weeks k weeks before the origin's last week; categoricals are level, broad category and target month; no size rule (no demand); the normal level is the median of the 26 weeks before the last week (last week excluded); a target month needs all its weeks (a week belongs to the month holding its Sunday); AUC score = forecast minus log normal; Spearman uses changes measured from the naive level.",
+   "Showcase categories are found by their label in `nodes.parquet` (narrow and middle level only)."
+  ]
+ },
+ "reason": "Choices the record does not make, needed to implement it; made while coding and testing on simulated panels. Source: code/main_study/study4/README.md ('# NOT IN RECORD:' in the code)."
+}

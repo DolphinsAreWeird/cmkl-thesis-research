@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-13",
+  "demand_data_seen": false,
+  "interest_data_seen": true,
+  "changes": {
+    "shift_definitions.quality_screen_gdelt": "GDELT shifts driven mostly by repeated pages from one website (column gdelt_feed_artifact, found by the interest side's check of article URLs; 11 main-set shifts, mainly two sites) are treated like flagged Wikipedia shifts: not tested in the main analysis, still counted in the donor and placebo-year screens, and included in the robustness run. No other spike is flagged by hand after the fact: the identical 30 April 2026 views of 'Information' and 'Communication' are left as they are and reported."
+  },
+  "reason": "One site republishing the same items is not public interest in the theme, the same reasoning as the Wikipedia automated-traffic flags. Decided on interest data only."
+}
