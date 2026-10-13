@@ -1,0 +1,59 @@
+column,group,source,meaning
+log_hours,META,LibriVox,log running time in hours
+log_sections,META,LibriVox,log number of sections
+narr_count,META,LibriVox,log number of recordings by this narrator
+g_Fiction,META,LibriVox,genre flag
+g_Religious_Spiritual,META,LibriVox,genre flag
+g_Time_Period,META,LibriVox,genre flag
+g_Autobiographical,META,LibriVox,genre flag
+g_Action_Adventure,META,LibriVox,genre flag
+g_History,META,LibriVox,genre flag
+g_Science_Fiction,META,LibriVox,genre flag
+g_Collection,META,LibriVox,genre flag
+g_Short,META,LibriVox,genre flag
+g_Non_fiction,META,LibriVox,genre flag
+g_Comedy,META,LibriVox,genre flag
+g_Romance,META,LibriVox,genre flag
+g_Animals_Nature,META,LibriVox,genre flag
+g_War,META,LibriVox,genre flag
+g_Mystery,META,LibriVox,genre flag
+g_Poetry,META,LibriVox,genre flag
+g_Crime,META,LibriVox,genre flag
+g_Children,META,LibriVox,genre flag
+g_Other,META,LibriVox,genre flag
+g_Antiquity,META,LibriVox,genre flag
+wa_has,VOL,author article,source has a usable series
+wb_has,VOL,book article,source has a usable series
+wa_level12,VOL,author article,"mean normalized page views, 12 months before release"
+wb_level12,VOL,book article,"mean normalized page views, 12 months before release"
+wa_rel_level,TREND,author article,last 12 months vs all earlier months
+wa_spike,TREND,author article,peak / median views in last 12 months
+wa_mk_tau,TREND,author article,"Mann-Kendall trend strength, last 12 months"
+wa_sen_slope,TREND,author article,"Sen's slope, last 12 months"
+wa_mk_rising,TREND,author article,significant rising trend (Mann-Kendall)
+wa_stl_slope,TREND,author article,"slope of STL trend component, last 12 months"
+wa_season_strength,TREND,author article,strength of yearly seasonality (STL)
+wa_n_breaks,TREND,author article,number of change points (PELT)
+wa_months_since_break,TREND,author article,months from last change point to release
+wa_last_jump,TREND,author article,level change at last change point
+wb_rel_level,TREND,book article,last 12 months vs all earlier months
+wb_spike,TREND,book article,peak / median views in last 12 months
+wb_mk_tau,TREND,book article,"Mann-Kendall trend strength, last 12 months"
+wb_sen_slope,TREND,book article,"Sen's slope, last 12 months"
+wb_mk_rising,TREND,book article,significant rising trend (Mann-Kendall)
+wb_n_breaks,TREND,book article,number of change points (PELT)
+wb_months_since_break,TREND,book article,months from last change point to release
+wb_last_jump,TREND,book article,level change at last change point
+wb_stl_slope,TREND,book article,"slope of STL trend component, last 12 months"
+wb_season_strength,TREND,book article,strength of yearly seasonality (STL)
+wa_shape0_falling,TREND,author article,k-Shape cluster of the 12-month pre-release curve
+wa_shape1_rising,TREND,author article,k-Shape cluster of the 12-month pre-release curve
+wa_shape2_rising,TREND,author article,k-Shape cluster of the 12-month pre-release curve
+wa_shape3_rising,TREND,author article,k-Shape cluster of the 12-month pre-release curve
+wb_shape0_spike,TREND,book article,k-Shape cluster of the 12-month pre-release curve
+wb_shape1_rising,TREND,book article,k-Shape cluster of the 12-month pre-release curve
+wb_shape2_falling,TREND,book article,k-Shape cluster of the 12-month pre-release curve
+wb_shape3_falling,TREND,book article,k-Shape cluster of the 12-month pre-release curve
+y_view,label,LibriVox,log views per day minus median of release half-year
+y_fav,label,LibriVox,"log favorites per 1,000 days minus median of release half-year"
+text_pca_1..32,TEXT,LibriVox API,"description embedding (MiniLM), PCA fitted inside each training fold"

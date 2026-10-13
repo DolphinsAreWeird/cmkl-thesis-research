@@ -1,0 +1,6 @@
+requests
+websockets
+google-cloud-bigquery
+db-dtypes
+pandas
+pyarrow

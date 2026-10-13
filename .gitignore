@@ -1,0 +1,15 @@
+# Never published: keys, raw or third-party data, local environments
+.env
+secrets/
+*.key
+data/
+*.parquet
+*.npy
+*.pkl
+*.log
+*.pid
+.venv/
+__pycache__/
+*.pyc
+catboost_info/
+.DS_Store

@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-13",
+  "demand_data_seen": true,
+  "demand_data_seen_note": "only library-wide monthly totals per format (no category); the four sanity categories' descriptive series had been viewed earlier (see DEVIATIONS.md)",
+  "changes": {
+    "demand.closure_months": "in every Seattle format, a month whose library-wide total checkouts are below 50% of that format's median over the previous 12 months with rows (at least 6 needed) is treated as missing (library closure), never as a share of a near-empty month. In the data this flags print from April to October 2020 (0%, 0%, 0%, 0%, 3%, 26% and 46% of the previous median) and no digital month."
+  },
+  "reason": "The library was closed to browsing from March 2020; print checkouts were zero from April to July 2020 and recovered slowly through curbside holds. A share computed on a near-empty month reflects access, not demand. A rule on library-wide totals replaces a hand-picked list of months."
+}

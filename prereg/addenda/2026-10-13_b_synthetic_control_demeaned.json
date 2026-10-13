@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-13",
+  "demand_data_seen": false,
+  "changes": {
+    "tests.synthetic_control.demeaning": "before fitting, each unit's log share is demeaned by its own mean over months -24 to -3 (intercept-shifted synthetic control; Doudchenko & Imbens, 2016; Ferman & Pinto, 2021). Weights remain non-negative and sum to 1.",
+    "demand.zero_or_missing": "a category-format-month with zero weighted checkouts, or a missing month, is treated as missing (excluded from fits and averages), never as log(0). Effects average over the available months of the window; a window with fewer than 2 available months is not estimated."
+  },
+  "reason": "Without demeaning, a convex mix of donors cannot match a category whose share is above or below every donor, so such categories would be untestable regardless of any effect. Missing-value handling was not stated."
+}

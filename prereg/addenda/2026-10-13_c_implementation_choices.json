@@ -1,0 +1,31 @@
+{
+ "date": "2026-10-13",
+ "demand_data_seen": false,
+ "changes": {
+  "implementation_choices": [
+   "Size rule: the median needs at least half of the 24 look-back months available; format-wide missing months are skipped and zero months count as zero.",
+   "A month with fewer rows than the SPL API count is a partial download and is treated as missing.",
+   "Donor overlap counts a category's works per format over all months of data.",
+   "Donors must also pass the minimum-size rule at that window and format.",
+   "Donor and placebo-year shift screens use shifts from both sources and of every class, seasonal included.",
+   "A donor missing any month in which the treated category is observed is left out of the pool.",
+   "Demeaning uses the same available months for every unit (months where the treated category is observed).",
+   "Fits need at least 75% of their window's months (event study 18 of 24, synthetic control 17 of 22, tone baseline and shift weeks); a calendar month never seen in the event-study fit gets no prediction.",
+   "Smallest donor pool: 2 (the report shows the smallest possible p, 1 / (donors + 1)).",
+   "One-sided rank p-value: units are ranked by sign(effect) x post/pre RMSPE, with post RMSPE over the effect window being tested; ties count against the treated category.",
+   "Placebo years: \"no shift in that window\" uses months -6 to +6; the placebo window must pass the size rule; the comparison uses the primary window.",
+   "Event-study placebo categories are the synthetic control's donors.",
+   "Month 0 is the month of the shift week's Monday.",
+   "Positive controls pass with a positive synthetic-control effect (months 0 to +2) and one-sided p < 0.05 in at least one Seattle format; LibriVox is shown but does not decide; the title-word backup keeps the main overlap table and only reports a pass when the main assignment did not pass.",
+   "Power: the same placebo draws for every lift size, drawn without replacement.",
+   "Benjamini-Hochberg family: all main-analysis shift x format tests, primary window; seasonal shifts are a separate family. Pooled means by source x level x format, source x level, and duration class.",
+   "Bootstrap intervals are 95% percentile intervals; bootstrap p-values are descriptive.",
+   "Carry-over model fitted per source and level, main-analysis shifts only; format dummies are among Seattle formats, LibriVox enters through the classic indicator.",
+   "Tone: each feature in its own model; two-sided placebo p (share of |placebo coef| >= |real coef|); a shift blocks max(duration, 4) weeks for placebo windows; baseline excludes the start week; placebo windows use the bootstrap seed and are drawn without replacement when enough exist.",
+   "LibriVox: every month with views is complete; the size rule uses recordings as works and views as checkouts.",
+   "Shifts without a record duration class (`interrupted`, `censored`) are not tested; they count in the shift screens.",
+   "Interest adapter: a shift with no seasonal verdict is not seasonal; partial GDELT weeks are missing for tone."
+  ]
+ },
+ "reason": "Choices the record does not make, needed to implement it; made while coding on simulated panels only. Source: code/main_study/study3/README.md, marked '# NOT IN RECORD:' in the code."
+}

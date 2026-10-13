@@ -1,0 +1,91 @@
+{
+  "record": "Study 4 settings: forecasting next month's demand for book categories from public interest. Fixed before any forecast was made or scored.",
+  "fixed_on": "2026-10-13",
+  "fixed_by": "Khant Phyo Wai (with Claude); the forecasting question was proposed by Khant in chat on 2026-10-13",
+  "questions": {
+    "main": "Does adding public-interest signals to a model that already knows a category's own demand history improve one-month-ahead forecasts of that category's demand?",
+    "secondary_interest_flow": "Can next month's interest in a category (the flow of a trend) be forecast from its own recent history?",
+    "secondary_tone": "Does GDELT tone add to interest volume in the forecasts?"
+  },
+  "units": {
+    "categories": "taxonomy v3 nodes at the narrow and middle levels (broad descriptive only)",
+    "formats": ["audiobook", "ebook", "print"],
+    "librivox": "secondary series, reported separately",
+    "eligibility": "a category-format series is forecast at an origin only if it passes the Study 3 minimum-size rule over the 24 months before the origin month"
+  },
+  "target": {
+    "main": "log share of the category in the format in month t+1 (share = theme-strength-weighted checkouts / all checkouts in that format and month), forecast at the end of month t (horizon 1)",
+    "secondary_horizon": "the same for month t+2 with the same information (horizon 2, one month of lead time)",
+    "missing": "missing, closure and partial months (Study 3 rules) are never scored; a forecast is scored only when the target month and month t are both available"
+  },
+  "information_set": {
+    "demand": "demand up to and including month t",
+    "interest": "weekly interest up to the last complete ISO week (Monday start) whose Sunday falls on or before the last day of month t",
+    "real_time_only": "every feature uses only data up to the origin; shift states come only from shifts whose start week and labelling week are on or before the origin; the seasonal flag and hand-made quality flags are not used as features",
+    "static_inputs": "the taxonomy and theme strengths are fixed (built from subject headings, not from demand); disclosed as a limitation"
+  },
+  "features": {
+    "demand_only_D": [
+      "log share at t, t-1, t-2",
+      "log share at t-11 (the target month one year earlier)",
+      "mean log share over t-5..t",
+      "change in log of all checkouts in the format, t vs t-1",
+      "target calendar month, format, level, broad category"
+    ],
+    "interest_W_wikipedia": [
+      "log of the category's mean weekly Wikipedia share over the last 4 weeks",
+      "ratio to normal (26-week median) in the last week",
+      "change in log mean share, last 4 weeks vs the 4 before",
+      "8-week Mann-Kendall tau in the last week",
+      "a shift started in the last 8 weeks (0/1), its real-time label if already given (sustained, intermediate, fading, or none yet), its size so far, weeks since its start"
+    ],
+    "interest_G_gdelt": "the same five features from GDELT volume",
+    "tone_T": "GDELT mean, positive and negative tone over the last 4 weeks, each minus the category's median over the previous 26 weeks",
+    "missing_interest": "a category or week without usable interest data gives missing feature values (CatBoost handles them; ridge uses 0 plus a missing indicator)"
+  },
+  "models": {
+    "naive": "y(t+1) = y(t)",
+    "seasonal_naive": "y(t+1) = y(t-11) + (mean of y over t-11..t) - (mean of y over t-23..t-12)",
+    "ridge": "pooled over categories and formats; features standardised on training rows only; alpha chosen from {0.1, 1, 10, 100} on the last 12 training origins (time split)",
+    "catboost_main": "pooled; iterations 600, depth 6, learning_rate 0.05, loss RMSE, random_seed 20261013; categorical: format, level, broad category, target month; no category id",
+    "feature_sets": ["D", "D+W", "D+W+G", "D+W+G+T"],
+    "main_comparison": "CatBoost D+W against CatBoost D"
+  },
+  "training_and_testing": {
+    "scheme": "walk-forward by month with an expanding window; at origin t the models train on all earlier origins s whose target month s+h is on or before t; retrained at every origin",
+    "test_origins_main": "2019-01 to the last origin whose target month exists (D and D+W)",
+    "test_origins_gdelt": "2019-01 to 2021-05 for D+W+G and D+W+G+T, until the GDELT backfill from 2 November 2026 extends them; then rerun to the end with the same settings",
+    "workers": "at most 4"
+  },
+  "metrics": {
+    "primary": "mean absolute error of the log-share forecast over all scored category-format-months; skill = 1 - MAE(D+W) / MAE(D)",
+    "inference": "Diebold-Mariano test on the monthly mean absolute-error differences (Newey-West variance, lag 3), one-sided; and a moving-block bootstrap over test months (block 3 months, 2,000 resamples, seed 20261013) for the skill interval",
+    "helps_rule": "interest helps if, for CatBoost, skill > 0 with the 95% bootstrap interval above zero and DM p < 0.05, reported for each format and level; the overall verdict uses all formats pooled at each level",
+    "secondary": [
+      "MASE against the seasonal naive forecast",
+      "Spearman correlation across categories, within each month and format, between forecast and actual change (y(t+1) - y(t)), averaged over months",
+      "top-10% hit rate: share of the categories with the largest forecast rises that are among the actual top 10% of rises (base rate 10%)",
+      "direction accuracy for category-months whose actual change exceeds 0.10 in absolute value"
+    ],
+    "conditional": "skill reported separately for category-months with a quality-ok interest shift that started in the 8 weeks before the origin, and for all other category-months (expected: gains concentrate in shift months)"
+  },
+  "interest_flow": {
+    "target": "log mean weekly Wikipedia share of the category in month t+1",
+    "models": "naive (last 4 weeks' mean) and CatBoost with interest-history features (the W features plus log shares at weekly lags 1-8 and 52)",
+    "metrics": "MAE skill against naive; Spearman across categories of forecast vs actual change; AUC for whether a category's interest next month is at least 1.5 times its normal level",
+    "same_scheme": "walk-forward by month, test origins 2019-01 onward"
+  },
+  "showcases": {
+    "note": "examples shown in the thesis, not tests; chosen knowing their outcome from Study 3 (disclosed)",
+    "cases": [
+      "Race and racism, ebook and audiobook: origin May 2020, target June 2020",
+      "Epidemics and plagues, ebook: origins February 2020 and March 2020"
+    ]
+  },
+  "disclosures": [
+    "Before this record was fixed, these were seen: Study 3 positive-control results (race and racism rose about 3 to 4.5 times in June 2020 in Seattle audiobooks and ebooks; epidemics ebooks +0.27 log share in March to May 2020, not significant) and the Study 3 power results. The descriptive series of four categories had been viewed earlier (see study3 record).",
+    "The Study 3 main shift-effect run had finished but its results had not been read.",
+    "Study 1 had used CatBoost and ridge on LibriVox titles; those results are known."
+  ],
+  "deviations": "changes after this date go to DEVIATIONS.md (a Study 4 section) and prereg/addenda_forecast/"
+}
