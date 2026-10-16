@@ -22,13 +22,13 @@ def say(msg):
     print(f'{time.strftime("%H:%M:%S")} {msg}', flush=True)
 
 
-def prepare():
+def prepare(panel=None, check_before=None):
     BF, B = FTS.load_4b()
-    say('building the feature table from the stored panel and interest series (all rows, including those without an observed target)')
-    F, inputs = FTS.build_table(BF, B)
+    say('building the feature table from the ' + ('extended panel ' + str(panel) if panel else 'stored panel') + ' and the stored interest series (all rows, including those without an observed target)')
+    F, inputs = FTS.build_table(BF, B, panel_path=panel)
     say(f'table: {len(F):,} rows; origins {ST.ym_of(F.origin_mi.min())} to {ST.ym_of(F.origin_mi.max())}')
-    worst = FTS.check_against_stored(F)
-    say(f'rebuilt rows with a target equal the stored Study 4b table (largest difference over {len(worst)} columns: {max(worst.values()):.2e})')
+    worst = FTS.check_against_stored(F, subset=bool(panel), before_mi=ST.mi_from_ym(check_before) if check_before else None)
+    say(f'rebuilt rows equal the stored Study 4b table (largest difference over {len(worst)} columns: {max(worst.values()):.2e})')
     return BF, B, F, inputs
 
 
@@ -48,7 +48,7 @@ def load_models(pipelines):
 def regression(a):
     origins = [ST.mi_from_ym(x) for x in a.origins.split(',')]
     pipelines = a.pipelines.split(',') if a.pipelines else FTS.PIPELINES
-    BF, B, F, inputs = prepare()
+    BF, B, F, inputs = prepare(a.panel, a.check_before)
     S = ST.settings()
     c2, pipe2, bolt = load_models(pipelines)
     covs = c2.load_covariates()
@@ -60,7 +60,7 @@ def regression(a):
              f'Written {time.strftime("%Y-%m-%d %H:%M")}. Code: code/main_study/benchmark/25_final_test_forecast.py (mode regression). The same code that makes the frozen forecasts '
              'is run at origins whose target months are known, and its forecasts are compared row by row with the forecasts stored from the benchmark '
              '(data/db/benchmark/wide2.parquet). Differences are in log-share units.', '',
-             '| Origin | Horizon | Pipeline | Rows compared | Rows only in one | Max abs difference | Mean abs difference | Rows differing by more than 1e-4 |',
+             '| Origin | Horizon | Pipeline | Rows compared | Rows only in one | Max abs difference | Mean abs difference | Rows differing by more than the limit |',
              '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |']
     ok_all = True
     for t in origins:
@@ -86,14 +86,15 @@ def regression(a):
                     say(f'  NOTHING TO COMPARE: {ST.ym_of(t)} h={h} {p}: mine {len(mine)} rows, stored {len(ref)} rows')
                     continue
                 d = (both.y_hat - both.ref).abs()
-                bad = int((d > 1e-4).sum())
+                bad = int((d > a.tol).sum())
                 lines.append(f'| {ST.ym_of(t)} | {h} | {p} | {len(both):,} | {only:,} | {d.max():.2e} | {d.mean():.2e} | {bad} |')
                 if bad or (only and p != 'naive'):
                     ok_all = False
                     say(f'  DIFFERENT: {ST.ym_of(t)} h={h} {p}: {bad} rows differ by more than 1e-4 (max {d.max():.3g}); rows only in one side: {only}')
-    lines += ['', 'Result: ' + ('every compared forecast agrees with the stored one within 1e-4.' if ok_all else 'DIFFERENCES FOUND (see the rows above); the final forecasts must not be made until they are explained.'), '']
-    REPORT.write_text('\n'.join(lines))
-    say(f'wrote {REPORT}; all agree: {ok_all}')
+    lines += ['', 'Result: ' + (f'every compared forecast agrees with the stored one within {a.tol:g}.' if ok_all else 'DIFFERENCES FOUND (see the rows above); the final forecasts must not be made until they are explained.'), '']
+    rp = pathlib.Path(a.report) if a.report else REPORT
+    rp.write_text('\n'.join(lines))
+    say(f'wrote {rp}; all agree: {ok_all}')
     if not ok_all:
         sys.exit(1)
 
@@ -144,14 +145,33 @@ def timesafety(a):
         sys.exit(1)
 
 
+def guard_d():
+    """Origins after 2026-08 are opened by addendum d, which must be fingerprinted in prereg/README.md."""
+    import re, hashlib
+    cand = sorted((ST.PREREG / 'addenda_benchmark').glob('*_d_final_test_*.json'))
+    if not cand:
+        raise SystemExit('addendum d does not exist: no origin after 2026-08 can be forecast')
+    f = cand[-1]
+    text = (ST.PREREG / 'README.md').read_text()
+    i = text.find(f.name)
+    m = re.search(r'SHA-256:\s*([0-9a-f]{64})', text[i:i + 600]) if i >= 0 else None
+    if not m or m.group(1) != hashlib.sha256(f.read_bytes()).hexdigest():
+        raise SystemExit(f'{f.name} is not fingerprinted in prereg/README.md or was changed')
+    return f.name
+
+
 def final(a):
     t = ST.mi_from_ym(a.origin)
     addendum, addendum_sha = FTS.check_addendum_c()
-    BF, B, F, inputs = prepare()
+    if a.origin != '2026-08' and not a.verify and not a.rehearsal_dir:
+        say('origin after 2026-08: addendum d ' + guard_d())
+        if not a.panel:
+            raise SystemExit('an origin after 2026-08 needs the extended panel (--panel)')
+    BF, B, F, inputs = prepare(a.panel, a.check_before)
     S = ST.settings()
     at = F[F.origin_mi == t]
     if len(at) == 0:
-        raise SystemExit(f'no rows at origin {a.origin}: the stored demand panel does not reach it')
+        raise SystemExit(f'no rows at origin {a.origin}: the demand panel does not reach it')
     if at.y.notna().any() or F[F.target_mi > t].y.notna().any() or F.origin_mi.max() != t:
         raise SystemExit(f'origin {a.origin} is not the last origin without an observed target; the final forecasts are made only at such an origin')
     pipelines = FTS.PIPELINES
@@ -167,12 +187,34 @@ def final(a):
     W['target_month'] = [ST.ym_of(m) for m in W.target_mi]
     out_cols = ['group', 'format', 'level', 'node_id', 'broad_id', 'origin', 'h', 'target_month', 'ls_t'] + pipelines
     out = W[out_cols].sort_values(['h', 'format', 'level', 'node_id']).reset_index(drop=True)
-    FTS.FINAL_DIR.mkdir(parents=True, exist_ok=True)
+    if a.verify:
+        # the code as it is now must reproduce the frozen file: compared, nothing written to prereg/
+        frozen = pd.read_csv(FTS.FINAL_DIR / f'forecasts_origin_{a.origin}.csv')
+        key = ['format', 'level', 'node_id', 'h']
+        m = frozen.merge(out, on=key, suffixes=('_f', '_n'), validate='one_to_one')
+        assert len(m) == len(frozen) == len(out), f'row sets differ: frozen {len(frozen)}, new {len(out)}, matched {len(m)}'
+        lines = [f'verification of the frozen forecasts of origin {a.origin} against the code as it is now ({time.strftime("%Y-%m-%d %H:%M")})']
+        ok = True
+        for p in ['ls_t'] + pipelines:
+            d = (m[p + '_f'] - m[p + '_n']).abs()
+            tol = 1e-4 if p.startswith('chronos') else 1e-9
+            lines.append(f'  {p}: max abs difference {d.max():.2e} (limit {tol:g})')
+            ok &= bool(d.max() < tol)
+        for ln in lines:
+            say(ln)
+        say('verification ' + ('PASSED' if ok else 'FAILED'))
+        (FTS.OUT / f'verify_origin_{a.origin}.txt').write_text('\n'.join(lines + ['verification ' + ('PASSED' if ok else 'FAILED')]) + '\n')
+        sys.exit(0 if ok else 1)
+    outdir = pathlib.Path(a.rehearsal_dir) if a.rehearsal_dir else FTS.FINAL_DIR       # a rehearsal never writes into prereg/
+    outdir.mkdir(parents=True, exist_ok=True)
     FTS.OUT.mkdir(parents=True, exist_ok=True)
-    csv = FTS.FINAL_DIR / f'forecasts_origin_{a.origin}.csv'
+    csv = outdir / f'forecasts_origin_{a.origin}.csv'
+    if csv.exists():
+        raise SystemExit(f'{csv} exists: frozen forecasts are never overwritten')
     out.to_csv(csv, index=False, float_format='%.10g')
-    W.to_parquet(FTS.OUT / f'forecasts_origin_{a.origin}_wide.parquet', index=False)
-    L.to_parquet(FTS.OUT / f'forecasts_origin_{a.origin}_long.parquet', index=False)
+    if not a.rehearsal_dir:
+        W.to_parquet(FTS.OUT / f'forecasts_origin_{a.origin}_wide.parquet', index=False)
+        L.to_parquet(FTS.OUT / f'forecasts_origin_{a.origin}_long.parquet', index=False)
     csv_sha = FTS.sha256_file(csv)
     meta = dict(
         what='Frozen forecasts of the final-test pipelines (addendum c) at one origin, for target months that were not released when they were made.',
@@ -181,14 +223,14 @@ def final(a):
         addendum=ADD_NAME, addendum_sha256=addendum_sha, csv=csv.name, csv_sha256=csv_sha,
         rows=int(len(out)), rows_by_horizon_format_level={f'h{h}_{f}_{l}': int(n) for (h, f, l), n in out.groupby(['h', 'format', 'level']).size().items()},
         pipelines=pipelines, missing_forecasts=missing, facts=facts,
-        last_demand_month=ST.ym_of(int(pd.read_parquet(ST.DB / 'study3' / 'demand_panel.parquet', columns=['mi']).mi.max())),
+        last_demand_month=ST.ym_of(int(F.origin_mi.max())),
         last_complete_interest_week=str(pd.read_parquet(ST.DB / 'interest' / 'wiki' / 'weekly_total.parquet').query('not partial_week').week.max().date()),
         interest_weeks_used_up_to=str(FT.last_week_monday(t).date()),
         input_sha256={k: FTS.sha256_file(v) for k, v in inputs.items()}, software=FTS.versions(),
         settings=dict(study4_record_sha256=B.sha256_study4, study4b_record_sha256=B.sha256, catboost=dict(iterations=S.cb_iterations, depth=S.cb_depth, learning_rate=S.cb_learning_rate,
                       loss=S.cb_loss, seed=S.cb_seed), chronos2_model=c2.MODEL, chronos2_revision=c2.REVISION, bolt_model='amazon/chronos-bolt-small', seed=FTS.SEED),
-        note='Forecasts are log shares of a theme in a format (Study 4 target). The target months are scored once, as addendum d will fix; nothing about them was looked at.')
-    (FTS.FINAL_DIR / f'forecasts_origin_{a.origin}_meta.json').write_text(json.dumps(meta, indent=1))
+        note='Forecasts are log shares of a theme in a format (Study 4 target). The target months are scored once, as addendum d fixes; nothing about them was looked at.')
+    (outdir / f'forecasts_origin_{a.origin}_meta.json').write_text(json.dumps(meta, indent=1))
     say(f'wrote {csv} ({len(out):,} rows, sha256 {csv_sha}) and the meta file')
 
 
@@ -201,5 +243,11 @@ if __name__ == '__main__':
     ap.add_argument('--origin', default='2026-08')
     ap.add_argument('--pipelines', default=None)
     ap.add_argument('--threads', type=int, default=1, help='CatBoost threads')
+    ap.add_argument('--panel', default=None, help='demand panel of an extended world (origins after 2026-08)')
+    ap.add_argument('--rehearsal-dir', default=None, help='final mode on a dry-run world: write the files here, never into prereg/ (a test of the later-origin path)')
+    ap.add_argument('--verify', action='store_true', help='final mode: recompute and compare with the frozen file, write nothing to prereg/')
+    ap.add_argument('--tol', type=float, default=1e-4, help='regression: largest difference counted as agreement')
+    ap.add_argument('--check-before', default=None, help='dry-run world: compare the rebuilt table with the stored one only for target months before YYYY-MM')
+    ap.add_argument('--report', default=None, help='regression: report file (default data/reports/benchmark_final_test_regression.md)')
     a = ap.parse_args()
     {'regression': regression, 'timesafety': timesafety, 'final': final}[a.mode](a)
