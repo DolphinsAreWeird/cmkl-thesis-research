@@ -1,0 +1,37 @@
+{
+  "record": "Study 2R settings: does a rise in attention to a single book raise its borrowing? Retest of Study 2 on modern Seattle books, with events defined from the project's own data. Fixed before any 2R result was computed.",
+  "fixed_on": "2026-10-14",
+  "fixed_by": "Khant Phyo Wai (with Claude); requested in chat on 2026-10-14",
+  "why": "Study 2 used LibriVox classics, whose catalogue lacks modern books on most current topics, and named public events. Study 2R uses modern library books and events detected in each book's own Wikipedia attention.",
+  "books": {
+    "set": "Seattle works with at least 500 checkouts in total over 2016-2026 that match an English Wikipedia article about the book (Wikidata item that is an instance of a written work, novel or book, with matching title and an author whose family name matches the Seattle creator)",
+    "matching_check": "a random 100 matches checked by hand; the error rate is reported"
+  },
+  "events": {
+    "series": "weekly user views of the book's article (redirects included), divided by total English Wikipedia user views",
+    "rule": "the Study 3 shift rule unchanged (26-week median, ratio >= 1.5, 8-week Mann-Kendall with Hamed-Rao, one-sided p < 0.10, armed start, sustained >= 4 weeks, intermediate 3, fading <= 2), with the automatic quality flags (one-day, desktop-only)",
+    "minimum_volume": "normal level at least 100 user views a week",
+    "secondary": "the same on the author's article"
+  },
+  "outcome": {
+    "formats_primary": ["print", "ebook"],
+    "formats_secondary": ["audiobook"],
+    "model": "the Study 3b quasi-Poisson count event study for one work: log E[Y_f,t] = log N_f,t + alpha_f + beta_f t + month-of-year, fitted on the 24 months ending at month -7; tau = log(sum Y / sum mu) over months 0 to +2 (primary) and 0 to +5; z = tau / sqrt(phi / sum mu)"
+  },
+  "inference": {
+    "placebo_books": "200 matched works per test (same primary format, expected count over the window within the same decile, no shift on their own article in months -6 to +6), drawn with seed 20261013; one-sided p = rank of the treated z",
+    "placebo_years": "the same work in the same calendar months of other years without a shift",
+    "pooled": "mean tau by duration class and by size tercile, bootstrap clustered by work (2,000, seed 20261013)",
+    "equivalence": "for each class, the largest lift ruled out = exp(upper 95% bound) - 1; a class shows 'no meaningful effect' when the upper bound is below log(1.10)",
+    "multiple_testing": "Benjamini-Hochberg q < 0.10 across single-book tests"
+  },
+  "positive_controls": {
+    "rule": "run first; the event is the first detected shift within 8 weeks before or after the release date; pass = pooled tau > 0 with bootstrap interval above zero across the controls, and at least 4 of 7 with one-sided p < 0.05",
+    "controls": ["The Queen's Gambit (Walter Tevis), series released October 2020", "The Duke and I (Julia Quinn), Bridgerton released December 2020", "Dune (Frank Herbert), film released October 2021", "Where the Crawdads Sing (Delia Owens), film released July 2022", "American Prometheus (Kai Bird and Martin J. Sherwin), Oppenheimer released July 2023", "Killers of the Flower Moon (David Grann), film released October 2023", "Shogun (James Clavell), series released February 2024"]
+  },
+  "disclosures": [
+    "Study 2 results on LibriVox were known (single-book bursts: +2.5%, not significant; adaptations helped).",
+    "The seven positive controls are well-known adaptations chosen from general knowledge before any Seattle series for them was viewed."
+  ],
+  "deviations": "DEVIATIONS.md (Study 2R section) and prereg/addenda_2r/"
+}

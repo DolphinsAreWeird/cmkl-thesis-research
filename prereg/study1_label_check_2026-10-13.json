@@ -1,0 +1,15 @@
+{
+  "record": "Study 1 label-window check. Fixed before any of these runs.",
+  "fixed_on": "2026-10-13",
+  "reason": "LibriVox listening in month 2 after release is still about 2.9 times its settled level (median over 4,064 recordings; the ratio reaches about 1.0 only by month 9-10), so the months 2-7 label still contains part of the launch decay. Raised by Khant on 2026-10-13.",
+  "labels": {
+    "L0_original": "mean of log(1 + views) over months 2-7 after the release month",
+    "L2_settled": "mean of log(1 + views) over months 9-14",
+    "L3_lifecycle_adjusted": "the title level alpha_i from log(1 + v_{i,a}) = alpha_i + f(a) + g(t) + e for months a = 1..12, where f is the common age curve and g the calendar-month effect, both estimated on training titles only at each walk-forward step; alpha_i = sum_a omega_a (log(1 + v_{i,a}) - f(a) - g(t_{i,a})) / sum_a omega_a with omega_a = 1 / residual variance at age a among training titles"
+  },
+  "design": "the final Study 1 walk-forward (quarters 2020Q1 onward, training only on titles whose label window had closed before the test quarter), with ridge and CatBoost and the three feature stages (metadata only, plus social and text, plus history), run once for each label; test quarters end where each label's window is still complete",
+  "metrics": ["AUC for the top 20%", "Spearman", "hit rate top 10% against the realised base rate"],
+  "also_reported": "Spearman correlation between the three labels; which sources' gains change between labels",
+  "disclosures": ["Study 1 results with the months 2-7 label were known; this is a robustness check, reported in full whatever it shows"],
+  "deviations": "DEVIATIONS.md (Study 1 check section)"
+}

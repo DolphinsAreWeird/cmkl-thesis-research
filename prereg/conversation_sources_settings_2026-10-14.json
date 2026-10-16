@@ -1,0 +1,25 @@
+{
+  "record": "Conversation-source replication: do rises in what people say online (tweets in TweetsKB, edits to Wikipedia talk pages) carry over into Seattle borrowing the way rises in Wikipedia reading do?",
+  "fixed_on": "2026-10-14",
+  "fixed_by": "Khant Phyo Wai (with Claude); Khant asked in chat on 2026-10-14 for interest sources beyond Wikipedia",
+  "outcomes_seen": "No borrowing outcome has been linked to TweetsKB or talk-page series. Known before fixing: all Study 3 and 3b results for Wikipedia and GDELT, the exploratory dose-response, the 3b backlist and value-screened checks, and Study 4b.",
+  "series": {
+    "tweetskb": "weekly count of tweets in the TweetsKB public 5% sample that mention any Wikipedia article mapped to the theme (each tweet counted once per theme), divided by all tweets in the sample that week; February 2013 to June 2023; tone = mean positive and mean negative sentiment of those tweets",
+    "talk_edits": "weekly edits to the talk pages of the theme's mapped articles, divided by all English Wikipedia talk-page edits that week; if that total is unavailable, by the theme's own trailing 52-week mean, stated in the report"
+  },
+  "breaks": "TweetsKB entity-linker re-runs (April 2018, January 2021, September 2022): no shift may start within 2 weeks of a break",
+  "shift_rule": "the Study 3 rule unchanged (26-week median; ratio >= 1.5; 8-week Mann-Kendall, one-sided p < 0.10, Hamed-Rao; 8 quiet weeks before a start; sustained >= 4 weeks, intermediate 3, fading <= 2; seasonal rule); minimum normal level 100 tweets a week in the sample (TweetsKB) or 20 talk edits a week; the parameter-audit noise benchmark is computed for each source from interest data alone and reported before outcomes are linked",
+  "outcome_model": "the Study 3b count model unchanged (joint quasi-Poisson across Seattle formats, fitted on the 24 months ending at month -7, tau over months 0 to 2, placebo-category rank on z), at narrow and middle levels, print and ebook primary, audiobook secondary",
+  "hypotheses": {
+    "H1": "per source, pooled tau of sustained rises minus pooled tau of fading rises > 0, with a 95% bootstrap interval (2,000 resamples, clustered by theme, seed 20261014) above 0",
+    "H2": "per source, pooled tau of sustained rises > 0 with its 95% bootstrap interval above 0"
+  },
+  "secondary": [
+    "positive controls reported first: COVID-19 (March 2020), George Floyd (June 2020), #MeToo (October 2017), using each source's first rise within 8 weeks of the event in the control theme",
+    "agreement: share of each source's rises with a Wikipedia rise in the same theme within 2 weeks",
+    "lead-lag: median weeks between a conversation rise and the matching Wikipedia rise"
+  ],
+  "period": "TweetsKB: month 0 from 2016-01 to 2023-03 so the window fits the coverage; talk edits: month 0 from 2016-01 to 2026-03",
+  "label": "a second, informed analysis: it repeats the Study 3b design on new interest sources; it is not an independent replication of the Wikipedia result",
+  "deviations": "DEVIATIONS.md (Conversation sources section)"
+}

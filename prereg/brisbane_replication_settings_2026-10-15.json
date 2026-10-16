@@ -1,0 +1,23 @@
+{
+  "record": "Brisbane replication: do sustained rises in Wikipedia interest by theme predict more borrowing of books on that theme in a second city, Brisbane City Council Libraries (Australia)?",
+  "fixed_on": "2026-10-15",
+  "fixed_by": "Khant Phyo Wai (with Claude); Khant delegated dataset decisions in chat on 2026-10-15",
+  "outcomes_seen": "No Brisbane borrowing has been linked to interest. Known before fixing: all Seattle results (Studies 3, 3b, 4, 4b, 2R), the exploratory dose-response and the size-versus-duration checks. The 2023-2025 Brisbane files were profiled (counts of loans and days only).",
+  "data": "Brisbane City Council library checkouts (Queensland Government open data, CC BY 4.0), yearly files 2015 to 2025 as published (sampled checkout days); loans aggregated to calendar months; a month is usable only if it has at least 2 sampled days",
+  "themes": "each Brisbane title is matched to a Seattle work by normalised title and author family name (exact match after normalisation, same rule for all titles) and inherits that work's theme profile from taxonomy version 3; unmatched titles are left out; the match rate by year is reported",
+  "demand": "a theme's monthly borrowing = sum of matched loans weighted by theme strength; exposure = all loans in that month; formats pooled, with a print versus other split reported if item_type allows",
+  "closures": "a month whose total loans fall below half of the median of the previous 12 months (at least 6 needed) is missing",
+  "shifts": "the Study 3 Wikipedia shifts unchanged (quality OK, non-seasonal), narrow and middle levels, month 0 from 2016-01 to 2025-06",
+  "outcome_model": "the Study 3b count model unchanged apart from formats (a single pooled series, or print and other if split), fitted on the 24 months ending at month -7, tau over months 0 to 2, placebo-category rank on z, bootstrap clustered by theme (2,000, seed 20261015)",
+  "hypotheses": {
+    "H1": "pooled tau of sustained rises > 0 with its 95% bootstrap interval above 0",
+    "H2": "pooled tau of sustained rises minus pooled tau of fading rises > 0 with its 95% interval above 0"
+  },
+  "secondary": [
+    "positive controls reported first: COVID-19 (March 2020) and George Floyd (June 2020), with Brisbane closure months marked",
+    "joint regression of tau on log2 whole duration and log2 peak size, bootstrap clustered by theme",
+    "power from injected lifts as in Study 3b (+20%, +50%, +100%; 200 draws)"
+  ],
+  "label": "a second-city replication of the Seattle theme-level design using the same global English Wikipedia interest series",
+  "deviations": "DEVIATIONS.md (Brisbane replication section)"
+}

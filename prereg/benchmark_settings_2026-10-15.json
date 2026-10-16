@@ -1,0 +1,64 @@
+{
+  "record": "Method benchmark settings: which ways of organizing online behavior into categories derived from books, and which models or combinations of models, best predict demand for books, how accurate the predictions are, and when they work best. Fixed before any score in this record was computed.",
+  "fixed_on": "2026-10-15",
+  "fixed_by": "Khant Phyo Wai (question and choices in chat, 15 Oct 2026 about 03:30: full question with a 'when' sub-question; existing organizing methods plus one grouping learned from book text; add combinations, a pretrained forecaster and more tree models) with Claude",
+  "questions": {
+    "main": "Which ways of organizing online behavior into categories derived from books, and which models or combinations of models, best predict demand for books, how accurate are those predictions, and when do they work best?",
+    "organizing": "Which category level (narrow or middle), which representation of behavior (none, Wikipedia volume, plus news volume, plus news tone, plus lasting-rise states) and, in stage 2, which category building and routing method gives the most accurate forecasts?",
+    "models": "Which single model or combination of models gives the most accurate forecasts?",
+    "accuracy": "How accurate is the best pipeline against the simple forecast that repeats last month's value?",
+    "when": "Does the ranking change in months after a lasting rise in interest, in surge months, by format and by horizon?"
+  },
+  "stages": {
+    "stage_1": "This record, scored now: the forecasts already made under forecast_settings_2026-10-13.json and study4b_settings_2026-10-14.json, plus LightGBM, a pretrained forecaster (Chronos-Bolt) and fixed combinations, all on the same units, months and features.",
+    "stage_2": "Later, each with its own addendum fixed before scoring and judged by the evaluation below: categories learned from book text (sentence-embedding clusters of works at the sizes of the middle and narrow levels); routing behavior into categories through the Wikipedia articles of the books themselves; routing by embedding similarity over a wider article pool; routing learned from past demand (walk-forward only)."
+  },
+  "units": {
+    "series": "one category (taxonomy v3 node) in one format at one level; the forecast target is the log share of the category in the format in month t+h (Study 4 definition)",
+    "formats_main": ["print", "ebook"],
+    "formats_secondary": ["audiobook"],
+    "librivox": "reported separately as a secondary series group",
+    "horizons": {"main": 1, "secondary": [2]},
+    "test_origins": "2019-01 to 2026-07 (the Study 4 test origins); pipelines with news features are compared only on 2019-01 to 2021-05",
+    "eligibility": "the rows forecast in Study 4; a series enters a comparison only with at least 12 test months scored by every pipeline in that comparison; scoring uses only the months common to all compared pipelines in that series"
+  },
+  "pipelines_existing": {
+    "naive": "y(t+h) = y(t)",
+    "seasonal_naive": "Study 4 seasonal naive",
+    "ridge_D, ridge_DW, ridge_DWG, ridge_DWGT": "Study 4 ridge on the level, feature sets D, D+W, D+W+G, D+W+G+T",
+    "catboost_D, catboost_DW, catboost_DWG, catboost_DWGT": "Study 4 CatBoost on the level, same feature sets",
+    "ridgechg_D, ridgechg_DW, ridgechg_DWS, catchg_D, catchg_DW, catchg_DWS": "Study 4b models trained on the change; level forecast = y(t) + predicted change; S = lasting-rise state and earlier responsiveness (4b record)"
+  },
+  "pipelines_new": {
+    "lightgbm_D, lightgbm_DW": "LightGBM regressor on the level with the Study 4 feature sets D and D+W, pooled, walk-forward with the Study 4 training rows; objective regression (L2), n_estimators 600, learning_rate 0.05, max_depth 6, num_leaves 63, min_child_samples 20, no row or column subsampling, random seed 20261013, deterministic; the four Study 4 categorical features as categories; at most 3 threads",
+    "chronos": "amazon/chronos-bolt-small, zero-shot (no training), univariate: context = the series' monthly log share up to and including month t (missing months left missing, at most the last 512 months), forecast = the median (0.5 quantile) for t+1 and t+2; CPU; no interest input",
+    "avg_ridge_cat_D": "mean of ridge_D and catboost_D",
+    "avg_ridge_cat_DW": "mean of ridge_DW and catboost_DW",
+    "avg_three_DW": "mean of ridge_DW, catboost_DW and lightgbm_DW",
+    "avg_naive_ridge_D": "mean of naive and ridge_D",
+    "median_all": "median of the single-model level forecasts available at the row among naive, seasonal_naive, ridge_D, ridge_DW, catboost_D, catboost_DW, lightgbm_D, lightgbm_DW, chronos",
+    "invmae_all": "weighted mean of the same set, weights proportional to 1 / MAE of each model over the 12 previous test origins in the same group, format, level and horizon (only target months on or before the origin); equal weights until 12 previous origins exist"
+  },
+  "evaluation": {
+    "per_series": "MAE of the log-share forecast over the series' common scored months; relative MAE = MAE(pipeline) / MAE(naive)",
+    "primary": "AvgRelMAE = geometric mean of the relative MAEs across series (Davydenko and Fildes, 2013); 95% interval from 2,000 bootstrap resamples of categories (node_id, all formats and levels of a node together), seed 20261015",
+    "also": "median relative MAE; share of series with relative MAE below 1; mean rank within series (1 = lowest MAE, ties averaged)",
+    "rank_test": "Friedman test across series; Nemenyi critical difference at alpha 0.05 (Demsar, 2006)",
+    "confidence_set": "Model Confidence Set (Hansen, Lunde and Nason, 2011), size 0.10, on the monthly mean absolute error across the series of the comparison, stationary bootstrap with block 3, 2,000 resamples, range statistic (arch package), seed 20261015",
+    "best": "the pipelines in the confidence set are the statistically tied best; among them the lowest AvgRelMAE is named first",
+    "organizing_comparison": "representations compared holding the model fixed (paired on the same series and months): D, D+W, D+W+G, D+W+G+T for ridge and CatBoost on the news window; D, D+W, D+W+S for the change-trained models; levels narrow and middle reported side by side (different series, descriptive)"
+  },
+  "when_segments": {
+    "after_lasting_rise": "test months whose origin has a quality-ok Wikipedia shift in the category that started in the 8 weeks before the origin and was labelled sustained by its fourth week, using only labels known at the origin (4b definition)",
+    "after_short_rise": "a quality-ok Wikipedia shift started in the 8 weeks before the origin and not labelled sustained by the origin",
+    "quiet": "no quality-ok Wikipedia shift started in the 8 weeks before the origin",
+    "surge": "months whose actual change in log share over the horizon is at least log(1.3) (4b surge definition); defined by the outcome, so it describes where errors fall and is not a forecasting condition",
+    "report": "AvgRelMAE per segment for every pipeline, segments with fewer than 20 series not reported"
+  },
+  "final_unseen_test": "Seattle months released after this record (2026-09 onward), scored once in early December 2026 with naive and every pipeline in the stage-1 confidence set, with the same evaluation; no pipeline is changed after this record except through DEVIATIONS.md",
+  "disclosures": [
+    "Seen before fixing: the Study 4 pooled results (naive MAE 0.0502, ridge D 0.0498, CatBoost D 0.0528; CatBoost D+W against D skill -0.2%), the Study 4b change and surge results (change skill +0.1% and +0.7%; surge average precision 0.080 to 0.111 with interest), and the Study 3 and Study 2R results.",
+    "Not computed or seen before fixing: per-series relative MAEs, AvgRelMAE, ranks, the Friedman and Nemenyi results, the confidence set, the segment results, and any LightGBM, Chronos or combination forecast."
+  ],
+  "deviations": "Changes after this record go to DEVIATIONS.md under 'Method benchmark'."
+}

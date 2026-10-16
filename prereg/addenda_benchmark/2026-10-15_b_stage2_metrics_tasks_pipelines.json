@@ -1,0 +1,194 @@
+{
+  "addendum": "Method benchmark, stage 2: (1) the secondary metrics, (2) 'which themes will rise' as a second task with the same standing as level accuracy, (3) every stage-2 pipeline with its settings, (4) the comparisons, horizons and the final test that cover them. Fixed before any stage-2 forecast was computed or scored.",
+  "fixed_on": "2026-10-15 07:06",
+  "fixed_by": "Khant Phyo Wai (chat, 15 Oct 2026 about 06:40: the choice of metric was left to Claude and the improvements were agreed; stage-2 order and pipelines agreed) with Claude",
+  "relation": "Adds to benchmark_settings_2026-10-15.json (stage_2) and to addendum a. Nothing in either record is changed. The primary metric stays AvgRelMAE (geometric mean over series of MAE of the pipeline / MAE of repeating last month; 95% interval from 2,000 resamples of categories, seed 20261015) with the 90% model confidence set on the monthly mean absolute error (arch, stationary bootstrap block 3, 2,000 resamples, range statistic, seed 20261015), mean ranks, Friedman test and Nemenyi critical difference, all as in the record. A series enters a comparison only with at least 12 months scored by every pipeline in it; scoring uses only the months common to all pipelines of the comparison.",
+  "tasks": {
+    "level": "Forecast the log share of a theme in a format at horizon h (1, 2 or 3 months). Judged by the primary metric (AvgRelMAE) and its 90% model confidence set.",
+    "rise": "Rank the themes by how much they will rise: for every theme and format the forecast change is y_hat(t+h) - y(t) and the actual change is y(t+h) - y(t). Judged by the cross-theme Spearman correlation between the two (below), with its own 90% model confidence set, and by the surge average precision.",
+    "same_standing": "Both tasks are reported side by side in every comparison, with the same tables and intervals. 'Best' is stated per task: tied best on a task = in that task's 90% confidence set. The record's primary metric (AvgRelMAE with its confidence set) stays the primary metric of the level task. No weighted score that mixes the tasks is used, and no single overall winner is named when the two sets differ."
+  },
+  "secondary_metrics": {
+    "common": "Series = group x format x level x node (record). Per series, over its scored months: MAE and RMSE of the log-share forecast of every pipeline. relMAE(p) = MAE(p) / MAE(naive); relRMSE(p) = RMSE(p) / RMSE(naive).",
+    "volume_weighted_relative_MAE": "VW-AvgRelMAE = exp( sum_s w_s ln relMAE_s / sum_s w_s ), the weighted geometric mean of the relative MAEs over series, with weight w_s = the series' mean borrowing share (mean of exp(log share) over its scored months). Large themes count more. 95% interval: the same category resamples as AvgRelMAE, with the weighted mean recomputed.",
+    "relative_RMSE": "AvgRelRMSE = exp( mean_s ln relRMSE_s ), the geometric mean of the RMSE ratios to naive; same resamples and interval.",
+    "cross_theme_spearman": "For each origin month and each (format, level) group with at least 10 series scored by every compared pipeline: the Spearman correlation across series between the forecast change (y_hat - y(t)) and the actual change (y(t+h) - y(t)). Month value = mean over the groups of that month; headline = mean over months. 95% interval: moving-block bootstrap over months (block 3, 2,000 resamples, seed 20261015). Confidence set: the model confidence set of the record (same settings) on the loss 1 - (month value), over the months where every pipeline in the set has a month value. Also reported: share of months with a positive month value. A pipeline whose forecast change is constant (naive) has no Spearman value.",
+    "surge_average_precision": "Surge = actual change y(t+h) - y(t) >= ln 1.3 (the 4b definition, at the horizon scored). Score = the pipeline's forecast change. Average precision over all scored rows pooled (as in the 4b code: rows ranked by descending score, ties in input order); the base rate (share of surge rows) is reported beside it, and the average precision of naive is the base rate by definition. 95% interval: moving-block bootstrap over months as above. 'Not distinguishable from the best': the 90% interval of AP(best) - AP(p), from the same paired bootstrap, includes 0.",
+    "descriptive_plain_numbers": "Reported for every pipeline, never used to select: (a) mean absolute error of the log-share forecast x 100, read as a percent error; (b) direction accuracy = share of series-months with |actual change| > 0.10 whose forecast change has the same sign (Study 4 definition); (c) precision among the flagged: in each origin month and (format, level) group the 5% of series (rounded up) with the largest forecast change are flagged, precision = share of flagged series that surge, pooled over groups; (d) the base rate of surges.",
+    "inference_for_organizing": "Paired comparisons with the model held fixed: geometric mean over series of MAE(with behavior) / MAE(without), category-bootstrap interval; and the same for the Spearman month value (difference, block bootstrap) and for the surge average precision (difference, block bootstrap)."
+  },
+  "interest_series_definitions": {
+    "weekly_share": "routed views / all English Wikipedia user views of the ISO week (data/db/interest/wiki/weekly_total.parquet); weeks with fewer than 7 days of data are partial and invalid; a week belongs to the month that holds its Sunday; at origin t only weeks whose Sunday is on or before the last day of month t are used (the record's rule).",
+    "volume_features": "the four Study 4 features computed from a weekly share series: logmean4 (log of the mean share of the last 4 weeks), ratio (last week / median of the previous 26 weeks), dlog4 (logmean4 minus logmean4 four weeks earlier), mk8 (8-week Mann-Kendall tau); complete windows only, otherwise missing; ridge uses 0 plus a missing indicator, trees use the missing value (as in Study 4).",
+    "monthly_log_share": "for a weekly series: ln of the mean of the weekly shares of the weeks of a month; missing if any week of the month is invalid or the mean is 0. Used as past covariates of the pretrained forecaster; month m uses only weeks of month m, so at origin t months after t are never used.",
+    "curated": "the existing hand-checked Wikipedia series of the record (data/db/interest/wiki/weekly_node.parquet, source wikipedia), the same series that feed the Study 4 W features"
+  },
+  "reference_pipelines": {
+    "revert6": "y_hat(t+h) = mean of the log share over t-5..t (the Study 4 feature mean6, missing months skipped as there). A no-fit reference added because noisy shares revert towards their mean, so a forecast change can correlate with the actual change without any model; it is the reference for the rise task and is also scored on the level task.",
+    "median_all": "unchanged (record): median of the single-model level forecasts naive, seasonal_naive, ridge_D, ridge_DW, catboost_D, catboost_DW, lightgbm_D, lightgbm_DW, chronos (Bolt)",
+    "median_s2_all": "median of the level forecasts of every learned or pretrained single-model pipeline of the A2 roster (ridge, catboost, lightgbm on the level; chronos, chronos2 and its covariate versions; ridgechg, lgbmchg, catchg with every feature set); naive, seasonal_naive, revert6 and the combinations are not members",
+    "median_s2_demand": "median of the level forecasts of ridge_D, lightgbm_D, catboost_D, ridgechg_D, lgbmchg_D, catchg_D, chronos2 (models without behavior inputs)",
+    "median_s2_behavior": "median of the level forecasts of ridge_DW, lightgbm_DW, catboost_DW, ridgechg_DW, lgbmchg_DW, catchg_DW, chronos2_cur (the same models with the curated Wikipedia inputs); compared with median_s2_demand it tests behavior at the level of a combination with the model mix held fixed",
+    "note": "The stage-1 combinations (avg_ridge_cat_D, avg_ridge_cat_DW, avg_three_DW, avg_naive_ridge_D, median_all, invmae_all) keep their record definitions and are rescored in the stage-2 comparisons."
+  },
+  "stage2_pipelines": {
+    "common": {
+      "rows": "the stage-1 rows: Seattle (print, ebook, audiobook) and LibriVox series and origins of the Study 4 forecasts at horizons 1 and 2, test origins 2019-01 to 2026-07; plus horizon 3 for Seattle from the Study 4b feature table (built with the same code, checked equal at horizons 1 and 2). Horizon 3 is not run for LibriVox.",
+      "walk_forward": "as the record: expanding window, retrained at every origin, training rows are origins s with s + h <= t and a known target; the Study 4 minimum of 30 training rows",
+      "change_models": "ridgechg, lgbmchg and catchg are trained on the change y(t+h) - y(t) with the Study 4b code path; level forecast = y(t) + predicted change. ridgechg: Study 4 ridge (alpha from {0.1, 1, 10, 100} on the last 12 training origins). catchg: Study 4 CatBoost (600 iterations, depth 6, learning rate 0.05, RMSE, seed 20261013; categorical format, level, broad category, target month). lgbmchg: LightGBM with the stage-1 parameters (L2, 600 trees, learning rate 0.05, max depth 6, 63 leaves, min child samples 20, no subsampling, seed 20261013, deterministic; the four categoricals).",
+      "feature_sets": "D = the six Study 4 demand features plus format, level, broad category and target month. W = the ten Study 4 curated Wikipedia features. S = the two Study 4b lasting-rise features. Vcur = the first four W features (logmean4, ratio, dlog4, mk8 of the curated series). Vtop, Vnli = the four volume features of the series routed by the embedding rule of addendum a and by the context-reading rule (2c). Vbk = eight features: the four volume features of the book-article series and the four of the author-article series (2b). DW = the one duration-weighted interest feature (2d). Feature sets run for each of ridgechg, lgbmchg, catchg: D, D+W, D+W+S (from Study 4b where they exist), D+Vcur, D+Vtop, D+Vnli, D+Vbk, D+Vcur+DW. Pipeline ids: model_feature set, e.g. catchg_DVbk.",
+      "threads_memory": "at most 3 threads in all (workers x threads), nice 10, jobs/heavy_lock.sh, 8 GB RAM; one heavy job at a time",
+      "seeds": "20261013 for models and torch, 20261015 for bootstraps and the confidence sets",
+      "software": "python 3.12.11, pandas 3.0.6, numpy 2.5.4, scikit-learn 1.9.1, lightgbm 4.6.0, catboost 1.2.10, arch 8.0.0, torch 2.14.1, chronos-forecasting 2.0.1, transformers 4.57.6, fastembed 0.9.0"
+    },
+    "2a_chronos2": {
+      "what": "The pretrained forecaster Chronos-2, zero-shot (no training), alone and with interest as past covariates.",
+      "model": "amazon/chronos-2 (Apache-2.0, 119,477,664 parameters), commit 29ec3766d36d6f73f0696f85560a422f50e8498c, Chronos2Pipeline, CPU, float32, no cross-learning between series (predict_batches_jointly False)",
+      "inputs": "context = the series' monthly log share up to and including month t (missing months left missing, at most the last 512 months), the stage-1 construction; covariates = past covariates only, monthly, aligned with the context, missing where undefined; no future covariates. If a covariate is missing in the whole context of a task it is dropped for that task (the count is reported).",
+      "forecast": "the median (0.5 quantile) for t+1, t+2 and t+3 from one call with prediction_length 3; torch seed 20261013; tasks passed in chunks of 1,024 with batch size 128",
+      "variants": {
+        "chronos2": "no covariates",
+        "chronos2_cur": "covariate: the monthly log share of the curated series of the node (Wlog)",
+        "chronos2_curdw": "covariates: Wlog and the monthly duration-weighted interest (2d)",
+        "chronos2_bk": "covariates: the monthly log shares of the book-article series and of the author-article series (2b)",
+        "chronos2_top": "covariate: the monthly log share of the series routed by the embedding rule of addendum a",
+        "chronos2_nli": "covariate: the monthly log share of the series routed by the context-reading rule (2c)"
+      },
+      "groups": "Seattle all formats at horizons 1, 2 and 3; LibriVox horizons 1 and 2 for chronos2 and chronos2_cur only (the other routings do not cover LibriVox)",
+      "order": "chronos2, chronos2_cur, chronos2_curdw, chronos2_bk, chronos2_nli, chronos2_top"
+    },
+    "2b_book_anchored_routing": {
+      "what": "Routing behavior into themes through the books themselves.",
+      "articles": "the Seattle works of Study 2R (data/db/study2r/works.parquet: 7,747 works with at least 500 checkouts in 2016-01 to 2026-08 matched to an English Wikipedia article; 7,427 distinct book articles, 3,065 distinct author articles) and the weekly user views of those articles (data/db/study2r/weekly_book.parquet and weekly_author.parquet, 2015-06-29 to 2026-09-28, redirects with real traffic included; a week without a row counts as 0 views).",
+      "weights": "for an article a and a node n at the middle or the narrow level: w(a, n) = the mean over the works linked to a of the taxonomy v3 strength of the work in n (strength from data/db/taxonomy_v3/work_theme.parquet, 0 when the work is not in n). One article therefore sends its views to the themes in proportion to the theme profile of its works; a prolific author is not counted once per work.",
+      "series": "routed views(n, week) = sum over articles of w(a, n) x views(a, week), separately for book articles and for author articles; share = routed views / all English Wikipedia user views of the week. Two series per node: the book-article series and the author-article series. Features: the four volume features of each (Vbk, eight features); monthly log shares for 2a.",
+      "static_inputs_note": "The set of works (at least 500 checkouts in the whole period), their matches and the strengths are fixed from full-period data; only the weekly views change with time. This is a look-ahead in the choice of books, not in any time-varying input, and is reported as a limitation.",
+      "pipelines": "ridgechg_DVbk, lgbmchg_DVbk, catchg_DVbk, chronos2_bk",
+      "units": "Seattle only (LibriVox recordings have no matched articles); nodes with no routed articles have missing features"
+    },
+    "2c_context_reading_routing": {
+      "what": "Routing the daily top-500 English Wikipedia pages into themes with a model that reads the page's context: a zero-shot natural-language-inference classifier re-ranks the embedding candidates.",
+      "pool": "the pages of addendum a (daily top 500, 2016-01-01 to 2026-09-30, same exclusions) whose best theme-value cosine in data/db/benchmark/top_routing/routes.parquet is at least 0.55 (25,645 pages); pages below that are not routed.",
+      "text": "the page title (underscores as spaces) followed by ', ' and its short description. For pool pages with no description in data/raw/wiki_top_descriptions.json the short description is fetched from the MediaWiki API (action=query, prop=description, redirects resolved, 50 titles per request, at most 5 requests per second, the project User-Agent); a page with no short description keeps its title only.",
+      "candidates": "the 5 theme values with the highest cosine to 'books about <text>' in the taxonomy embedding space (addendum a's model, taxonomy-mean centering)",
+      "classifier": "MoritzLaurer/deberta-v3-base-zeroshot-v2.0 (MIT, commit 8e7e5af5983a0ddb1a5b45a38b129ab69e2258e8), run as an entailment classifier on CPU: premise = the text, hypothesis = 'This text is about <theme value>.'; score = probability of entailment against not-entailment (softmax of the two logits).",
+      "rule": "a page is routed to every candidate value whose entailment probability is at least 0.50 (multi-label); a page counts once for each node it reaches (its value's node and all ancestors, as in addendum a). The threshold is the classifier's own decision boundary and is not tuned. Series, features and monthly log shares are built as in addendum a (views on the days the page was in the top 500 / all views of the week).",
+      "outcome_free_checks": "reported with the routing, before any forecast: number of pages routed, agreement with the hand-checked pages that are in the pool (same node, ancestor or descendant, other, none) and the same film and television examples listed in addendum a's report. No demand data are read.",
+      "pipelines": "ridgechg_DVnli, lgbmchg_DVnli, catchg_DVnli, chronos2_nli; and ridgechg_DVtop, lgbmchg_DVtop, catchg_DVtop, chronos2_top for the embedding routing of addendum a under the same change-trained models"
+    },
+    "2d_duration_weighted_interest": {
+      "what": "Interest weighted by how long a rise has lasted, as one input that any model can use.",
+      "series": "the curated weekly series (data/db/interest/wiki/weekly_node.parquet, source wikipedia)",
+      "definition": "ratio(k) = share(k) / median of the share of the previous 26 weeks (the record's normal level). excess(k) = ln ratio(k) if ratio(k) >= 1.5 (the record's rise threshold) and the normal level is at least 1,000 views a week (the record's minimum volume), otherwise 0. run(k) = number of consecutive weeks up to and including k with excess > 0 (0 if excess(k) = 0). DWI(k) = sum over the 8 most recent weeks j = k-7..k of excess(j) x min(run(j), 4) / 4. A rise therefore counts a quarter of its excess in its first week and fully from its fourth week (the record's sustained duration); a one-week spike counts a quarter. Missing if any of the 8 weeks, or the ratio of week k, is missing or partial.",
+      "constants": "1.5, 26 weeks, 1,000 views, 4 weeks and 8 weeks are all taken from the record (shift_definitions, minimum_volume) and the Study 4 window; none was fitted",
+      "feature": "dwi = DWI at the last included week of the origin month; monthly series for 2a = DWI at the last week of each month",
+      "pipelines": "ridgechg_DVcurdw, lgbmchg_DVcurdw, catchg_DVcurdw, chronos2_curdw (compared with the same models on D+Vcur, and with D+W and D+W+S that carry the shift states)"
+    },
+    "2e_horizons": {
+      "what": "Horizons 2 and 3 for the leading pipelines.",
+      "level_models_h3": "ridge_D, ridge_DW, catboost_D, catboost_DW, lightgbm_D, lightgbm_DW and the seasonal naive are run at horizon 3 for Seattle (Study 4 and benchmark settings, horizon 3 added), so that the record's combinations exist at horizon 3. Chronos (Bolt) is run at horizon 3 with the stage-1 settings.",
+      "rule": "all stage-2 level and change pipelines are first run at horizon 1. They are then run at horizons 2 and 3 if they are (i) in the 90% confidence set of the level task or of the rise task of comparison A2, or (ii) the pipeline with the lowest AvgRelMAE in A2 within each model (chronos2 versions, ridgechg, lgbmchg, catchg) and within each routing (curated, top-500 embedding, context-reading, book-anchored, duration-weighted). Pipelines of the record that already have horizon 2 forecasts keep them. The Study 4b change pipelines already have horizon 3."
+    },
+    "2f_learned_categories_and_demand_aligned_routing": {
+      "priority": "Run only if time allows, after 2a to 2e; if they are not run they are reported as not run. Specified here so that their settings are fixed before any score.",
+      "f1_categories_from_book_text": {
+        "works": "Seattle works with at least 20 checkouts in 2016-01 to 2026-08 in any format (data/db/taxonomy_v3/spl_works.parquet)",
+        "text": "title, then the work's subject-heading and SPL term phrases (taxonomy_v3 work_terms and work_headings), then, for works linked to Goodreads, the first 500 characters of the description; embedded with the taxonomy model (paraphrase-multilingual-MiniLM-L12-v2, fastembed), vectors normalised",
+        "clusters": "k-means (k-means++, 3 initialisations, seed 20261013; mini-batch if memory requires) with k = 86 and k = 242, the numbers of middle and narrow themes; each work to its nearest centroid with strength 1",
+        "series": "the Study 3 demand definition (sum of checkouts x strength / all checkouts of the format and month, log share), the Study 3 minimum-size rule, test origins as the record",
+        "pipelines": "naive, seasonal_naive, revert6, ridge_D, catboost_D, lightgbm_D, chronos, chronos2, ridgechg_D, lgbmchg_D, catchg_D and median_s2_demand, on the learned series only; behavior routing is not part of stage 2 for learned categories",
+        "comparison": "descriptive: the series differ from the subject-heading themes, so AvgRelMAE values of the two category sets are compared as such, not tested; reported with the same metrics"
+      },
+      "f2_demand_aligned_routing": {
+        "pool": "for each node, the book and author articles routed to it in 2b (w(a, n) > 0)",
+        "learning": "at origin t, for each node, format and article: the Pearson correlation over the months m with m + h <= t between the article's monthly change in log views (month m minus month m-1, both defined) and the node's change in log share y(m+h) - y(m); positive part rho_a. Only months from 2016-08 on.",
+        "weights": "w_a = lambda x rho_a / sum rho + (1 - lambda) x 1 / P, P = number of articles in the pool, lambda = n / (n + 36), n = number of months used; equal weights when sum rho = 0. Weights are recomputed at every origin from past months only.",
+        "features": "the four volume features of the weighted sum of the articles' weekly shares, as of the origin (Vdem, per node, format, horizon and origin)",
+        "pipelines": "ridgechg_DVdem, lgbmchg_DVdem, catchg_DVdem at horizon 1 (and at 2 and 3 under the rule in 2e); the comparison with static weights is ridgechg_DVbk and so on"
+      }
+    }
+  },
+  "roster_A2": {
+    "stage1_21": [
+      "naive",
+      "seasonal_naive",
+      "ridge_D",
+      "ridge_DW",
+      "catboost_D",
+      "catboost_DW",
+      "lightgbm_D",
+      "lightgbm_DW",
+      "chronos",
+      "ridgechg_D",
+      "ridgechg_DW",
+      "ridgechg_DWS",
+      "catchg_D",
+      "catchg_DW",
+      "catchg_DWS",
+      "avg_ridge_cat_D",
+      "avg_ridge_cat_DW",
+      "avg_three_DW",
+      "avg_naive_ridge_D",
+      "median_all",
+      "invmae_all"
+    ],
+    "stage2_new": [
+      "revert6",
+      "chronos2",
+      "chronos2_cur",
+      "chronos2_curdw",
+      "chronos2_bk",
+      "chronos2_top",
+      "chronos2_nli",
+      "lgbmchg_D",
+      "lgbmchg_DW",
+      "lgbmchg_DWS",
+      "ridgechg_DVcur",
+      "ridgechg_DVtop",
+      "ridgechg_DVnli",
+      "ridgechg_DVbk",
+      "ridgechg_DVcurdw",
+      "lgbmchg_DVcur",
+      "lgbmchg_DVtop",
+      "lgbmchg_DVnli",
+      "lgbmchg_DVbk",
+      "lgbmchg_DVcurdw",
+      "catchg_DVcur",
+      "catchg_DVtop",
+      "catchg_DVnli",
+      "catchg_DVbk",
+      "catchg_DVcurdw",
+      "median_s2_all",
+      "median_s2_demand",
+      "median_s2_behavior"
+    ],
+    "count": 49,
+    "later_if_run": "ridgechg_DVdem, lgbmchg_DVdem, catchg_DVdem (2f) join the roster when they are run; learned-category series are compared separately (2f)"
+  },
+  "comparisons": {
+    "A2": "print and ebook, horizon 1: every level pipeline of stage 1 and stage 2 that has forecasts on all rows (the main stage-2 comparison; AvgRelMAE with confidence set, secondary metrics, rise task, surge)",
+    "A2_no_seasonal": "A2 without the seasonal repeat, which brings back the months it could not be made for (sensitivity, as in the stage-1 report); reported beside A2, A2 itself is the main comparison",
+    "B2_C2": "the same at horizon 2 (B2) and horizon 3 (C2, Seattle only) for the pipelines that exist there",
+    "D2": "Seattle audiobooks, horizon 1 (and 2, 3)",
+    "E2": "LibriVox, horizons 1 and 2: the record's pipelines, chronos2, chronos2_cur, revert6 and the combinations that can be formed",
+    "F2_organizing": "paired, model held fixed: for each of ridgechg, lgbmchg, catchg and chronos2, MAE with each behavior representation (Vcur, W, W+S, Vtop, Vnli, Vbk, Vcur+DW; chronos2_cur, _curdw, _bk, _nli, _top) against the same model without behavior (D, or chronos2), and routing against routing (Vtop, Vnli, Vbk, Vcur+DW against Vcur); median_s2_behavior against median_s2_demand; for the level task, the Spearman month value and the surge average precision",
+    "G2_when": "the record's segments (quiet, after a short rise, after a lasting rise, surge months) at horizons 1, 2 and 3 for every pipeline, segments with fewer than 20 series not reported; with the secondary metrics",
+    "H2_by_format_level": "by format (print, ebook, audiobook) and level (narrow, middle) for the pipelines in the A2 confidence sets, descriptive",
+    "stage1_rescored": "the 21 pipelines of stage 1 are also rescored alone (as in the stage-1 report) with the new metrics; those numbers belong to the stage-1 roster and need not equal their values inside A2 because the common months can change"
+  },
+  "final_unseen_test": "Replaces the record's list of pipelines for the final test (the rest of that paragraph stands): Seattle months released after the record (2026-09 onward), scored once in early December 2026 with naive and every pipeline that is in the stage-1 confidence set, or in the level or the rise confidence set of A2 (at most the 12 of these with the lowest AvgRelMAE if there are more), with the same evaluation, including the secondary metrics. No pipeline is changed after this addendum except through DEVIATIONS.md.",
+  "run_rules": {
+    "order": "2a, 2b, 2c, 2d, 2e, 2f; scoring only after the forecasts of 2a to 2d at horizon 1 exist",
+    "failures": "a pipeline that cannot be run for a technical reason is reported as not run with the reason; any change to a setting above is made only through DEVIATIONS.md (date, reason, whether any stage-2 score had been seen)",
+    "code": "code/main_study/benchmark/ (03_evaluate.py extended for the new metrics; new scripts numbered after 06); results data/db/benchmark/ and data/reports/benchmark_stage2.md",
+    "unit_tests": "each new feature builder is tested for time safety (a feature at origin t does not change when later weeks are altered) before its forecasts are made"
+  },
+  "disclosures": [
+    "Seen before fixing (stage 1, all 15 Oct): the AvgRelMAE, ranks, confidence set, segments and robustness results of the 21 stage-1 pipelines (print and ebook, horizon 1: 39,402 rows; Chronos-Bolt 0.945, CatBoost on the change 0.957 to 0.960, median of all models 0.963, ridge 1.001, CatBoost on the level 1.083, seasonal naive 2.086; behavior changes the error by less than 1%; after lasting rises Chronos 0.833 at horizon 1 and CatBoost on the change with the lasting-rise state 0.851 against 0.937; horizon 2 Chronos alone in the set at 0.905; LibriVox Chronos 0.848); the routing test of addendum a (251 of 274 shared pages to the same node, 4.3% of pages routed, forecasts 0.999 against the curated routing).",
+    "Seen at about 06:30 on 15 Oct (stage 1, print and ebook, horizon 1, 39,402 rows), before this addendum: mean absolute error of the best pipeline 4.8% against 5.2% for repeating last month; the forecast direction is right for moves above 10% in about 73% (Chronos) and 72% (CatBoost on the change); cross-theme Spearman of forecast and actual change 0.294 (Chronos), 0.273 (CatBoost on the change), 0.267 (median of all models), 0.199 (ridge); the Chronos forecast change correlates 0.45 with the actual change, which is why revert6 is added as a reference. Those quick numbers were computed with an ad hoc grouping; the definitions above are the ones that count.",
+    "Seen from earlier studies: the Study 3, 3b, 4 and 4b results (lasting rises predict about 8 to 11% more borrowing, short spikes nothing; surge average precision 0.080 to 0.111 with interest at a base rate of 1.7%), the Study 2R results on single books, and the Seattle new-title coverage check (the author's article is the main pre-release attention source, 30 to 44% of new titles; book articles before release 1 to 2%). The duration-weighted interest of 2d is motivated by these results and by the stage-1 lasting-rise segment, so it is a test of a representation suggested by data already seen; the final unseen test is its clean confirmation.",
+    "Looked at before fixing, without any demand outcome: the cosine distribution of the top-500 pages (25,645 pages at 0.55 or above; 6,002 at 0.70 or above) and the share of them with a short description (23% in the pool); the size and coverage of the Study 2R tables (7,747 works, 7,427 book articles, 3,065 author articles, weekly views 2015-06-29 to 2026-09-28); the taxonomy strengths of those works; the timing of Chronos-2 on synthetic random series (about 40 series a second, 28 with two covariates); the Hub model cards.",
+    "Not computed or seen before fixing: any Chronos-2, LightGBM-on-the-change, book-anchored, context-reading, duration-weighted, learned-category or demand-aligned forecast or score; any horizon 3 level forecast; the new metrics for any pipeline."
+  ],
+  "deviations": "Changes after this addendum go to DEVIATIONS.md under 'Method benchmark, stage 2'."
+}

@@ -1,0 +1,79 @@
+set,k,pct,lo,hi,events
+"all bursts, NEW out-of-sample trend",-6,-10.428193250560291,-12.789051746391424,-8.046625407023196,2724
+"all bursts, NEW out-of-sample trend",-5,-12.15682212346355,-15.101055863281417,-9.073058085438692,2724
+"all bursts, NEW out-of-sample trend",-4,-15.653980805586265,-18.773396918341426,-12.05283165078574,2724
+"all bursts, NEW out-of-sample trend",-3,-18.87659307112084,-22.599075631219844,-14.769919869562647,2724
+"all bursts, NEW out-of-sample trend",-2,-24.006858316302182,-27.79923789532429,-19.871730330752317,2724
+"all bursts, NEW out-of-sample trend",-1,-24.456532607373592,-28.77624803664236,-19.8976001057284,2724
+"all bursts, NEW out-of-sample trend",0,-23.713820538347086,-28.599592435210074,-18.500584298414342,2724
+"all bursts, NEW out-of-sample trend",1,-26.531057807197257,-31.537152480342556,-20.9194067440372,2724
+"all bursts, NEW out-of-sample trend",2,-30.10078158595738,-35.393616106489304,-24.30119870269327,2724
+"all bursts, NEW out-of-sample trend",3,-33.23520429188633,-38.575708818769144,-27.220009042054798,2724
+"all bursts, NEW out-of-sample trend",4,-35.58853681725363,-41.18116648556387,-29.288903275946655,2724
+"all bursts, NEW out-of-sample trend",5,-37.68744306984975,-43.47080482578899,-31.29536151891671,2724
+"all bursts, NEW out-of-sample trend",6,-40.68145675006629,-46.56191292886752,-34.00429836863492,2724
+"strongest bursts, NEW out-of-sample trend",-6,-24.188501582400267,-42.96933356773155,-3.5617920447735556,50
+"strongest bursts, NEW out-of-sample trend",-5,-28.853629473040797,-48.82500252297333,-4.535235790255293,50
+"strongest bursts, NEW out-of-sample trend",-4,-32.24446955288154,-53.5082772822564,-6.614097570053936,50
+"strongest bursts, NEW out-of-sample trend",-3,-40.75785237783597,-62.31671456253286,-12.12098094459163,50
+"strongest bursts, NEW out-of-sample trend",-2,-53.41682891910455,-72.17247330234285,-26.192287287571606,50
+"strongest bursts, NEW out-of-sample trend",-1,-56.58598340583252,-75.53349907961724,-26.90360342510068,50
+"strongest bursts, NEW out-of-sample trend",0,-47.90559756299866,-72.75188314905824,-6.070956812768072,50
+"strongest bursts, NEW out-of-sample trend",1,-51.184675820881,-76.46985826115076,0.8777890658999197,50
+"strongest bursts, NEW out-of-sample trend",2,-55.94373347597747,-80.37273748765224,-2.5506053387352954,50
+"strongest bursts, NEW out-of-sample trend",3,-65.61201666685687,-85.29622377156306,-24.267827952459157,50
+"strongest bursts, NEW out-of-sample trend",4,-68.82571264873876,-87.2950902607814,-29.28261329957722,50
+"strongest bursts, NEW out-of-sample trend",5,-71.93815667782523,-89.12697147694085,-31.50910009309353,50
+"strongest bursts, NEW out-of-sample trend",6,-74.53108379804934,-91.11373784560993,-32.20513431148883,50
+"all bursts, OLD in-sample trend (same events, clustered)",-6,0.05109361578430338,-1.352364777882159,1.4311065408928052,2724
+"all bursts, OLD in-sample trend (same events, clustered)",-5,1.2919345909656599,-0.25138712989440565,2.8533060798386076,2724
+"all bursts, OLD in-sample trend (same events, clustered)",-4,0.4032426265752287,-0.9425580790379353,1.8568063546047044,2724
+"all bursts, OLD in-sample trend (same events, clustered)",-3,-0.31136451686368805,-1.7700527798140797,1.1857611207719465,2724
+"all bursts, OLD in-sample trend (same events, clustered)",-2,-3.5970794930382466,-5.031767027134418,-2.0410228393427365,2724
+"all bursts, OLD in-sample trend (same events, clustered)",-1,-1.0697679215428968,-3.2870636471511956,1.3572297791926837,2724
+"all bursts, OLD in-sample trend (same events, clustered)",0,3.1322042064757083,0.12928570507183548,6.468388696956734,2724
+"all bursts, OLD in-sample trend (same events, clustered)",1,2.534151773588511,-0.7867530659187824,5.9600330974986315,2724
+"all bursts, OLD in-sample trend (same events, clustered)",2,0.7055480461151342,-2.1582194605460994,3.6889461752756523,2724
+"all bursts, OLD in-sample trend (same events, clustered)",3,-0.7009888798376496,-3.962658733142562,2.483029448155165,2724
+"all bursts, OLD in-sample trend (same events, clustered)",4,-1.104419196932771,-4.590887890841022,2.502373181730305,2724
+"all bursts, OLD in-sample trend (same events, clustered)",5,-1.2344208978016136,-4.883271989413063,2.5319463937024604,2724
+"all bursts, OLD in-sample trend (same events, clustered)",6,-2.9407702193494645,-7.030247639739765,1.1342419528215228,2724
+"strongest bursts, OLD in-sample trend (same events, clustered)",-6,2.345330157840886,-5.6958065457266125,11.142382318669128,50
+"strongest bursts, OLD in-sample trend (same events, clustered)",-5,3.6305765212454766,-0.9754743716853508,8.55979459940338,50
+"strongest bursts, OLD in-sample trend (same events, clustered)",-4,6.483453475317003,0.6526654824364897,13.426413423143464,50
+"strongest bursts, OLD in-sample trend (same events, clustered)",-3,0.4547288573388597,-7.663088748271879,7.07307543462143,50
+"strongest bursts, OLD in-sample trend (same events, clustered)",-2,-14.774245522060337,-24.98741042434125,-5.571089964987061,50
+"strongest bursts, OLD in-sample trend (same events, clustered)",-1,-14.301348732076846,-28.78096458202407,-0.8351391636145592,50
+"strongest bursts, OLD in-sample trend (same events, clustered)",0,10.952551401259324,-13.706753554426943,36.19332138744437,50
+"strongest bursts, OLD in-sample trend (same events, clustered)",1,12.177207390693656,-19.408951278786603,64.2120730169108,50
+"strongest bursts, OLD in-sample trend (same events, clustered)",2,9.23412920309421,-22.878352249864434,53.35454548842293,50
+"strongest bursts, OLD in-sample trend (same events, clustered)",3,-8.005983376590875,-35.144141087722325,19.644127638523436,50
+"strongest bursts, OLD in-sample trend (same events, clustered)",4,-10.018832944086508,-37.5003077000765,17.292237511712955,50
+"strongest bursts, OLD in-sample trend (same events, clustered)",5,-12.607634138334378,-41.71033860394741,17.394078088835272,50
+"strongest bursts, OLD in-sample trend (same events, clustered)",6,-14.420453793444587,-45.698203173665945,18.39891431527351,50
+"all bursts, OLD in-sample trend (full old set, clustered)",-6,0.36897893570888574,-0.9118385603917778,1.7278069257826973,2807
+"all bursts, OLD in-sample trend (full old set, clustered)",-5,1.239437957230649,-0.22722529840933064,2.817547514712246,2807
+"all bursts, OLD in-sample trend (full old set, clustered)",-4,0.3296392871929843,-0.927310933171381,1.749944718054316,2807
+"all bursts, OLD in-sample trend (full old set, clustered)",-3,-0.354164971050297,-1.8050524415921867,1.0904837557987845,2807
+"all bursts, OLD in-sample trend (full old set, clustered)",-2,-3.673271284190238,-5.145748716186919,-2.2448691419109714,2807
+"all bursts, OLD in-sample trend (full old set, clustered)",-1,-1.4206344500709234,-3.765428189783709,0.9016445494637546,2807
+"all bursts, OLD in-sample trend (full old set, clustered)",0,2.489300704533526,-0.5328404662837696,5.538340328350203,2807
+"all bursts, OLD in-sample trend (full old set, clustered)",1,1.6309059603139886,-1.4843852596539489,4.868828609491483,2807
+"all bursts, OLD in-sample trend (full old set, clustered)",2,-0.31269613296111,-3.2006550563657883,2.605203879112241,2807
+"all bursts, OLD in-sample trend (full old set, clustered)",3,-2.001536093836598,-5.058569453055295,0.9974143937612324,2807
+"all bursts, OLD in-sample trend (full old set, clustered)",4,-3.035815185367796,-6.670344887349121,0.5117322813417601,2807
+"all bursts, OLD in-sample trend (full old set, clustered)",5,-3.4376498059442206,-7.284773142290543,0.32013319745298063,2807
+"all bursts, OLD in-sample trend (full old set, clustered)",6,-5.40849946156341,-9.289741754748734,-1.44369036783861,2807
+"strongest bursts, OLD in-sample trend (full old set, clustered)",-6,1.162124628696093,-7.0323584639904935,10.060797556184584,51
+"strongest bursts, OLD in-sample trend (full old set, clustered)",-5,2.77266376061569,-1.7141713619781318,7.621257474819485,51
+"strongest bursts, OLD in-sample trend (full old set, clustered)",-4,6.4536763209288805,0.6532641424371699,13.253948983141761,51
+"strongest bursts, OLD in-sample trend (full old set, clustered)",-3,0.8573098220740816,-7.1021228185502006,7.427027739691126,51
+"strongest bursts, OLD in-sample trend (full old set, clustered)",-2,-14.19237182874732,-23.755622436648146,-5.417351891142228,51
+"strongest bursts, OLD in-sample trend (full old set, clustered)",-1,-14.016403810394474,-28.004050420972302,-0.7428116411635396,51
+"strongest bursts, OLD in-sample trend (full old set, clustered)",0,10.249380701880728,-13.898553938992599,35.57715076753218,51
+"strongest bursts, OLD in-sample trend (full old set, clustered)",1,11.555088231967336,-19.32832815262524,62.27689036285199,51
+"strongest bursts, OLD in-sample trend (full old set, clustered)",2,8.551726703954078,-22.757679014195347,52.35207432146474,51
+"strongest bursts, OLD in-sample trend (full old set, clustered)",3,-8.214262674420848,-34.872625335858174,18.94984579687772,51
+"strongest bursts, OLD in-sample trend (full old set, clustered)",4,-12.26724117860385,-39.303273113887855,15.382226309127699,51
+"strongest bursts, OLD in-sample trend (full old set, clustered)",5,-14.847839632543348,-43.07224012027456,14.44794296110357,51
+"strongest bursts, OLD in-sample trend (full old set, clustered)",6,-16.297786295761817,-46.4105947429085,16.804813326172553,51

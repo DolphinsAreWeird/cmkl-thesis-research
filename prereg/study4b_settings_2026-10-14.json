@@ -1,0 +1,38 @@
+{
+  "record": "Study 4b settings: forecasting the change in category demand and catching rare surges, books first. Fixed before any 4b forecast was made or scored.",
+  "fixed_on": "2026-10-14",
+  "fixed_by": "Khant Phyo Wai (with Claude); agreed in chat on 2026-10-14",
+  "relation_to_study4": "Study 4 stays reported as run (interest did not improve one-month-ahead level forecasts). Study 4b is a new, separately fixed study that changes the target, the horizon and the scoring after Study 4's result was known (disclosed below).",
+  "units": {
+    "levels": ["narrow", "middle"],
+    "formats_primary": ["print", "ebook"],
+    "formats_secondary": ["audiobook"],
+    "eligibility": "the Study 3 minimum-size rule at the origin, as in Study 4"
+  },
+  "part_a_change_forecasts": {
+    "target": "change in log share, d(t+h) - d(t); the forecast of the level is d(t) + predicted change",
+    "horizons": {"primary": 2, "secondary": [1, 3]},
+    "models": ["zero change (naive)", "ridge on the change", "CatBoost on the change (main)"],
+    "catboost": "iterations 600, depth 6, learning_rate 0.05, loss RMSE, random_seed 20261013, thread_count per Study 4",
+    "feature_sets": {
+      "D": "the Study 4 demand-only features",
+      "D+W": "plus the Study 4 Wikipedia interest features",
+      "D+W+S": "plus Study 3 knowledge known at the origin: (1) a sustained Wikipedia shift (labelled sustained by its fourth week) started in the 8 weeks before the origin; (2) the category's responsiveness = mean Study 3 synthetic-control effect of its earlier shifts whose effect window (months 0 to +2) ended on or before the origin, 0 when none"
+    },
+    "scheme": "walk-forward by month with an expanding window, retrained at every origin; test origins 2019-01 to the last origin with a target month",
+    "metrics": "MAE of the level; skill = 1 - MAE(new) / MAE(base); Diebold-Mariano one-sided (Newey-West lag 3); moving-block bootstrap (block 3, 2,000, seed 20261013)",
+    "helps_rule": "interest helps if CatBoost D+W (or D+W+S) beats CatBoost D at the primary horizon with skill > 0, bootstrap interval above zero and DM p < 0.05, for print and ebook pooled at each level; each model is also compared with zero change"
+  },
+  "part_b_surges": {
+    "surge": "change in log share d(t+h) - d(t) >= log(1.3) for an eligible category-format at horizon h (primary h = 2)",
+    "models": "CatBoost classifier (logloss, same tree settings) and logistic regression, feature sets D, D+W, D+W+S",
+    "metrics": "average precision (primary); recall among the 10 highest-scored category-formats per origin and format; Brier score; the base rate is reported",
+    "inference": "moving-block bootstrap of the average-precision difference D+W(+S) minus D (block 3 months, 2,000, seed 20261013); helps if the 95% interval is above zero",
+    "showcases": ["Race and racism, print and ebook, origin April 2020 (target June 2020)", "Epidemics and plagues, ebook, origin January 2020 (target March 2020)"]
+  },
+  "disclosures": [
+    "Known before fixing: Study 3 and 3b results (sustained shifts carry over about 9 to 11% over 3 months; peak 2 to 3 months after the start), Study 4 results (no gain at horizon 1; +1.4% at horizon 2, not significant; CatBoost worse than naive), and the Study 1 label check.",
+    "The choice of horizon 2 as primary and of a change target follows from those results; Study 4b is therefore a second, informed test, not a replication."
+  ],
+  "deviations": "DEVIATIONS.md (Study 4b section) and prereg/addenda_4b/"
+}

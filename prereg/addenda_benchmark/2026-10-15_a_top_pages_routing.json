@@ -1,0 +1,14 @@
+{
+  "addendum": "Method benchmark, stage 2a: routing broad, unselected behavior into the book-derived themes with an embedding model, compared with the hand-curated routing. Fixed before any series, feature or forecast of this addendum was built.",
+  "fixed_on": "2026-10-15 03:40",
+  "relation": "Adds one routing alternative to benchmark_settings_2026-10-15.json (stage_2 'routing by embedding similarity over a wider article pool'); evaluation unchanged.",
+  "behavior_pool": "every page in the daily top 500 of English Wikipedia (data/raw/wiki_top_daily.json, 2016-01-01 to 2026-09-30), except Main_Page, '-' and pages in the Special, Wikipedia, File, Portal, Help, Category, Template, User and Talk namespaces",
+  "routing_rule": "text = the page title (underscores as spaces), followed by ', ' and its short description when one is in data/raw/wiki_top_descriptions.json; embedded as 'books about <text>' with the taxonomy model, centered with the taxonomy mean, cosine with every theme value (specific and general); the page is routed to its most similar value when the cosine is at least 0.70 (the automatic rule already used for news themes), otherwise to none; no hand verdicts",
+  "series": "weekly share per node = views of routed pages on the days each was in the top 500 / all English Wikipedia views that week (wiki/total_daily.parquet); a page counts for its value's node and every ancestor; weeks with fewer than 7 days are partial",
+  "features": "the four Study 4 volume features (logmean4, ratio, dlog4, mk8; study4/_features.weekly_feature_matrices, same windows) computed from this series ('Wv_top'); for a fair comparison the same four features are computed from the hand-curated Wikipedia series ('Wv_cur'); no shift states in either",
+  "pipelines": "ridge and LightGBM (benchmark settings) with feature sets D, D+Wv_cur and D+Wv_top; CatBoost is not run here (time); naive as reference",
+  "units": "Seattle, horizon 1, test origins 2019-01 to 2026-07, the Study 4 rows",
+  "evaluation": "as benchmark_settings_2026-10-15.json: AvgRelMAE to naive with the category bootstrap, ranks, Friedman and Nemenyi, model confidence set; main comparison print and ebook; paired ratio D+Wv_top against D+Wv_cur for each model",
+  "routing_check": "descriptive and outcome-free: share of hand-curated pages that appear in the top-500 pool and that the rule routes to the same node, or to one of its ancestors or descendants",
+  "disclosures": "Stage-1 benchmark scores had not been read when this addendum was fixed (the stage-1 runs were still in progress)."
+}

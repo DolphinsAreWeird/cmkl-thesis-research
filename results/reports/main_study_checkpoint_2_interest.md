@@ -1,6 +1,6 @@
 # Main study, checkpoint 2: interest timelines from GDELT and Wikipedia
 
-Khant Phyo Wai (student ID 01323050), CMKL University, honors thesis
+Khant Phyo Wai, CMKL University, honors thesis
 Prepared 13 October 2026; updated the same evening with the decisions on the first version's open questions. Status: checkpoint for Khant's review. This step covers the interest side only. No Seattle, LibriVox, Goodreads, Amazon or NYT data were read or joined, and nothing here compares interest with demand.
 
 ## Summary

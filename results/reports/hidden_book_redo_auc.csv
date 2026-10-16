@@ -1,0 +1,17 @@
+split,model,subset,rows,base_rate,auc
+A book split (5 folds),attention only,all weeks,218307,0.082,0.618
+A book split (5 folds),attention only,attention >= 2x,5019,0.143,0.712
+A book split (5 folds),own listening only,all weeks,218307,0.082,0.818
+A book split (5 folds),own listening only,attention >= 2x,5019,0.143,0.824
+A book split (5 folds),both,all weeks,218307,0.082,0.82
+A book split (5 folds),both,attention >= 2x,5019,0.143,0.832
+A book split (5 folds),rule: own 4-week ratio,all weeks,218307,0.082,0.727
+A book split (5 folds),rule: own 4-week ratio,attention >= 2x,5019,0.143,0.775
+B walk-forward 2020-2026 (time + books held out),attention only,all weeks,186650,0.086,0.587
+B walk-forward 2020-2026 (time + books held out),attention only,attention >= 2x,4393,0.152,0.627
+B walk-forward 2020-2026 (time + books held out),own listening only,all weeks,186650,0.086,0.766
+B walk-forward 2020-2026 (time + books held out),own listening only,attention >= 2x,4393,0.152,0.802
+B walk-forward 2020-2026 (time + books held out),both,all weeks,186650,0.086,0.769
+B walk-forward 2020-2026 (time + books held out),both,attention >= 2x,4393,0.152,0.803
+B walk-forward 2020-2026 (time + books held out),rule: own 4-week ratio,all weeks,186650,0.086,0.711
+B walk-forward 2020-2026 (time + books held out),rule: own 4-week ratio,attention >= 2x,4393,0.152,0.77

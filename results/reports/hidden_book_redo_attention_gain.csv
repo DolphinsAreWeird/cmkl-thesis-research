@@ -1,0 +1,9 @@
+split,subset,contrast,diff,lo,hi
+A book split,all weeks,both minus own listening only (what attention adds),0.0023,0.0008,0.004
+A book split,all weeks,both minus attention only (what own listening adds),0.2022,0.1939,0.2116
+A book split,attention >= 2x,both minus own listening only (what attention adds),0.0081,-0.0022,0.0181
+A book split,attention >= 2x,both minus attention only (what own listening adds),0.1199,0.0893,0.1627
+B walk-forward,all weeks,both minus own listening only (what attention adds),0.003,0.0011,0.0051
+B walk-forward,all weeks,both minus attention only (what own listening adds),0.1815,0.1725,0.1919
+B walk-forward,attention >= 2x,both minus own listening only (what attention adds),0.0002,-0.009,0.0089
+B walk-forward,attention >= 2x,both minus attention only (what own listening adds),0.1754,0.1411,0.2146

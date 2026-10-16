@@ -1,0 +1,129 @@
+label,run,model,step,gain,ci_lo,ci_hi
+y_view,old,CatBoost,S0->S1,0.0208,0.0137,0.0282
+y_view,old,CatBoost,S1->S2,0.0087,0.0027,0.0144
+y_view,old,CatBoost,S2->S3,0.0058,0.0003,0.0116
+y_view,old,CatBoost,S3->S4,-0.0034,-0.0121,0.0063
+y_view,old,Count model,S0->S1,0.0245,0.0188,0.0301
+y_view,old,Count model,S1->S2,-0.0251,-0.0378,-0.0133
+y_view,old,Count model,S2->S3,0.0003,-0.0059,0.0061
+y_view,old,Count model,S3->S4,0.0097,-0.0016,0.0211
+y_view,old,LambdaMART,S0->S1,0.0154,0.0065,0.0245
+y_view,old,LambdaMART,S1->S2,0.0236,0.0063,0.0419
+y_view,old,LambdaMART,S2->S3,0.0105,0.0014,0.0196
+y_view,old,LambdaMART,S3->S4,0.0269,0.0131,0.0415
+y_view,old,LightGBM,S0->S1,0.0228,0.015,0.0306
+y_view,old,LightGBM,S1->S2,0.0107,0.0019,0.0199
+y_view,old,LightGBM,S2->S3,0.0062,0.0003,0.0125
+y_view,old,LightGBM,S3->S4,0.0166,0.0076,0.026
+y_view,old,Neural net,S0->S1,0.0239,0.0049,0.0439
+y_view,old,Neural net,S1->S2,-0.0207,-0.0349,-0.0048
+y_view,old,Neural net,S2->S3,0.0146,-0.0002,0.0284
+y_view,old,Neural net,S3->S4,-0.0338,-0.0526,-0.0144
+y_view,old,Random forest,S0->S1,0.0336,0.0264,0.0411
+y_view,old,Random forest,S1->S2,0.0071,-0.0013,0.0163
+y_view,old,Random forest,S2->S3,0.0054,-0.0024,0.0135
+y_view,old,Random forest,S3->S4,0.0132,0.0036,0.0212
+y_view,old,Ridge,S0->S1,0.0352,0.026,0.0431
+y_view,old,Ridge,S1->S2,-0.0074,-0.0152,0.0004
+y_view,old,Ridge,S2->S3,0.0036,-0.0005,0.0075
+y_view,old,Ridge,S3->S4,0.0063,-0.0044,0.0155
+y_view,old,k-NN,S0->S1,0.043,0.0325,0.0537
+y_view,old,k-NN,S1->S2,-0.0034,-0.0146,0.0069
+y_view,old,k-NN,S2->S3,0.0069,-0.0016,0.0166
+y_view,old,k-NN,S3->S4,0.0106,-0.0018,0.0233
+y_view,new,CatBoost,S0->S1,0.0241,0.0153,0.033
+y_view,new,CatBoost,S1->S2,0.0149,0.0071,0.0223
+y_view,new,CatBoost,S2->S3,0.0022,-0.0027,0.0075
+y_view,new,CatBoost,S3->S4,0.0044,-0.0047,0.0123
+y_view,new,Count model,S0->S1,0.0236,0.0175,0.0288
+y_view,new,Count model,S1->S2,-0.0238,-0.0369,-0.0121
+y_view,new,Count model,S2->S3,0.0003,-0.0067,0.0063
+y_view,new,Count model,S3->S4,0.01,-0.0015,0.0211
+y_view,new,LambdaMART,S0->S1,0.0226,0.0108,0.034
+y_view,new,LambdaMART,S1->S2,0.0316,0.0168,0.0505
+y_view,new,LambdaMART,S2->S3,0.0019,-0.0068,0.0101
+y_view,new,LambdaMART,S3->S4,0.0363,0.026,0.0461
+y_view,new,LightGBM,S0->S1,0.0339,0.0247,0.0434
+y_view,new,LightGBM,S1->S2,0.0197,0.0109,0.0281
+y_view,new,LightGBM,S2->S3,0.0034,-0.0025,0.0091
+y_view,new,LightGBM,S3->S4,0.0106,0.0011,0.0192
+y_view,new,Neural net,S0->S1,0.0191,0.0011,0.037
+y_view,new,Neural net,S1->S2,-0.0191,-0.0323,-0.0055
+y_view,new,Neural net,S2->S3,0.0131,-0.0033,0.0281
+y_view,new,Neural net,S3->S4,-0.0369,-0.0555,-0.0145
+y_view,new,Random forest,S0->S1,0.0396,0.0317,0.0471
+y_view,new,Random forest,S1->S2,0.0096,0.0011,0.0176
+y_view,new,Random forest,S2->S3,0.0095,0.0044,0.0146
+y_view,new,Random forest,S3->S4,0.0101,-0.0015,0.0199
+y_view,new,Ridge,S0->S1,0.034,0.0253,0.042
+y_view,new,Ridge,S1->S2,-0.0068,-0.0149,0.0014
+y_view,new,Ridge,S2->S3,0.0036,-0.0004,0.0075
+y_view,new,Ridge,S3->S4,0.0065,-0.0037,0.0167
+y_view,new,k-NN,S0->S1,0.0426,0.0303,0.0524
+y_view,new,k-NN,S1->S2,0.0002,-0.0088,0.0095
+y_view,new,k-NN,S2->S3,0.0092,0.0018,0.0174
+y_view,new,k-NN,S3->S4,0.0072,-0.0039,0.0189
+y_fav,old,CatBoost,S0->S1,0.045,0.0372,0.0523
+y_fav,old,CatBoost,S1->S2,0.0051,-0.0006,0.0112
+y_fav,old,CatBoost,S2->S3,0.0124,0.0074,0.0176
+y_fav,old,CatBoost,S3->S4,0.0379,0.0327,0.0436
+y_fav,old,Count model,S0->S1,0.0874,0.0766,0.0992
+y_fav,old,Count model,S1->S2,-0.013,-0.0233,-0.0038
+y_fav,old,Count model,S2->S3,0.0243,0.0168,0.0315
+y_fav,old,Count model,S3->S4,0.0541,0.0422,0.0661
+y_fav,old,LambdaMART,S0->S1,0.0652,0.0539,0.0772
+y_fav,old,LambdaMART,S1->S2,0.0128,0.0032,0.0227
+y_fav,old,LambdaMART,S2->S3,0.0347,0.0276,0.0431
+y_fav,old,LambdaMART,S3->S4,0.0743,0.0631,0.0872
+y_fav,old,LightGBM,S0->S1,0.0692,0.061,0.0772
+y_fav,old,LightGBM,S1->S2,0.0075,-0.0013,0.0161
+y_fav,old,LightGBM,S2->S3,0.0246,0.0181,0.03
+y_fav,old,LightGBM,S3->S4,0.07,0.0608,0.0795
+y_fav,old,Neural net,S0->S1,0.0655,0.0523,0.0792
+y_fav,old,Neural net,S1->S2,-0.0405,-0.055,-0.0256
+y_fav,old,Neural net,S2->S3,0.0263,0.0056,0.0451
+y_fav,old,Neural net,S3->S4,0.042,0.027,0.0581
+y_fav,old,Random forest,S0->S1,0.0832,0.0748,0.0916
+y_fav,old,Random forest,S1->S2,-0.0011,-0.0085,0.0069
+y_fav,old,Random forest,S2->S3,0.0232,0.0155,0.0303
+y_fav,old,Random forest,S3->S4,0.0519,0.0394,0.0632
+y_fav,old,Ridge,S0->S1,0.0858,0.076,0.0952
+y_fav,old,Ridge,S1->S2,0.0032,-0.0028,0.0089
+y_fav,old,Ridge,S2->S3,0.0215,0.0148,0.0276
+y_fav,old,Ridge,S3->S4,0.069,0.059,0.0784
+y_fav,old,k-NN,S0->S1,0.0641,0.053,0.0754
+y_fav,old,k-NN,S1->S2,-0.0106,-0.0172,-0.0041
+y_fav,old,k-NN,S2->S3,0.0329,0.0252,0.0413
+y_fav,old,k-NN,S3->S4,0.059,0.0494,0.0685
+y_fav,new,CatBoost,S0->S1,0.0757,0.0667,0.0855
+y_fav,new,CatBoost,S1->S2,0.0019,-0.0044,0.0078
+y_fav,new,CatBoost,S2->S3,0.0154,0.0088,0.0218
+y_fav,new,CatBoost,S3->S4,0.0592,0.0518,0.0678
+y_fav,new,Count model,S0->S1,0.086,0.0758,0.0977
+y_fav,new,Count model,S1->S2,-0.0137,-0.0242,-0.0042
+y_fav,new,Count model,S2->S3,0.024,0.0166,0.0311
+y_fav,new,Count model,S3->S4,0.054,0.0419,0.0657
+y_fav,new,LambdaMART,S0->S1,0.0821,0.0667,0.0988
+y_fav,new,LambdaMART,S1->S2,0.019,0.0028,0.0349
+y_fav,new,LambdaMART,S2->S3,0.0265,0.0202,0.0329
+y_fav,new,LambdaMART,S3->S4,0.099,0.0857,0.1125
+y_fav,new,LightGBM,S0->S1,0.0796,0.0702,0.0901
+y_fav,new,LightGBM,S1->S2,0.0169,0.008,0.0254
+y_fav,new,LightGBM,S2->S3,0.023,0.0177,0.0276
+y_fav,new,LightGBM,S3->S4,0.0935,0.083,0.1036
+y_fav,new,Neural net,S0->S1,0.0635,0.0527,0.0746
+y_fav,new,Neural net,S1->S2,-0.0384,-0.0549,-0.0235
+y_fav,new,Neural net,S2->S3,0.0318,0.0138,0.0489
+y_fav,new,Neural net,S3->S4,0.0383,0.0227,0.0532
+y_fav,new,Random forest,S0->S1,0.0773,0.0667,0.0884
+y_fav,new,Random forest,S1->S2,-0.0045,-0.0115,0.0032
+y_fav,new,Random forest,S2->S3,0.0289,0.0218,0.0352
+y_fav,new,Random forest,S3->S4,0.0831,0.0699,0.095
+y_fav,new,Ridge,S0->S1,0.0859,0.0761,0.0962
+y_fav,new,Ridge,S1->S2,0.0031,-0.0027,0.0087
+y_fav,new,Ridge,S2->S3,0.0216,0.0148,0.0277
+y_fav,new,Ridge,S3->S4,0.0689,0.0591,0.0783
+y_fav,new,k-NN,S0->S1,0.0621,0.051,0.0741
+y_fav,new,k-NN,S1->S2,-0.0053,-0.0119,0.0008
+y_fav,new,k-NN,S2->S3,0.0337,0.0254,0.0426
+y_fav,new,k-NN,S3->S4,0.0583,0.0496,0.0665

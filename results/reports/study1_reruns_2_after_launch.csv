@@ -1,0 +1,13 @@
+stage,model,auc_top20_old,hit_rate_top10_old,spearman_old,auc_top20_new,hit_rate_top10_new,spearman_new,quarters_old,quarters_new
+S5 +history,CatBoost,0.773,0.322,0.53,0.774,0.316,0.534,20,20
+S5 +history,Ensemble,0.771,0.312,0.524,0.772,0.317,0.528,20,20
+S5 +history,LightGBM,0.751,0.326,0.465,0.75,0.298,0.473,20,20
+S5 +history,LightGBM classifier,0.704,0.266,0.371,0.702,0.258,0.362,20,20
+S5 +history,Logistic,0.702,0.325,0.385,0.703,0.325,0.386,20,20
+S5 +history,Ridge,0.771,0.379,0.534,0.772,0.383,0.535,20,20
+S6 +month 1,CatBoost,0.832,0.372,0.678,0.829,0.36,0.677,20,20
+S6 +month 1,Ensemble,0.829,0.368,0.667,0.83,0.362,0.669,20,20
+S6 +month 1,LightGBM,0.83,0.385,0.671,0.833,0.377,0.676,20,20
+S6 +month 1,LightGBM classifier,0.804,0.345,0.578,0.806,0.346,0.578,20,20
+S6 +month 1,Logistic,0.783,0.326,0.58,0.785,0.325,0.583,20,20
+S6 +month 1,Ridge,0.82,0.354,0.655,0.82,0.35,0.655,20,20

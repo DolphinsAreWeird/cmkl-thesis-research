@@ -1,0 +1,58 @@
+{
+  "record": "Study 3b settings: small and fine-grained categories with count models, and sentiment direction. Fixed before any 3b result was computed.",
+  "fixed_on": "2026-10-13",
+  "fixed_by": "Khant Phyo Wai (with Claude). Khant asked for this on 2026-10-13 because the minimum-size rule of Study 3 made the #MeToo control and COVID-19 audiobooks untestable, and they want to study smaller, easy-to-miss events and negative as well as positive sentiment.",
+  "relation_to_study3": "Study 3 stays the primary, fixed analysis and is reported as run. Study 3b is a second analysis added after Study 3 results were seen (disclosed below). It keeps every Study 3 setting except those changed here.",
+  "unchanged_from_study3": ["shift definitions (with addenda d, g, h, i)", "month 0 and the effect windows (0..+2 primary, 0..+5 secondary)", "the event-study fit window (24 months ending at month -7)", "the three positive controls and their months", "placebo years", "bootstrap (2,000, seed 20261013) and BH q < 0.10", "missing, partial and closure months (addenda b, e)"],
+  "levels": {
+    "tested": ["narrow", "middle", "value"],
+    "value_level": "taxonomy v3 theme values (work_theme_value: work, theme, weight). Interest shifts at value level are detected with the Study 3 rules on value-level Wikipedia and GDELT series, using the same quality screens."
+  },
+  "no_size_threshold": "There is no minimum-size rule. A test is run whenever the model below can be fitted: the category has a nonzero weighted checkout in at least 12 of the 24 fit months in at least one format. Tests with fewer than 5 expected weighted checkouts over the primary window are reported separately as too sparse.",
+  "demand": {
+    "counts": "Y_{c,f,t} = sum over works of theme weight x checkouts (narrow and middle: work_theme strength; value: work_theme_value weight); exposure N_{f,t} = all checkouts in format f, month t",
+    "formats": "the Seattle formats are modelled jointly in one model per test (missing format-months simply drop out); per-format effects are reported as secondary. LibriVox is analysed separately with its own exposure (all LibriVox views)."
+  },
+  "count_event_study": {
+    "model": "quasi-Poisson GLM on the fit months: log E[Y_{c,f,t}] = log N_{f,t} + alpha_f + beta_f * t + sum_k gamma_k 1[month(t) = k] (format-specific level and trend, shared month-of-year effects); dispersion phi estimated by Pearson chi-square / residual df",
+    "expected": "mu_{c,f,t} predicted for the effect window from the fitted model",
+    "effect": "tau = log( sum over formats and window months of Y / sum of mu ); per-format effects the same within one format",
+    "standardised_gap": "z = ( log(sum Y) - log(sum mu) ) / sqrt( phi / sum mu ), so that small and large categories are comparable"
+  },
+  "inference": {
+    "placebo_categories": "the same model at the same month 0 for every other category at the same level that has no interest shift start in months -6..+6 and does not share its parent; one-sided p = rank of the treated z among treated and placebo z values / (number of placebos + 1)",
+    "placebo_years": "the same category and calendar months in every other year from 2017 without a shift in that window; share of placebo z at or above the treated z",
+    "detected": "one-sided p < 0.05 for a single test; BH q < 0.10 within each level across all main tests"
+  },
+  "positive_controls": {
+    "rule": "run first; pass = tau > 0 with one-sided placebo-category p < 0.05 in the joint Seattle model",
+    "controls": ["COVID-19: Epidemics and plagues (narrow), 2020-03", "George Floyd / BLM: Race and racism (narrow), 2020-06", "#MeToo: Sexual violence and domestic violence (narrow), 2017-10"],
+    "value_level_controls": "also reported at the value level for the values inside these nodes (descriptive, not part of the pass rule)"
+  },
+  "power": {
+    "method": "multiply the observed Y of placebo categories by (1 + L) in months 0..+2 after random placebo start months and rerun the count event study",
+    "lift_sizes": [0.10, 0.20, 0.30, 0.50, 1.00],
+    "draws": "200 per size and size band",
+    "size_bands": "quartiles of the expected weighted checkouts over the primary window (sum of mu), computed per level",
+    "minimum_detectable_effect": "smallest lift detected in at least 80% of draws, per level and size band",
+    "seed": 20261013
+  },
+  "all_shifts": {
+    "set": "quality-ok main-set shifts (labelled, not seasonal) at the narrow, middle and value levels, from 2017-01",
+    "pooled": "mean tau by source, level and duration class with a bootstrap clustered by category",
+    "carry_over": "the Study 3 carry-over regression with tau from this model as the outcome"
+  },
+  "sentiment": {
+    "question": "Does negative as well as positive news sentiment carry over into demand, and does emotional intensity matter?",
+    "features": ["delta tone (mean of the first 4 weeks minus the 26-week median)", "delta positive", "delta negative", "delta intensity = delta (positive + negative)", "negative shift = 1 if delta tone < 0"],
+    "tests": ["each feature added to the carry-over regression on its own", "negative shift x sustained interaction", "comparison with 200 placebo windows per category, two-sided"],
+    "source": "GDELT tone only (2017-01 to 2021-06 until the backfill, then rerun to the end with the same settings)",
+    "emotions": "named emotions (fear, anger, sadness and others from GDELT GCAM) are not part of this record; they need a separate record if the data are obtained"
+  },
+  "disclosures": [
+    "Study 3 results were known when this record was fixed: positive controls (race and racism passed; COVID-19 epidemics ebook +0.27, p 0.115; #MeToo untestable by the size rule), power (80% detection only at about +50%), all-shift results (no single shift after BH; sustained shifts +0.08 to +0.11 log share pooled) and tone (no tone feature beat its placebo).",
+    "Study 4 forecasting results were known (interest did not improve one-month-ahead forecasts).",
+    "The sizes of the control categories (median weighted checkouts) were known."
+  ],
+  "deviations": "changes after this date go to DEVIATIONS.md (Study 3b section) and prereg/addenda_3b/"
+}

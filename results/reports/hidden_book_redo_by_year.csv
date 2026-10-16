@@ -1,0 +1,57 @@
+year,model,subset,rows,base_rate,auc
+2020,attention only,all weeks,17209,0.046,0.532
+2020,attention only,attention >= 2x,454,0.13,0.523
+2020,own listening only,all weeks,17209,0.046,0.798
+2020,own listening only,attention >= 2x,454,0.13,0.839
+2020,both,all weeks,17209,0.046,0.802
+2020,both,attention >= 2x,454,0.13,0.856
+2020,rule: own 4-week ratio,all weeks,17209,0.046,0.792
+2020,rule: own 4-week ratio,attention >= 2x,454,0.13,0.829
+2021,attention only,all weeks,20910,0.048,0.567
+2021,attention only,attention >= 2x,405,0.101,0.655
+2021,own listening only,all weeks,20910,0.048,0.776
+2021,own listening only,attention >= 2x,405,0.101,0.807
+2021,both,all weeks,20910,0.048,0.777
+2021,both,attention >= 2x,405,0.101,0.812
+2021,rule: own 4-week ratio,all weeks,20910,0.048,0.763
+2021,rule: own 4-week ratio,attention >= 2x,405,0.101,0.799
+2022,attention only,all weeks,25137,0.049,0.528
+2022,attention only,attention >= 2x,593,0.15,0.546
+2022,own listening only,all weeks,25137,0.049,0.752
+2022,own listening only,attention >= 2x,593,0.15,0.852
+2022,both,all weeks,25137,0.049,0.753
+2022,both,attention >= 2x,593,0.15,0.845
+2022,rule: own 4-week ratio,all weeks,25137,0.049,0.719
+2022,rule: own 4-week ratio,attention >= 2x,593,0.15,0.854
+2023,attention only,all weeks,29011,0.069,0.559
+2023,attention only,attention >= 2x,560,0.111,0.678
+2023,own listening only,all weeks,29011,0.069,0.76
+2023,own listening only,attention >= 2x,560,0.111,0.807
+2023,both,all weeks,29011,0.069,0.764
+2023,both,attention >= 2x,560,0.111,0.808
+2023,rule: own 4-week ratio,all weeks,29011,0.069,0.728
+2023,rule: own 4-week ratio,attention >= 2x,560,0.111,0.777
+2024,attention only,all weeks,33891,0.126,0.537
+2024,attention only,attention >= 2x,880,0.24,0.699
+2024,own listening only,all weeks,33891,0.126,0.716
+2024,own listening only,attention >= 2x,880,0.24,0.756
+2024,both,all weeks,33891,0.126,0.721
+2024,both,attention >= 2x,880,0.24,0.753
+2024,rule: own 4-week ratio,all weeks,33891,0.126,0.626
+2024,rule: own 4-week ratio,attention >= 2x,880,0.24,0.694
+2025,attention only,all weeks,38368,0.086,0.614
+2025,attention only,attention >= 2x,1034,0.133,0.613
+2025,own listening only,all weeks,38368,0.086,0.8
+2025,own listening only,attention >= 2x,1034,0.133,0.818
+2025,both,all weeks,38368,0.086,0.803
+2025,both,attention >= 2x,1034,0.133,0.811
+2025,rule: own 4-week ratio,all weeks,38368,0.086,0.767
+2025,rule: own 4-week ratio,attention >= 2x,1034,0.133,0.791
+2026,attention only,all weeks,22124,0.159,0.486
+2026,attention only,attention >= 2x,467,0.146,0.468
+2026,own listening only,all weeks,22124,0.159,0.753
+2026,own listening only,attention >= 2x,467,0.146,0.813
+2026,both,all weeks,22124,0.159,0.756
+2026,both,attention >= 2x,467,0.146,0.817
+2026,rule: own 4-week ratio,all weeks,22124,0.159,0.679
+2026,rule: own 4-week ratio,attention >= 2x,467,0.146,0.761
