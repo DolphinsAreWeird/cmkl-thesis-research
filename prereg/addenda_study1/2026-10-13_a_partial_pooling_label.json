@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-13",
+  "results_seen": false,
+  "changes": {
+    "labels.L4_partial_pooling": "count-scale level with a book-specific decay: v_{i,a} ~ NegBin(mu_{i,a}, theta), log mu_{i,a} = alpha_i + f(a) + beta_i * l(a) + g(t_{i,a}) for months a = 1..12, where l(a) = log(a) minus its mean over 1..12; f (common age curve), g (calendar-month effect), theta and the spread sigma_beta of the decay slopes are estimated on training titles only at each walk-forward step; each test title's alpha_i and beta_i are then fitted with f and g fixed and a penalty (beta_i / sigma_beta)^2 / 2 that shrinks its slope toward the common curve. Label = alpha_i (the book's lasting level on the count scale). This is the preferred label of the check; L0, L2 and L3 are reported beside it.",
+    "labels.launch_strength": "secondary outcome, not a label: log(v_{i,1} + v_{i,2}) - log(mu_{i,1} + mu_{i,2}) using the fitted L4 model, i.e. how far the book's first two months sat above or below what its own level and decay predict; reported descriptively and compared across performance tiers"
+  },
+  "reason": "Raised by Khant on 2026-10-13: one common release curve on log(1 + views) undervalues low-view books, because the log squashes small counts and because books fade at different speeds. A count model with a book-specific decay, shrunk toward the common curve when a book has little data, treats large and small books on the same footing."
+}

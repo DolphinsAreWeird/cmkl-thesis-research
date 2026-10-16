@@ -1,0 +1,226 @@
+rep,fold,S,sp
+0,0,Metadata,0.16309671272154774
+0,0,Wiki volume,0.11100277609336673
+0,0,Wiki trend,0.08271189983756262
+0,0,Text,0.16764628273424312
+0,0,Metadata|Wiki volume,0.2093831641608676
+0,0,Metadata|Wiki trend,0.2405113445920548
+0,0,Metadata|Text,0.24926025898742815
+0,0,Wiki volume|Wiki trend,0.07076171648897228
+0,0,Wiki volume|Text,0.17445330348112895
+0,0,Wiki trend|Text,0.19897718943805479
+0,0,Metadata|Wiki volume|Wiki trend,0.21378611986288854
+0,0,Metadata|Wiki volume|Text,0.25279854933256735
+0,0,Metadata|Wiki trend|Text,0.2567809814080765
+0,0,Wiki volume|Wiki trend|Text,0.1798011350597729
+0,0,Metadata|Wiki volume|Wiki trend|Text,0.24610835475251758
+0,1,Metadata,0.2171638284388354
+0,1,Wiki volume,0.07269587002492948
+0,1,Wiki trend,0.13201815887892485
+0,1,Text,0.18118044975161313
+0,1,Metadata|Wiki volume,0.2626368722505167
+0,1,Metadata|Wiki trend,0.28417014230471366
+0,1,Metadata|Text,0.295839913586644
+0,1,Wiki volume|Wiki trend,0.13436322537326897
+0,1,Wiki volume|Text,0.205510423997752
+0,1,Wiki trend|Text,0.21821370291026362
+0,1,Metadata|Wiki volume|Wiki trend,0.300269424961069
+0,1,Metadata|Wiki volume|Text,0.33088803128617206
+0,1,Metadata|Wiki trend|Text,0.32456139808147905
+0,1,Wiki volume|Wiki trend|Text,0.23131146188609006
+0,1,Metadata|Wiki volume|Wiki trend|Text,0.33095505835221684
+0,2,Metadata,0.26286235647661954
+0,2,Wiki volume,0.10899928455679024
+0,2,Wiki trend,0.05867031038891814
+0,2,Text,0.21297031734576838
+0,2,Metadata|Wiki volume,0.3177410623082237
+0,2,Metadata|Wiki trend,0.3137985320784731
+0,2,Metadata|Text,0.2899599725679861
+0,2,Wiki volume|Wiki trend,0.1128840360433048
+0,2,Wiki volume|Text,0.1976015415317602
+0,2,Wiki trend|Text,0.2501653989072018
+0,2,Metadata|Wiki volume|Wiki trend,0.3366486824614903
+0,2,Metadata|Wiki volume|Text,0.31209267219590087
+0,2,Metadata|Wiki trend|Text,0.3340117128921999
+0,2,Wiki volume|Wiki trend|Text,0.21894407664229762
+0,2,Metadata|Wiki volume|Wiki trend|Text,0.3169557785776292
+0,3,Metadata,0.25499114039781295
+0,3,Wiki volume,0.14312682518688644
+0,3,Wiki trend,0.12839682058042248
+0,3,Text,0.21403112743466002
+0,3,Metadata|Wiki volume,0.3066170031547933
+0,3,Metadata|Wiki trend,0.3100423742038365
+0,3,Metadata|Text,0.2689108518290872
+0,3,Wiki volume|Wiki trend,0.15423762665601062
+0,3,Wiki volume|Text,0.23815853790129465
+0,3,Wiki trend|Text,0.19389330530365073
+0,3,Metadata|Wiki volume|Wiki trend,0.3040273437966971
+0,3,Metadata|Wiki volume|Text,0.28953376806954856
+0,3,Metadata|Wiki trend|Text,0.28784021851955344
+0,3,Wiki volume|Wiki trend|Text,0.24217584084290739
+0,3,Metadata|Wiki volume|Wiki trend|Text,0.3096995450335132
+0,4,Metadata,0.23363100777070064
+0,4,Wiki volume,0.07862389955332721
+0,4,Wiki trend,0.06203076951135858
+0,4,Text,0.12823130226681237
+0,4,Metadata|Wiki volume,0.2400482064541833
+0,4,Metadata|Wiki trend,0.2224126702630413
+0,4,Metadata|Text,0.22963257433972975
+0,4,Wiki volume|Wiki trend,0.09756635194374932
+0,4,Wiki volume|Text,0.16713312408998302
+0,4,Wiki trend|Text,0.1408967362933297
+0,4,Metadata|Wiki volume|Wiki trend,0.24464445752360706
+0,4,Metadata|Wiki volume|Text,0.2386928686041451
+0,4,Metadata|Wiki trend|Text,0.23382271114018957
+0,4,Wiki volume|Wiki trend|Text,0.16642650618492588
+0,4,Metadata|Wiki volume|Wiki trend|Text,0.2374601977678154
+1,0,Metadata,0.21407599070214448
+1,0,Wiki volume,0.0897395237970749
+1,0,Wiki trend,0.1233062055888096
+1,0,Text,0.161051484196971
+1,0,Metadata|Wiki volume,0.2600436157458376
+1,0,Metadata|Wiki trend,0.27318098706834515
+1,0,Metadata|Text,0.23549494682316077
+1,0,Wiki volume|Wiki trend,0.09580470563723223
+1,0,Wiki volume|Text,0.2105086989069156
+1,0,Wiki trend|Text,0.2193016302216351
+1,0,Metadata|Wiki volume|Wiki trend,0.28051648942745894
+1,0,Metadata|Wiki volume|Text,0.26488536460981527
+1,0,Metadata|Wiki trend|Text,0.28212576880303947
+1,0,Wiki volume|Wiki trend|Text,0.20876708983569336
+1,0,Metadata|Wiki volume|Wiki trend|Text,0.28556481781630366
+1,1,Metadata,0.2188424368411073
+1,1,Wiki volume,0.04402263990552099
+1,1,Wiki trend,0.05478663522121607
+1,1,Text,0.20201594147805615
+1,1,Metadata|Wiki volume,0.23098916461465355
+1,1,Metadata|Wiki trend,0.23381963460736951
+1,1,Metadata|Text,0.25141530054788097
+1,1,Wiki volume|Wiki trend,0.08029238953939825
+1,1,Wiki volume|Text,0.2097909532515893
+1,1,Wiki trend|Text,0.19568045393834863
+1,1,Metadata|Wiki volume|Wiki trend,0.23601322518922346
+1,1,Metadata|Wiki volume|Text,0.24872060214848732
+1,1,Metadata|Wiki trend|Text,0.2424416232191706
+1,1,Wiki volume|Wiki trend|Text,0.21611393164214285
+1,1,Metadata|Wiki volume|Wiki trend|Text,0.23477637986899047
+1,2,Metadata,0.2227708891387606
+1,2,Wiki volume,0.12893899379744014
+1,2,Wiki trend,0.0540356088715367
+1,2,Text,0.16051442582094005
+1,2,Metadata|Wiki volume,0.2579863262363146
+1,2,Metadata|Wiki trend,0.27917595158719444
+1,2,Metadata|Text,0.24323829701142152
+1,2,Wiki volume|Wiki trend,0.08230479555146152
+1,2,Wiki volume|Text,0.2243314250515718
+1,2,Wiki trend|Text,0.21376697698326677
+1,2,Metadata|Wiki volume|Wiki trend,0.309628260037558
+1,2,Metadata|Wiki volume|Text,0.28342358728560346
+1,2,Metadata|Wiki trend|Text,0.288836800674484
+1,2,Wiki volume|Wiki trend|Text,0.20393685528795064
+1,2,Metadata|Wiki volume|Wiki trend|Text,0.29545124665480244
+1,3,Metadata,0.2635416292624256
+1,3,Wiki volume,0.14721478485493633
+1,3,Wiki trend,0.09154984711554007
+1,3,Text,0.21874323690883912
+1,3,Metadata|Wiki volume,0.2666519540622542
+1,3,Metadata|Wiki trend,0.297700261402351
+1,3,Metadata|Text,0.2563127327756907
+1,3,Wiki volume|Wiki trend,0.10364260876655101
+1,3,Wiki volume|Text,0.18488970237384703
+1,3,Wiki trend|Text,0.22809274116718056
+1,3,Metadata|Wiki volume|Wiki trend,0.27254614606139344
+1,3,Metadata|Wiki volume|Text,0.28851705811316997
+1,3,Metadata|Wiki trend|Text,0.29308308965986646
+1,3,Wiki volume|Wiki trend|Text,0.2421310761066722
+1,3,Metadata|Wiki volume|Wiki trend|Text,0.2760600758210251
+1,4,Metadata,0.21489309853830454
+1,4,Wiki volume,0.10817927602851678
+1,4,Wiki trend,0.10907424800170674
+1,4,Text,0.1932266356793724
+1,4,Metadata|Wiki volume,0.2516347257444898
+1,4,Metadata|Wiki trend,0.29241604799199666
+1,4,Metadata|Text,0.30746101995296277
+1,4,Wiki volume|Wiki trend,0.10450957482820951
+1,4,Wiki volume|Text,0.20626559677554565
+1,4,Wiki trend|Text,0.23432188085983366
+1,4,Metadata|Wiki volume|Wiki trend,0.3119203538722913
+1,4,Metadata|Wiki volume|Text,0.33275083689406654
+1,4,Metadata|Wiki trend|Text,0.3277245651674212
+1,4,Wiki volume|Wiki trend|Text,0.20475511343079342
+1,4,Metadata|Wiki volume|Wiki trend|Text,0.32624180381217394
+2,0,Metadata,0.18767459512923995
+2,0,Wiki volume,0.08452628691103484
+2,0,Wiki trend,0.1196443471017877
+2,0,Text,0.17649674665987805
+2,0,Metadata|Wiki volume,0.19291731967682543
+2,0,Metadata|Wiki trend,0.23537482347846964
+2,0,Metadata|Text,0.241945259000104
+2,0,Wiki volume|Wiki trend,0.16685041658790456
+2,0,Wiki volume|Text,0.17540169482458362
+2,0,Wiki trend|Text,0.19036281297648563
+2,0,Metadata|Wiki volume|Wiki trend,0.2568450435911849
+2,0,Metadata|Wiki volume|Text,0.23560001202516304
+2,0,Metadata|Wiki trend|Text,0.2788973597863097
+2,0,Wiki volume|Wiki trend|Text,0.2160609150582539
+2,0,Metadata|Wiki volume|Wiki trend|Text,0.2976828607790611
+2,1,Metadata,0.3086215883867873
+2,1,Wiki volume,0.11140344434332956
+2,1,Wiki trend,0.09402117649138117
+2,1,Text,0.20022350948561882
+2,1,Metadata|Wiki volume,0.31741950951655434
+2,1,Metadata|Wiki trend,0.3480779731015227
+2,1,Metadata|Text,0.3115922279538957
+2,1,Wiki volume|Wiki trend,0.12332001292394844
+2,1,Wiki volume|Text,0.23766606600103632
+2,1,Wiki trend|Text,0.28985101945589486
+2,1,Metadata|Wiki volume|Wiki trend,0.32760045681523475
+2,1,Metadata|Wiki volume|Text,0.3273781589727328
+2,1,Metadata|Wiki trend|Text,0.3594007780295589
+2,1,Wiki volume|Wiki trend|Text,0.2643797289528567
+2,1,Metadata|Wiki volume|Wiki trend|Text,0.34560029182553365
+2,2,Metadata,0.19995289022752907
+2,2,Wiki volume,0.11847836099348119
+2,2,Wiki trend,0.08259424523521275
+2,2,Text,0.183964900564369
+2,2,Metadata|Wiki volume,0.251057763585562
+2,2,Metadata|Wiki trend,0.24191229768622238
+2,2,Metadata|Text,0.24870503125036744
+2,2,Wiki volume|Wiki trend,0.10945140133360412
+2,2,Wiki volume|Text,0.22249320947905266
+2,2,Wiki trend|Text,0.21536999947023633
+2,2,Metadata|Wiki volume|Wiki trend,0.2817644089082734
+2,2,Metadata|Wiki volume|Text,0.2587739296086943
+2,2,Metadata|Wiki trend|Text,0.278014744119718
+2,2,Wiki volume|Wiki trend|Text,0.21487839394870803
+2,2,Metadata|Wiki volume|Wiki trend|Text,0.2785065519376391
+2,3,Metadata,0.17013590590083408
+2,3,Wiki volume,0.07018507217885793
+2,3,Wiki trend,0.07716405038705418
+2,3,Text,0.14149882683161993
+2,3,Metadata|Wiki volume,0.20765052534096512
+2,3,Metadata|Wiki trend,0.2524917842081697
+2,3,Metadata|Text,0.2003083388619461
+2,3,Wiki volume|Wiki trend,0.12989824871678152
+2,3,Wiki volume|Text,0.19122236376891394
+2,3,Wiki trend|Text,0.1645265469299315
+2,3,Metadata|Wiki volume|Wiki trend,0.2411448161160706
+2,3,Metadata|Wiki volume|Text,0.21020031134404632
+2,3,Metadata|Wiki trend|Text,0.2361381268884023
+2,3,Wiki volume|Wiki trend|Text,0.20349520657463466
+2,3,Metadata|Wiki volume|Wiki trend|Text,0.22556559306427082
+2,4,Metadata,0.23319885047161545
+2,4,Wiki volume,0.10475012747144956
+2,4,Wiki trend,0.12739318752717244
+2,4,Text,0.189148103333751
+2,4,Metadata|Wiki volume,0.31037905283680867
+2,4,Metadata|Wiki trend,0.30244922077466985
+2,4,Metadata|Text,0.292880288099677
+2,4,Wiki volume|Wiki trend,0.13754724472046218
+2,4,Wiki volume|Text,0.22280180840798774
+2,4,Wiki trend|Text,0.21650697926778736
+2,4,Metadata|Wiki volume|Wiki trend,0.31577930028278495
+2,4,Metadata|Wiki volume|Text,0.3023868582833419
+2,4,Metadata|Wiki trend|Text,0.286029494439685
+2,4,Wiki volume|Wiki trend|Text,0.24126726450077798
+2,4,Metadata|Wiki volume|Wiki trend|Text,0.30678330481184873

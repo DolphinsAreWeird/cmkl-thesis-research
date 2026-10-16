@@ -1,0 +1,151 @@
+{
+  "date": "2026-10-14",
+  "results_seen": false,
+  "results_seen_note": "Interest data and checkout placebo windows only. No Study 2R borrowing outcome around any event has been computed or read. The first run (floor 300) showed that no ratio reached a sustained noise share of 0.30 (best 0.52 at ratio 4.0); the grid over floors 300, 1000 and 3000 was then run, under the rule written below, before any shift was joined to borrowing.",
+  "changes": {
+    "events.selection_rule_verbatim": "Pre-declared rule: if any floor >= 1000 has a ratio with sustained noise share <= 0.30, choose the lowest such floor and the smallest qualifying ratio there; otherwise keep floor 300 and ratio 4.0, the addendum-a fallback (no ratio reached 0.30 at floor 300; 4.0 had the lowest share).",
+    "events.chosen": "floor 300 user views a week, rise ratio 4.0; sustained-shift noise share 0.521; rule branch: no floor >= 1000 reached 0.30: floor 300 and ratio 4.0 (addendum-a fallback)",
+    "events.grid_floor_x_ratio": {
+      "floor_300_ratio_1.5": {
+        "articles_kept": 4759,
+        "works_kept": 5048,
+        "real_sustained_shifts": 3853,
+        "noise_sustained_shifts": 7064,
+        "sustained_noise_share": 0.669
+      },
+      "floor_300_ratio_2.0": {
+        "articles_kept": 4759,
+        "works_kept": 5048,
+        "real_sustained_shifts": 1957,
+        "noise_sustained_shifts": 3183,
+        "sustained_noise_share": 0.594
+      },
+      "floor_300_ratio_2.5": {
+        "articles_kept": 4759,
+        "works_kept": 5048,
+        "real_sustained_shifts": 1371,
+        "noise_sustained_shifts": 2100,
+        "sustained_noise_share": 0.559
+      },
+      "floor_300_ratio_3.0": {
+        "articles_kept": 4759,
+        "works_kept": 5048,
+        "real_sustained_shifts": 1033,
+        "noise_sustained_shifts": 1514,
+        "sustained_noise_share": 0.535
+      },
+      "floor_300_ratio_4.0": {
+        "articles_kept": 4759,
+        "works_kept": 5048,
+        "real_sustained_shifts": 658,
+        "noise_sustained_shifts": 940,
+        "sustained_noise_share": 0.521
+      },
+      "floor_300_ratio_5.0": {
+        "articles_kept": 4759,
+        "works_kept": 5048,
+        "real_sustained_shifts": 470,
+        "noise_sustained_shifts": 677,
+        "sustained_noise_share": 0.526
+      },
+      "floor_1000_ratio_1.5": {
+        "articles_kept": 2716,
+        "works_kept": 2939,
+        "real_sustained_shifts": 1911,
+        "noise_sustained_shifts": 4752,
+        "sustained_noise_share": 0.845
+      },
+      "floor_1000_ratio_2.0": {
+        "articles_kept": 2716,
+        "works_kept": 2939,
+        "real_sustained_shifts": 966,
+        "noise_sustained_shifts": 2336,
+        "sustained_noise_share": 0.822
+      },
+      "floor_1000_ratio_2.5": {
+        "articles_kept": 2716,
+        "works_kept": 2939,
+        "real_sustained_shifts": 690,
+        "noise_sustained_shifts": 1655,
+        "sustained_noise_share": 0.815
+      },
+      "floor_1000_ratio_3.0": {
+        "articles_kept": 2716,
+        "works_kept": 2939,
+        "real_sustained_shifts": 526,
+        "noise_sustained_shifts": 1287,
+        "sustained_noise_share": 0.832
+      },
+      "floor_1000_ratio_4.0": {
+        "articles_kept": 2716,
+        "works_kept": 2939,
+        "real_sustained_shifts": 341,
+        "noise_sustained_shifts": 813,
+        "sustained_noise_share": 0.81
+      },
+      "floor_1000_ratio_5.0": {
+        "articles_kept": 2716,
+        "works_kept": 2939,
+        "real_sustained_shifts": 249,
+        "noise_sustained_shifts": 574,
+        "sustained_noise_share": 0.783
+      },
+      "floor_3000_ratio_1.5": {
+        "articles_kept": 1281,
+        "works_kept": 1420,
+        "real_sustained_shifts": 666,
+        "noise_sustained_shifts": 2781,
+        "sustained_noise_share": 1.32
+      },
+      "floor_3000_ratio_2.0": {
+        "articles_kept": 1281,
+        "works_kept": 1420,
+        "real_sustained_shifts": 365,
+        "noise_sustained_shifts": 1518,
+        "sustained_noise_share": 1.315
+      },
+      "floor_3000_ratio_2.5": {
+        "articles_kept": 1281,
+        "works_kept": 1420,
+        "real_sustained_shifts": 260,
+        "noise_sustained_shifts": 1094,
+        "sustained_noise_share": 1.33
+      },
+      "floor_3000_ratio_3.0": {
+        "articles_kept": 1281,
+        "works_kept": 1420,
+        "real_sustained_shifts": 204,
+        "noise_sustained_shifts": 823,
+        "sustained_noise_share": 1.275
+      },
+      "floor_3000_ratio_4.0": {
+        "articles_kept": 1281,
+        "works_kept": 1420,
+        "real_sustained_shifts": 130,
+        "noise_sustained_shifts": 511,
+        "sustained_noise_share": 1.242
+      },
+      "floor_3000_ratio_5.0": {
+        "articles_kept": 1281,
+        "works_kept": 1420,
+        "real_sustained_shifts": 96,
+        "noise_sustained_shifts": 345,
+        "sustained_noise_share": 1.136
+      }
+    },
+    "events.noise_benchmark": "block-resampled series from each article's own quiet weeks, 8-week blocks, 2 per article, seed 20261014, as in code/parameter_audit/calibrate_book_series.py; code/study2r/05_calibrate_ratio.py",
+    "events.book_set": "7747 Seattle works matched to 7510 English Wikipedia book articles; at the chosen floor 4759 articles (5048 works) reach the floor with a 26-week normal level; 33039 real series-years above the floor",
+    "inference.equivalence_feasibility": {
+      "basis": "3000 placebo windows (random month 0, no attention data) on works of the kept 2R list with at least 500 print and ebook checkouts (4050 works), method of code/parameter_audit/calibrate_2r_noise.py, seed 20261013",
+      "placebo_tau_sd": 0.8407,
+      "placebo_tau_robust_sd": 0.5748,
+      "placebo_tau_mean": -0.0097,
+      "works_needed_upper_bound_below_log_1_10_true_effect_0": 299,
+      "works_needed_robust_sd_true_effect_0": 140,
+      "works_needed_true_effect_3pct": 628,
+      "works_needed_true_effect_5pct": 1255,
+      "rule": "a duration class with fewer works than works_needed_upper_bound_below_log_1_10_true_effect_0 (the SD-based figure) is reported as inconclusive, with the largest lift ruled out, and gets no \"no meaningful effect\" verdict"
+    }
+  },
+  "reason": "Addendum a requires the rise ratio and the feasibility numbers to be fixed from interest data and checkout placebo windows before any 2R outcome is computed. At floor 300 no ratio reached the 0.30 noise target, so a pre-declared rule over higher floors was applied; these are the resulting values."
+}

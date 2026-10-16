@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-14",
+  "results_seen": true,
+  "results_seen_note": "Study 3b controls and all-shift results were known; the #MeToo diagnosis showed a new crime novel driving the pre-period",
+  "changes": {
+    "robustness.backlist": "a robustness run of the 3b controls and all shifts with demand restricted to backlist works: works whose first checkout in any Seattle format is at least 13 months before month 0. Everything else as in Study 3b. Reported beside the main 3b results, never instead of them."
+  },
+  "reason": "A single new release with incidental subject headings (The Late Show, July 2017) inflated the #MeToo comparison period. Backlist demand separates people seeking books on a topic from new hits that happen to carry its headings."
+}

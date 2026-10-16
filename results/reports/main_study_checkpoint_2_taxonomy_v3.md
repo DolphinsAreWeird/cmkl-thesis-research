@@ -1,6 +1,6 @@
 # Main study, checkpoint 2: taxonomy v3 (print subject headings as the main theme source)
 
-Khant Phyo Wai (student ID 01323050), CMKL University, honors thesis
+Khant Phyo Wai, CMKL University, honors thesis
 Prepared 13 October 2026, final version (full print file). Status: draft for Khant's review. Nothing here is a result. It describes the categories and the data that later steps use.
 
 **Data status.** All three SPL files are now read in full: print 25,791,712 rows, audiobook 4,697,512 rows and ebook 9,685,032 rows. Each one equals the SPL API row count in every month. The print download wrote `BOOK DONE` at 20:28, and the final run (`REFRESH_SNAPSHOT=1 ./run_all.sh v3`) started at 20:29. An earlier version of this report was built on a print snapshot that ended in September 2020; every number below replaces it.

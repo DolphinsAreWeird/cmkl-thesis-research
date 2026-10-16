@@ -14,12 +14,14 @@ git checkout -q main && git pull -q --ff-only
 
 EX=(--exclude __pycache__ --exclude '*.pyc' --exclude .env --exclude catboost_info --exclude .DS_Store
     --exclude data --exclude .venv --exclude '*.log' --exclude '*.pid' --exclude '*.parquet')
-rsync -a --delete "${EX[@]}" "$ROOT/code/" "$CLONE/code/"
+# Held back until submission because their text overlaps the thesis (similarity checkers index public pages): code/parameter_audit,
+# the parameter register and the fact-check reports.
+rsync -a --delete "${EX[@]}" --exclude parameter_audit "$ROOT/code/" "$CLONE/code/"
 rsync -a --delete "${EX[@]}" --exclude TASK_PROMPT.md "$ROOT/collectors/" "$CLONE/collectors/"
 rsync -a --delete "${EX[@]}" "$ROOT/jobs/" "$CLONE/jobs/"
 rsync -a --delete "${EX[@]}" "$ROOT/prereg/" "$CLONE/prereg/"
 mkdir -p "$CLONE/results/reports"
-rsync -a --delete --include '*.md' --include '*.csv' --exclude '*' "$ROOT/data/reports/" "$CLONE/results/reports/"
+rsync -a --delete --exclude 'thesis_factcheck*' --exclude 'litreview_factcheck*' --exclude 'parameter_register*' --include '*.md' --include '*.csv' --exclude '*' "$ROOT/data/reports/" "$CLONE/results/reports/"
 # public root files (README, PRIVACY, TERMS, .gitignore, collect/) live in repo_public/
 rsync -a --exclude requirements.txt "$ROOT/repo_public/" "$CLONE/"
 cp "$ROOT/requirements.txt" "$ROOT/requirements.lock" "$CLONE/"

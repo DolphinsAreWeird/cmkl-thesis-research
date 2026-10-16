@@ -1,6 +1,6 @@
 # Main study, checkpoint 1: SPL data profile and draft taxonomy v2
 
-Khant Phyo Wai (student ID 01323050), CMKL University, honors thesis
+Khant Phyo Wai, CMKL University, honors thesis
 Prepared 13 October 2026. Status: draft for Khant's review. Nothing here is a result; it is the data and the categories that later steps would use.
 
 ## Summary

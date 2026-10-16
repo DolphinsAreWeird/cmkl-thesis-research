@@ -1,0 +1,25 @@
+Agree:
+- The ordering of the stages holds. Metadata alone gives AUC of about 0.68 to 0.75, adding social and text raises AUC in all eight label-model cells, and every label keeps AUC well above chance and a top-10% hit rate of about 0.22 to 0.39 against a base rate of 0.104 (2 to 4 times).
+- Social and text help under every label. The gain in AUC is 0.009 to 0.038 (CatBoost) and 0.014 to 0.034 (ridge). It is largest for the settled labels L2 and L3, and smallest for L0 (0.009 CatBoost) and L4 (0.015 and 0.016). The old run gave 0.030 and 0.011.
+- No label turns the stage-S5 models into a poor ranker: S5 AUC is 0.714 to 0.778 for all labels.
+
+Differ:
+- Predictability falls when the launch decay is taken out. AUC under L2, L3 and L4 is 0.02 to 0.07 lower than under L0 (paired standard errors about 0.005 to 0.016). The months 2 to 7 label includes part of the launch, which features such as volume and trend can predict; the settled labels do not. So the headline AUC of about 0.77 in the earlier run is partly a launch effect, and about 0.73 to 0.74 is the better figure for "which books keep being listened to".
+- The history gain mostly disappears. Under L0 the history stage adds 0.016 AUC for both models (Spearman +0.016 ridge, +0.028 CatBoost, positive in 16 to 20 of 20 quarters). Under L2, L3 and L4 it adds -0.003 to +0.009 AUC; for ridge the Spearman gain is slightly negative (-0.007 to -0.010) and positive in only 9 of 20 quarters. The earlier ridge gain from history (AUC +0.015) is therefore not robust to the label: a part of what author, book and narrator history carried was the shared launch pattern.
+- For CatBoost the social-and-text gain in AUC is 0.009 under L0 and 0.038 under L2. The gap is 0.03 and its spread over quarters was not tested; read it as a direction, not a result.
+- Hit rate at the top 10% is lower under L2, L3 and L4 for CatBoost (0.22 to 0.30) than under L0 (0.29 to 0.36). Ridge shows the same pattern.
+- L0 here (mean of log(1+views)) is not the old label (log of summed views). The two give similar results (ridge S5 AUC 0.778 and 0.772; CatBoost S5 0.773 and 0.774), so that definition change does not move the conclusion.
+
+L3 against L4:
+- L4 does not beat L3 on any metric beyond noise (AUC difference between -0.011 and +0.004, standard errors 0.004 to 0.007). The two labels are correlated 0.990 and share 93% of their top 20%. In this data the extra machinery of L4 changes the ranking very little.
+- The reason is visible in the tiers: almost no recording is a low-view book. The lowest L4 quartile has a median of about 4,000 views in months 1 to 12, and under 1% of test titles have fewer than 100. The squashing of small counts that motivated L4 has little room to act here. The simulated test in `tests/` shows L4 recovering levels better than L0 when low-view titles decay differently (Spearman with the true level 0.949 against 0.891 among low-view titles), so the method works; it is the data that lack the case. This is a statement about this set of recordings and says nothing about smaller collections.
+- Decay differs between tiers: the shrunk slope rises from -0.19 in the lowest L4 quartile to +0.12 in the highest, so higher-level books fade more slowly than the common curve. This is the case the book-specific slope was built for.
+
+Launch strength (descriptive):
+- Launch strength sits close to zero (10th to 90th percentile about -0.25 to +0.35 log units) because the book-specific level and slope absorb most of the launch. It is weakly negatively related to L4 (Spearman -0.13): books in the lowest tier started slightly above their own fitted curve (median +0.04, 59% above zero), books in the top tier slightly below (median -0.04, 40% above zero).
+- By year, the median is about +0.04 in 2020 and 2021, +0.01 in 2022, and -0.04 to -0.05 in 2023 and 2024. Recent releases start a little weaker relative to their own level and decay. We did not test whether this reflects the listening platform, the release mix, or the common curve being fitted on older titles.
+
+Limits:
+- Standard errors are over 20 quarters of overlapping training sets and are rough; no formal test was run.
+- One data set, one platform. Views on the Internet Archive include automated and repeat access that we cannot separate.
+- The labels differ in what they measure, so their AUC values are not on a common scale; the comparison is about which signal the models can recover under each definition.

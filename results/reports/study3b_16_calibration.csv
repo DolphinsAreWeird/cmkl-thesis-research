@@ -1,0 +1,117 @@
+pool,band,lift,draws,detected,rate,ci_low,ci_high,set
+"record pool (all values, recomputed)",1,0.0,200,5,0.025,0.010724561470787711,0.05717914415161715,step 11 draws
+"record pool (all values, recomputed)",1,0.1,200,6,0.03,0.013820125830748327,0.06389511973247333,step 11 draws
+"record pool (all values, recomputed)",1,0.2,200,7,0.035,0.017055324637357105,0.07047146086668134,step 11 draws
+"record pool (all values, recomputed)",1,0.3,200,7,0.035,0.017055324637357105,0.07047146086668134,step 11 draws
+"record pool (all values, recomputed)",1,0.5,200,7,0.035,0.017055324637357105,0.07047146086668134,step 11 draws
+"record pool (all values, recomputed)",1,1.0,200,13,0.065,0.03837598764975976,0.10802003749917945,step 11 draws
+"record pool (all values, recomputed)",2,0.0,200,4,0.02,0.007804300176394188,0.050287865505193874,step 11 draws
+"record pool (all values, recomputed)",2,0.1,200,4,0.02,0.007804300176394188,0.050287865505193874,step 11 draws
+"record pool (all values, recomputed)",2,0.2,200,6,0.03,0.013820125830748327,0.06389511973247333,step 11 draws
+"record pool (all values, recomputed)",2,0.3,200,6,0.03,0.013820125830748327,0.06389511973247333,step 11 draws
+"record pool (all values, recomputed)",2,0.5,200,12,0.06,0.0346518499012715,0.10193263530685089,step 11 draws
+"record pool (all values, recomputed)",2,1.0,200,22,0.11,0.07377190160716048,0.16092798300912986,step 11 draws
+"record pool (all values, recomputed)",3,0.0,200,10,0.05,0.027382349028644986,0.08957905629784384,step 11 draws
+"record pool (all values, recomputed)",3,0.1,200,14,0.07,0.04215178292291873,0.11405578216683726,step 11 draws
+"record pool (all values, recomputed)",3,0.2,200,21,0.105,0.0697069624619373,0.15518138221353622,step 11 draws
+"record pool (all values, recomputed)",3,0.3,200,30,0.15,0.107135265876273,0.20605693826655166,step 11 draws
+"record pool (all values, recomputed)",3,0.5,200,39,0.195,0.14605441564505764,0.25544164796511815,step 11 draws
+"record pool (all values, recomputed)",3,1.0,200,71,0.355,0.29198518653239286,0.4234801551839203,step 11 draws
+"record pool (all values, recomputed)",4,0.0,200,19,0.095,0.06166261364986359,0.14360265114397636,step 11 draws
+"record pool (all values, recomputed)",4,0.1,200,29,0.145,0.1028928513530641,0.20048781284894374,step 11 draws
+"record pool (all values, recomputed)",4,0.2,200,44,0.22,0.16816453539463405,0.2823892279196257,step 11 draws
+"record pool (all values, recomputed)",4,0.3,200,55,0.275,0.21779604313809775,0.3406846595251467,step 11 draws
+"record pool (all values, recomputed)",4,0.5,200,82,0.41,0.34415559179081295,0.4792366892744849,step 11 draws
+"record pool (all values, recomputed)",4,1.0,200,114,0.57,0.500703604055383,0.636657955116052,step 11 draws
+screened pool,1,0.0,200,1,0.005,0.0008831459893662054,0.02777439986977148,step 11 draws
+screened pool,1,0.1,200,1,0.005,0.0008831459893662054,0.02777439986977148,step 11 draws
+screened pool,1,0.2,200,1,0.005,0.0008831459893662054,0.02777439986977148,step 11 draws
+screened pool,1,0.3,200,2,0.01,0.0027466006037749346,0.03572248519617954,step 11 draws
+screened pool,1,0.5,200,2,0.01,0.0027466006037749346,0.03572248519617954,step 11 draws
+screened pool,1,1.0,200,2,0.01,0.0027466006037749346,0.03572248519617954,step 11 draws
+screened pool,2,0.0,200,0,0.0,0.0,0.018846005918320894,step 11 draws
+screened pool,2,0.1,200,0,0.0,0.0,0.018846005918320894,step 11 draws
+screened pool,2,0.2,200,0,0.0,0.0,0.018846005918320894,step 11 draws
+screened pool,2,0.3,200,0,0.0,0.0,0.018846005918320894,step 11 draws
+screened pool,2,0.5,200,0,0.0,0.0,0.018846005918320894,step 11 draws
+screened pool,2,1.0,200,5,0.025,0.010724561470787711,0.05717914415161715,step 11 draws
+screened pool,3,0.0,200,1,0.005,0.0008831459893662054,0.02777439986977148,step 11 draws
+screened pool,3,0.1,200,1,0.005,0.0008831459893662054,0.02777439986977148,step 11 draws
+screened pool,3,0.2,200,2,0.01,0.0027466006037749346,0.03572248519617954,step 11 draws
+screened pool,3,0.3,200,4,0.02,0.007804300176394188,0.050287865505193874,step 11 draws
+screened pool,3,0.5,200,6,0.03,0.013820125830748327,0.06389511973247333,step 11 draws
+screened pool,3,1.0,200,18,0.09,0.05768697871453362,0.13776674613848952,step 11 draws
+screened pool,4,0.0,200,7,0.035,0.017055324637357105,0.07047146086668134,step 11 draws
+screened pool,4,0.1,200,15,0.075,0.045974507057252416,0.12004459797332034,step 11 draws
+screened pool,4,0.2,200,21,0.105,0.0697069624619373,0.15518138221353622,step 11 draws
+screened pool,4,0.3,200,23,0.115,0.07786317221824318,0.16664825233886393,step 11 draws
+screened pool,4,0.5,200,44,0.22,0.16816453539463405,0.2823892279196257,step 11 draws
+screened pool,4,1.0,200,81,0.405,0.3393765611244294,0.4742041800000517,step 11 draws
+"screened pool, units with an interest series",1,0.0,2,0,0.0,0.0,0.6576280471103807,step 11 draws
+"screened pool, units with an interest series",1,0.1,2,0,0.0,0.0,0.6576280471103807,step 11 draws
+"screened pool, units with an interest series",1,0.2,2,0,0.0,0.0,0.6576280471103807,step 11 draws
+"screened pool, units with an interest series",1,0.3,2,1,0.5,0.09452865480086614,0.9054713451991339,step 11 draws
+"screened pool, units with an interest series",1,0.5,2,1,0.5,0.09452865480086614,0.9054713451991339,step 11 draws
+"screened pool, units with an interest series",1,1.0,2,1,0.5,0.09452865480086614,0.9054713451991339,step 11 draws
+"screened pool, units with an interest series",2,0.0,1,0,0.0,0.0,0.7934567085261071,step 11 draws
+"screened pool, units with an interest series",2,0.1,1,0,0.0,0.0,0.7934567085261071,step 11 draws
+"screened pool, units with an interest series",2,0.2,1,0,0.0,0.0,0.7934567085261071,step 11 draws
+"screened pool, units with an interest series",2,0.3,1,0,0.0,0.0,0.7934567085261071,step 11 draws
+"screened pool, units with an interest series",2,0.5,1,0,0.0,0.0,0.7934567085261071,step 11 draws
+"screened pool, units with an interest series",2,1.0,1,0,0.0,0.0,0.7934567085261071,step 11 draws
+"screened pool, units with an interest series",3,0.0,2,0,0.0,0.0,0.6576280471103807,step 11 draws
+"screened pool, units with an interest series",3,0.1,2,0,0.0,0.0,0.6576280471103807,step 11 draws
+"screened pool, units with an interest series",3,0.2,2,0,0.0,0.0,0.6576280471103807,step 11 draws
+"screened pool, units with an interest series",3,0.3,2,0,0.0,0.0,0.6576280471103807,step 11 draws
+"screened pool, units with an interest series",3,0.5,2,1,0.5,0.09452865480086614,0.9054713451991339,step 11 draws
+"screened pool, units with an interest series",3,1.0,2,2,1.0,0.34237195288961925,1.0,step 11 draws
+"screened pool, units with an interest series",4,0.0,14,0,0.0,0.0,0.21531701192718142,step 11 draws
+"screened pool, units with an interest series",4,0.1,14,1,0.07142857142857142,0.012721886112291636,0.3146926955395781,step 11 draws
+"screened pool, units with an interest series",4,0.2,14,1,0.07142857142857142,0.012721886112291636,0.3146926955395781,step 11 draws
+"screened pool, units with an interest series",4,0.3,14,1,0.07142857142857142,0.012721886112291636,0.3146926955395781,step 11 draws
+"screened pool, units with an interest series",4,0.5,14,3,0.21428571428571427,0.0757124833691637,0.4758972377320828,step 11 draws
+"screened pool, units with an interest series",4,1.0,14,7,0.5,0.2679886791947528,0.7320113208052472,step 11 draws
+"record pool, units with an interest series",1,0.0,2,1,0.5,0.09452865480086614,0.9054713451991339,step 11 draws
+"record pool, units with an interest series",1,0.1,2,1,0.5,0.09452865480086614,0.9054713451991339,step 11 draws
+"record pool, units with an interest series",1,0.2,2,1,0.5,0.09452865480086614,0.9054713451991339,step 11 draws
+"record pool, units with an interest series",1,0.3,2,1,0.5,0.09452865480086614,0.9054713451991339,step 11 draws
+"record pool, units with an interest series",1,0.5,2,1,0.5,0.09452865480086614,0.9054713451991339,step 11 draws
+"record pool, units with an interest series",1,1.0,2,1,0.5,0.09452865480086614,0.9054713451991339,step 11 draws
+"record pool, units with an interest series",2,0.0,1,0,0.0,0.0,0.7934567085261071,step 11 draws
+"record pool, units with an interest series",2,0.1,1,0,0.0,0.0,0.7934567085261071,step 11 draws
+"record pool, units with an interest series",2,0.2,1,0,0.0,0.0,0.7934567085261071,step 11 draws
+"record pool, units with an interest series",2,0.3,1,0,0.0,0.0,0.7934567085261071,step 11 draws
+"record pool, units with an interest series",2,0.5,1,0,0.0,0.0,0.7934567085261071,step 11 draws
+"record pool, units with an interest series",2,1.0,1,0,0.0,0.0,0.7934567085261071,step 11 draws
+"record pool, units with an interest series",3,0.0,2,0,0.0,0.0,0.6576280471103807,step 11 draws
+"record pool, units with an interest series",3,0.1,2,1,0.5,0.09452865480086614,0.9054713451991339,step 11 draws
+"record pool, units with an interest series",3,0.2,2,2,1.0,0.34237195288961925,1.0,step 11 draws
+"record pool, units with an interest series",3,0.3,2,2,1.0,0.34237195288961925,1.0,step 11 draws
+"record pool, units with an interest series",3,0.5,2,2,1.0,0.34237195288961925,1.0,step 11 draws
+"record pool, units with an interest series",3,1.0,2,2,1.0,0.34237195288961925,1.0,step 11 draws
+"record pool, units with an interest series",4,0.0,14,0,0.0,0.0,0.21531701192718142,step 11 draws
+"record pool, units with an interest series",4,0.1,14,2,0.14285714285714285,0.040093073737921175,0.39941907763863693,step 11 draws
+"record pool, units with an interest series",4,0.2,14,2,0.14285714285714285,0.040093073737921175,0.39941907763863693,step 11 draws
+"record pool, units with an interest series",4,0.3,14,4,0.2857142857142857,0.11721187910109099,0.5464954117248438,step 11 draws
+"record pool, units with an interest series",4,0.5,14,8,0.5714285714285714,0.3259026690286936,0.7861949006959948,step 11 draws
+"record pool, units with an interest series",4,1.0,14,8,0.5714285714285714,0.3259026690286936,0.7861949006959948,step 11 draws
+record pool,1,0.0,2000,35,0.0175,0.0126096775369995,0.02424034094749549,"extended 2000 draws, lift 0"
+record pool,2,0.0,2000,70,0.035,0.027795451573697436,0.043987467794779606,"extended 2000 draws, lift 0"
+record pool,3,0.0,2000,100,0.05,0.04128108811097559,0.06044431772948606,"extended 2000 draws, lift 0"
+record pool,4,0.0,2000,211,0.1055,0.09278448405749254,0.11972812172931216,"extended 2000 draws, lift 0"
+screened pool,1,0.0,2000,7,0.0035,0.0016964100455623193,0.007207287731747025,"extended 2000 draws, lift 0"
+screened pool,2,0.0,2000,14,0.007,0.004174307221708975,0.011715970732396778,"extended 2000 draws, lift 0"
+screened pool,3,0.0,2000,21,0.0105,0.00687783461945913,0.01599902351144304,"extended 2000 draws, lift 0"
+screened pool,4,0.0,2000,72,0.036,0.02868448710149568,0.045094598031780314,"extended 2000 draws, lift 0"
+"record pool, units with a series",1,0.0,11,0,0.0,2.7755575615628914e-17,0.2588400172488141,"extended 2000 draws, lift 0"
+"record pool, units with a series",2,0.0,10,1,0.1,0.01787574951572113,0.4041563854975721,"extended 2000 draws, lift 0"
+"record pool, units with a series",3,0.0,20,4,0.2,0.0806563532712,0.41602172202575993,"extended 2000 draws, lift 0"
+"record pool, units with a series",4,0.0,165,37,0.22424242424242424,0.1672918740906337,0.29374142575964013,"extended 2000 draws, lift 0"
+"screened pool, units with a series",1,0.0,11,0,0.0,2.7755575615628914e-17,0.2588400172488141,"extended 2000 draws, lift 0"
+"screened pool, units with a series",2,0.0,10,0,0.0,-2.7755575615628914e-17,0.2775401687666166,"extended 2000 draws, lift 0"
+"screened pool, units with a series",3,0.0,20,0,0.0,-1.3877787807814457e-17,0.16113012549493322,"extended 2000 draws, lift 0"
+"screened pool, units with a series",4,0.0,165,10,0.06060606060606061,0.03324939331698606,0.10795751303784593,"extended 2000 draws, lift 0"
+"screened pool, units without a series",1,0.0,1989,7,0.003519356460532931,0.0017057974683360555,0.007247046550977873,"extended 2000 draws, lift 0"
+"screened pool, units without a series",2,0.0,1990,14,0.007035175879396985,0.004195306010639621,0.011774668735598997,"extended 2000 draws, lift 0"
+"screened pool, units without a series",3,0.0,1980,21,0.010606060606060607,0.006947409145439317,0.016160080888039163,"extended 2000 draws, lift 0"
+"screened pool, units without a series",4,0.0,1835,62,0.033787465940054495,0.02644577260114312,0.04307712703306137,"extended 2000 draws, lift 0"

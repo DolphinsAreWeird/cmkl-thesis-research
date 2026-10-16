@@ -1,0 +1,25 @@
+label,model,stage,spearman,auc_top20,hit_rate_top10,hit_base,n_quarters
+L0,CatBoost,S0 metadata,0.5151,0.7486,0.2889,0.1044,20
+L0,CatBoost,S4 +social+text,0.5274,0.7573,0.2982,0.1044,20
+L0,CatBoost,S5 +history,0.5556,0.7729,0.3575,0.1044,20
+L0,Ridge,S0 metadata,0.5335,0.7483,0.3167,0.1044,20
+L0,Ridge,S4 +social+text,0.5447,0.7619,0.3764,0.1044,20
+L0,Ridge,S5 +history,0.5612,0.7779,0.3881,0.1044,20
+L2,CatBoost,S0 metadata,0.4525,0.6873,0.2168,0.1044,20
+L2,CatBoost,S4 +social+text,0.4863,0.7254,0.3011,0.1044,20
+L2,CatBoost,S5 +history,0.5012,0.7275,0.2835,0.1044,20
+L2,Ridge,S0 metadata,0.4554,0.6764,0.233,0.1044,20
+L2,Ridge,S4 +social+text,0.4844,0.7108,0.298,0.1044,20
+L2,Ridge,S5 +history,0.477,0.7143,0.3086,0.1044,20
+L3,CatBoost,S0 metadata,0.4851,0.7125,0.2363,0.1044,20
+L3,CatBoost,S4 +social+text,0.5213,0.7399,0.2703,0.1044,20
+L3,CatBoost,S5 +history,0.5187,0.7364,0.2849,0.1044,20
+L3,Ridge,S0 metadata,0.5018,0.7151,0.2575,0.1044,20
+L3,Ridge,S4 +social+text,0.5187,0.7344,0.3147,0.1044,20
+L3,Ridge,S5 +history,0.5113,0.7384,0.312,0.1044,20
+L4,CatBoost,S0 metadata,0.4771,0.7144,0.2601,0.1044,20
+L4,CatBoost,S4 +social+text,0.497,0.729,0.2515,0.1044,20
+L4,CatBoost,S5 +history,0.5091,0.7379,0.2569,0.1044,20
+L4,Ridge,S0 metadata,0.4963,0.7194,0.254,0.1044,20
+L4,Ridge,S4 +social+text,0.5047,0.735,0.315,0.1044,20
+L4,Ridge,S5 +history,0.495,0.7361,0.3094,0.1044,20

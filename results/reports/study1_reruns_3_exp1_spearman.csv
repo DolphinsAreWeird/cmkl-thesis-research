@@ -1,0 +1,165 @@
+model,stage,spearman,label,run,folds
+CatBoost,S0 metadata,0.3016,y_view,old,15
+CatBoost,S1 +wiki volume,0.3224,y_view,old,15
+CatBoost,S2 +wiki trend,0.3311,y_view,old,15
+CatBoost,S3 +goodreads,0.3369,y_view,old,15
+CatBoost,S4 +text,0.3335,y_view,old,15
+Count model,S0 metadata,0.2307,y_view,old,15
+Count model,S1 +wiki volume,0.2552,y_view,old,15
+Count model,S2 +wiki trend,0.2301,y_view,old,15
+Count model,S3 +goodreads,0.2305,y_view,old,15
+Count model,S4 +text,0.2402,y_view,old,15
+LambdaMART,S0 metadata,0.1955,y_view,old,15
+LambdaMART,S1 +wiki volume,0.2109,y_view,old,15
+LambdaMART,S2 +wiki trend,0.2345,y_view,old,15
+LambdaMART,S3 +goodreads,0.2449,y_view,old,15
+LambdaMART,S4 +text,0.2718,y_view,old,15
+LightGBM,S0 metadata,0.2446,y_view,old,15
+LightGBM,S1 +wiki volume,0.2673,y_view,old,15
+LightGBM,S2 +wiki trend,0.278,y_view,old,15
+LightGBM,S3 +goodreads,0.2842,y_view,old,15
+LightGBM,S4 +text,0.3008,y_view,old,15
+Median floor,S0 metadata,0.2064,y_view,old,15
+Neural net,S0 metadata,0.2379,y_view,old,15
+Neural net,S1 +wiki volume,0.2618,y_view,old,15
+Neural net,S2 +wiki trend,0.2411,y_view,old,15
+Neural net,S3 +goodreads,0.2557,y_view,old,15
+Neural net,S4 +text,0.2219,y_view,old,15
+Random forest,S0 metadata,0.2271,y_view,old,15
+Random forest,S1 +wiki volume,0.2607,y_view,old,15
+Random forest,S2 +wiki trend,0.2678,y_view,old,15
+Random forest,S3 +goodreads,0.2733,y_view,old,15
+Random forest,S4 +text,0.2864,y_view,old,15
+Ridge,S0 metadata,0.259,y_view,old,15
+Ridge,S1 +wiki volume,0.2942,y_view,old,15
+Ridge,S2 +wiki trend,0.2868,y_view,old,15
+Ridge,S3 +goodreads,0.2903,y_view,old,15
+Ridge,S4 +text,0.2966,y_view,old,15
+k-NN,S0 metadata,0.2121,y_view,old,15
+k-NN,S1 +wiki volume,0.2551,y_view,old,15
+k-NN,S2 +wiki trend,0.2517,y_view,old,15
+k-NN,S3 +goodreads,0.2586,y_view,old,15
+k-NN,S4 +text,0.2692,y_view,old,15
+CatBoost,S0 metadata,0.272,y_view,new,15
+CatBoost,S1 +wiki volume,0.2961,y_view,new,15
+CatBoost,S2 +wiki trend,0.311,y_view,new,15
+CatBoost,S3 +goodreads,0.3132,y_view,new,15
+CatBoost,S4 +text,0.3176,y_view,new,15
+Count model,S0 metadata,0.2311,y_view,new,15
+Count model,S1 +wiki volume,0.2547,y_view,new,15
+Count model,S2 +wiki trend,0.2309,y_view,new,15
+Count model,S3 +goodreads,0.2312,y_view,new,15
+Count model,S4 +text,0.2411,y_view,new,15
+LambdaMART,S0 metadata,0.1793,y_view,new,15
+LambdaMART,S1 +wiki volume,0.2019,y_view,new,15
+LambdaMART,S2 +wiki trend,0.2335,y_view,new,15
+LambdaMART,S3 +goodreads,0.2354,y_view,new,15
+LambdaMART,S4 +text,0.2717,y_view,new,15
+LightGBM,S0 metadata,0.2255,y_view,new,15
+LightGBM,S1 +wiki volume,0.2595,y_view,new,15
+LightGBM,S2 +wiki trend,0.2791,y_view,new,15
+LightGBM,S3 +goodreads,0.2826,y_view,new,15
+LightGBM,S4 +text,0.2932,y_view,new,15
+Median floor,S0 metadata,0.2064,y_view,new,15
+Neural net,S0 metadata,0.242,y_view,new,15
+Neural net,S1 +wiki volume,0.2611,y_view,new,15
+Neural net,S2 +wiki trend,0.242,y_view,new,15
+Neural net,S3 +goodreads,0.2551,y_view,new,15
+Neural net,S4 +text,0.2182,y_view,new,15
+Random forest,S0 metadata,0.2256,y_view,new,15
+Random forest,S1 +wiki volume,0.2652,y_view,new,15
+Random forest,S2 +wiki trend,0.2748,y_view,new,15
+Random forest,S3 +goodreads,0.2843,y_view,new,15
+Random forest,S4 +text,0.2944,y_view,new,15
+Ridge,S0 metadata,0.2598,y_view,new,15
+Ridge,S1 +wiki volume,0.2938,y_view,new,15
+Ridge,S2 +wiki trend,0.287,y_view,new,15
+Ridge,S3 +goodreads,0.2906,y_view,new,15
+Ridge,S4 +text,0.2971,y_view,new,15
+k-NN,S0 metadata,0.2112,y_view,new,15
+k-NN,S1 +wiki volume,0.2538,y_view,new,15
+k-NN,S2 +wiki trend,0.254,y_view,new,15
+k-NN,S3 +goodreads,0.2632,y_view,new,15
+k-NN,S4 +text,0.2704,y_view,new,15
+CatBoost,S0 metadata,0.4198,y_fav,old,15
+CatBoost,S1 +wiki volume,0.4648,y_fav,old,15
+CatBoost,S2 +wiki trend,0.4699,y_fav,old,15
+CatBoost,S3 +goodreads,0.4823,y_fav,old,15
+CatBoost,S4 +text,0.5202,y_fav,old,15
+Count model,S0 metadata,0.2465,y_fav,old,15
+Count model,S1 +wiki volume,0.3338,y_fav,old,15
+Count model,S2 +wiki trend,0.3208,y_fav,old,15
+Count model,S3 +goodreads,0.3451,y_fav,old,15
+Count model,S4 +text,0.3992,y_fav,old,15
+LambdaMART,S0 metadata,0.2773,y_fav,old,15
+LambdaMART,S1 +wiki volume,0.3425,y_fav,old,15
+LambdaMART,S2 +wiki trend,0.3553,y_fav,old,15
+LambdaMART,S3 +goodreads,0.39,y_fav,old,15
+LambdaMART,S4 +text,0.4644,y_fav,old,15
+LightGBM,S0 metadata,0.3147,y_fav,old,15
+LightGBM,S1 +wiki volume,0.3839,y_fav,old,15
+LightGBM,S2 +wiki trend,0.3914,y_fav,old,15
+LightGBM,S3 +goodreads,0.4161,y_fav,old,15
+LightGBM,S4 +text,0.4861,y_fav,old,15
+Median floor,S0 metadata,0.2522,y_fav,old,15
+Neural net,S0 metadata,0.2941,y_fav,old,15
+Neural net,S1 +wiki volume,0.3596,y_fav,old,15
+Neural net,S2 +wiki trend,0.3191,y_fav,old,15
+Neural net,S3 +goodreads,0.3454,y_fav,old,15
+Neural net,S4 +text,0.3874,y_fav,old,15
+Random forest,S0 metadata,0.3202,y_fav,old,15
+Random forest,S1 +wiki volume,0.4034,y_fav,old,15
+Random forest,S2 +wiki trend,0.4023,y_fav,old,15
+Random forest,S3 +goodreads,0.4254,y_fav,old,15
+Random forest,S4 +text,0.4774,y_fav,old,15
+Ridge,S0 metadata,0.2727,y_fav,old,15
+Ridge,S1 +wiki volume,0.3585,y_fav,old,15
+Ridge,S2 +wiki trend,0.3617,y_fav,old,15
+Ridge,S3 +goodreads,0.3833,y_fav,old,15
+Ridge,S4 +text,0.4523,y_fav,old,15
+k-NN,S0 metadata,0.2999,y_fav,old,15
+k-NN,S1 +wiki volume,0.3639,y_fav,old,15
+k-NN,S2 +wiki trend,0.3533,y_fav,old,15
+k-NN,S3 +goodreads,0.3862,y_fav,old,15
+k-NN,S4 +text,0.4452,y_fav,old,15
+CatBoost,S0 metadata,0.3327,y_fav,new,15
+CatBoost,S1 +wiki volume,0.4084,y_fav,new,15
+CatBoost,S2 +wiki trend,0.4103,y_fav,new,15
+CatBoost,S3 +goodreads,0.4257,y_fav,new,15
+CatBoost,S4 +text,0.485,y_fav,new,15
+Count model,S0 metadata,0.2488,y_fav,new,15
+Count model,S1 +wiki volume,0.3348,y_fav,new,15
+Count model,S2 +wiki trend,0.3211,y_fav,new,15
+Count model,S3 +goodreads,0.3451,y_fav,new,15
+Count model,S4 +text,0.3992,y_fav,new,15
+LambdaMART,S0 metadata,0.2214,y_fav,new,15
+LambdaMART,S1 +wiki volume,0.3035,y_fav,new,15
+LambdaMART,S2 +wiki trend,0.3225,y_fav,new,15
+LambdaMART,S3 +goodreads,0.349,y_fav,new,15
+LambdaMART,S4 +text,0.448,y_fav,new,15
+LightGBM,S0 metadata,0.2636,y_fav,new,15
+LightGBM,S1 +wiki volume,0.3433,y_fav,new,15
+LightGBM,S2 +wiki trend,0.3601,y_fav,new,15
+LightGBM,S3 +goodreads,0.3831,y_fav,new,15
+LightGBM,S4 +text,0.4766,y_fav,new,15
+Median floor,S0 metadata,0.2522,y_fav,new,15
+Neural net,S0 metadata,0.2898,y_fav,new,15
+Neural net,S1 +wiki volume,0.3534,y_fav,new,15
+Neural net,S2 +wiki trend,0.315,y_fav,new,15
+Neural net,S3 +goodreads,0.3468,y_fav,new,15
+Neural net,S4 +text,0.3851,y_fav,new,15
+Random forest,S0 metadata,0.2854,y_fav,new,15
+Random forest,S1 +wiki volume,0.3627,y_fav,new,15
+Random forest,S2 +wiki trend,0.3582,y_fav,new,15
+Random forest,S3 +goodreads,0.3871,y_fav,new,15
+Random forest,S4 +text,0.4702,y_fav,new,15
+Ridge,S0 metadata,0.2732,y_fav,new,15
+Ridge,S1 +wiki volume,0.3591,y_fav,new,15
+Ridge,S2 +wiki trend,0.3621,y_fav,new,15
+Ridge,S3 +goodreads,0.3837,y_fav,new,15
+Ridge,S4 +text,0.4526,y_fav,new,15
+k-NN,S0 metadata,0.2939,y_fav,new,15
+k-NN,S1 +wiki volume,0.356,y_fav,new,15
+k-NN,S2 +wiki trend,0.3507,y_fav,new,15
+k-NN,S3 +goodreads,0.3844,y_fav,new,15
+k-NN,S4 +text,0.4427,y_fav,new,15

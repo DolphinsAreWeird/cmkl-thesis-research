@@ -1,0 +1,87 @@
+theme_id,label,search_terms
+B01.M01,"Monsters, vampires and superheroes",vampires; superheroes; monsters; heroes
+B01.M02,"Magic, witches and fantasy creatures",magic; witches; dragons; occult
+B01.M03,Myths and legends,mythology; arthurian romances; gods greek; atlantis legendary place
+B01.M04,Ghosts and dreams,ghosts; dreams; haunted houses; sleep
+B02.M01,LGBTQ lives and sexuality,lgbtq; gay men; sexuality; queer
+B02.M02,Feminism and gender,feminism; sex role; single women; gender identity
+B02.M03,"Marriage, dating and infidelity",marriage; man woman relationships; dating social customs; married people
+B02.M04,"Pregnancy, childbirth and abortion",pregnancy; pregnant women; childbirth; abortion
+B03.M01,Christianity and the Bible,christianity; christian life; theology; clergy
+B03.M02,"Islam, Buddhism, Hinduism and other religions",buddhism; islam; cults; shamanism
+B03.M03,Jewish life and history,jewish life; judaism; jewish women; antisemitism
+B03.M04,"Meditation, prayer and mysticism",mindfulness; spiritual life; blessing and cursing; mind and body
+B04.M01,Language and linguistics,language; vocabulary; reading phonetic method; english teachers
+B04.M02,"Computers, software and the internet",computers; internet; web sites design; computer graphics
+B04.M03,"Mathematics, physics and chemistry",mathematics; physics; physicists; chemistry
+B04.M04,Time and time travel,time travel; space and time; clocks and watches; time measurements
+B04.M05,Teaching and learning,teaching; teachers; literacy; teacher student relationships
+B04.M06,"Brain, mind and memory",neuroscience; imagination; memory; amnesia
+B04.M07,"Biology, evolution and the human body",biology; human body; evolution; genetic engineering
+B04.M08,Artificial intelligence and robots,artificial intelligence; robots; virtual reality; cyborgs
+B04.M09,"The future, utopias and the end of the world",end of the world; utopia; twenty first century forecasts; prophecy
+B04.M10,"Data, statistics and information",data science; curiosities and wonders; information technology; statistics
+B04.M11,Decision making and systems thinking,decision making; problem solving; options; planning
+B05.M01,African American and Black life,african american life; african american women; black life; african american families
+B05.M02,"Race, racism and diversity",multicultural; race relations; racism; ethnic relations
+B05.M03,"Indigenous peoples, culture and colonial history",anthropology; customs; native americans; frontier and pioneer life
+B05.M04,"Slavery, trafficking and immigration",slavery; immigration; mexican americans; hispanic americans
+B06.M01,"Visual arts, design and crafts",crafts and hobbies; artists; handicraft; painting
+B06.M02,Writing and storytelling,writing; authors; novelists; poets
+B06.M03,"Books, libraries and museums",books and reading; libraries; childrens literature; librarians
+B06.M04,"Film, television and stage",film; actors; theater; motion pictures
+B06.M05,Celebrity and popular culture,celebrity; popular culture; comedians; fame
+B06.M06,"Fashion, beauty and dance",fashion; beauty personal; clothing and dress; dance
+B06.M07,Music,rock music; rock musicians; popular music; jazz musicians
+B07.M01,"Childhood, parenting and adoption",childhood; family life; mothers and daughters; orphans
+B07.M02,"School, adolescence and coming of age",coming of age; schools; teenagers; teenage girls
+B07.M03,Siblings and family history,sisters; brothers; twins; grandmothers
+B08.M01,"World wars, modern wars and terrorism",world war ii; terrorism; world war i; vietnam war
+B08.M02,Civil wars and revolutions,civil war; french revolution; napoleonic wars; reconstruction
+B08.M03,"The Holocaust, Nazism and genocide",holocaust; german occupation; nazis; genocide
+B08.M04,Medieval history and monarchy,castles; princesses; monarchy; aristocracy
+B08.M05,"Military, naval and air warfare",naval warfare; soldiers; generals; boats and boating
+B08.M06,International relations and globalization,international relations; world politics; arab israeli conflict; globalization
+B09.M01,"Travel, exploration and mountains",geography; voyages and travels; quests expeditions; islands
+B09.M02,"Architecture, engineering and transport",architecture; transportation; automobiles; architects
+B09.M03,"Environment, wilderness and survival",survival; ecology; camps; trees
+B09.M04,Gardening and farming,gardening; farm life; country life; gardens
+B09.M05,The sea and seafaring,seafaring; pirates; marine animals; ocean
+B09.M06,"Archaeology, geology and natural history",archaeology; natural history; scientists; prehistoric peoples
+B09.M07,"Climate, weather and seasons",seasons; climatic changes; summer; winter
+B09.M08,Cities and communities,cities; city and town life; neighbors; villages
+B10.M01,Careers and work,careers and work; vocational guidance; occupations; career development
+B10.M02,Management and leadership,management; leadership; organizational change; nonprofit organizations
+B10.M03,"Money, investing and the economy",investing; personal finance; investments; rich people
+B10.M04,Entrepreneurship and productivity,entrepreneurship; success; new business enterprises; businesswomen
+B10.M05,Marketing and sales,marketing; consumer; advertising; shopping
+B11.M01,Holidays,christmas; halloween; holidays; birthdays
+B11.M02,Cooking and food,cooking; recipes; baking; desserts
+B11.M03,"Home, homesteading and simple living",home and interior design; diy; interior decoration; moving household
+B12.M01,"Abuse, sexual violence and revenge",abuse; violent crimes; revenge; violence in general
+B12.M02,Murder and kidnapping,murder; missing persons; kidnapping; serial murderers
+B12.M03,"Death, grief and the afterlife",grief; widows; suicide; widowers
+B12.M04,"Trauma, fear and self-harm",ptsd; fear; psychic trauma; self help techniques
+B13.M01,Government and political ideas,presidents; american revolution; statesmen; legislators
+B13.M02,"Socialism, communism and the Cold War",anarchism; communism; cold war; socialism
+B13.M03,"Human rights, civil rights and justice",social justice; civil rights; human rights; equality
+B13.M04,Media and communication,media; journalists; interpersonal communication; journalism
+B13.M05,"Social issues, poverty and social theory",critical theory; social classes; aristocracy social class; social change
+B14.M01,"Friendship, happiness and identity",friendship; identity; best friends; happiness
+B14.M02,"Ethics, mindset and motivation",ethics; good and evil; conduct of life; self actualization
+B14.M03,Philosophy and belief,metaphysics; philosophers; atheism; existentialism
+B15.M01,Mental health and therapy,mental health; mental illness; anxiety; stress
+B15.M02,"Diet, nutrition and eating disorders",nutrition; food habits; weight loss; reducing diets
+B15.M03,Drugs and addiction,drugs; drug traffic; drug abuse; alcoholism
+B15.M04,"Disease, epidemics and public health",cancer; physicians; nurses; epidemics and pandemics
+B15.M05,Disability,disability; people with disabilities; blind; deaf
+B16.M01,Pets and farm animals,pets; dogs; cats; human animal relationships
+B16.M02,Wild animals,birds; bears; mice; dinosaurs
+B16.M03,Horses,horses; ponies; horse racing; horsemanship
+B17.M01,Games and gambling,games; toys; minecraft game; amusement parks
+B17.M02,Sports,baseball; soccer; basketball; football players
+B17.M03,"Fitness, yoga and running",fitness; martial arts; exercise; yoga
+B18.M01,Aliens and space exploration,aliens; life on other planets; extraterrestrial beings; human alien encounters
+B18.M02,Astronomy and cosmology,astronomy; cosmology; stars; astronomers
+B19.M01,"Police, organized crime and prison",mafia; police; private investigators; women detectives
+B19.M02,"Spies, hackers and conspiracies",conspiracy; intelligence officers; spies; spy

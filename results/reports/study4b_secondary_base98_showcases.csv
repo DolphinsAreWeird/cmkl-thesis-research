@@ -1,0 +1,4 @@
+category,level,node_id,format,origin,target_month,note,actual_change,cutoff,surge,n_in_group,p catboost_clf|D,rank catboost_clf|D,p catboost_clf|D+W,rank catboost_clf|D+W,p catboost_clf|D+W+S,rank catboost_clf|D+W+S,p logistic|D,rank logistic|D,p logistic|D+W,rank logistic|D+W,p logistic|D+W+S,rank logistic|D+W+S
+Race and racism,narrow,B05.M02.N02,print,2020-04,2020-06,not forecast at this origin,,,,,,,,,,,,,,,,
+Race and racism,narrow,B05.M02.N02,ebook,2020-04,2020-06,,1.6326366056890729,0.18079147195010403,1.0,124.0,0.006367640671117191,78.0,0.009342472604595217,65.0,0.011775443457754949,62.0,0.018514485645668596,32.0,0.021223615147055775,28.0,0.02090773924025244,29.0
+Epidemics and plagues,narrow,B15.M04.N05,ebook,2020-01,2020-03,,0.18839133426019483,0.1684950170528585,1.0,122.0,0.01970927125893984,26.0,0.009796437911617453,75.0,0.011299389058153995,60.0,0.006209645439975611,72.0,0.00478140680314379,85.0,0.00525365487120744,84.0

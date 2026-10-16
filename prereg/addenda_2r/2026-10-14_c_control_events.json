@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-14",
+  "results_seen": false,
+  "results_seen_note": "No 2R borrowing outcome has been computed. Known: the calibration grid and shift tables (interest only), which show that at the calibrated rule (floor 300, ratio 4.0) only one of the seven positive controls (Shogun) has a detected shift within 8 weeks of its release.",
+  "changes": {
+    "positive_controls.event_definition": "For the seven positive controls only, month 0 is the month of the first shift at ratio 1.5 (the record's secondary sensitivity table, data/db/study2r/shifts_book_ratio1_5.parquet) within 8 weeks before or after the release date; if there is none, the month of the release date. The pass rule of the record is unchanged. The main analysis keeps the calibrated rule (floor 300, ratio 4.0) of addendum b.",
+    "reporting.ratio_1_5_sensitivity": "The full analysis is also reported on the ratio 1.5 shift table as the record's secondary sensitivity, beside the main results and never instead of them."
+  },
+  "reason": "Positive controls test whether the borrowing measurement recovers a lift after a known real attention event; the noise filter of the calibrated ratio, chosen to suppress ordinary variation across thousands of books, should not decide whether a known event counts. Fixed before any outcome was computed."
+}
