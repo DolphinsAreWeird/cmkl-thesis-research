@@ -1,0 +1,127 @@
+{
+ "what": "Frozen forecasts of the final-test pipelines (addendum c) at one origin, for target months that were not released when they were made.",
+ "origin": "2026-08",
+ "horizons": [
+  1,
+  2,
+  3
+ ],
+ "targets": [
+  "2026-09",
+  "2026-10",
+  "2026-11"
+ ],
+ "made_at": "2026-10-17T03:22:29+07:00",
+ "addendum": "2026-10-17_c_final_test_forecasts.json",
+ "addendum_sha256": "d893b6b386b3e7e1cd64f59455681b842457fff981c4fff82a8a30639a1e6729",
+ "csv": "forecasts_origin_2026-08.csv",
+ "csv_sha256": "6f58c13fb51a894784ca038826da322fa28b44791fbd96d649bfe43c16a880e6",
+ "rows": 2142,
+ "rows_by_horizon_format_level": {
+  "h1_audiobook_middle": 83,
+  "h1_audiobook_narrow": 151,
+  "h1_ebook_middle": 82,
+  "h1_ebook_narrow": 155,
+  "h1_print_middle": 84,
+  "h1_print_narrow": 159,
+  "h2_audiobook_middle": 83,
+  "h2_audiobook_narrow": 151,
+  "h2_ebook_middle": 82,
+  "h2_ebook_narrow": 155,
+  "h2_print_middle": 84,
+  "h2_print_narrow": 159,
+  "h3_audiobook_middle": 83,
+  "h3_audiobook_narrow": 151,
+  "h3_ebook_middle": 82,
+  "h3_ebook_narrow": 155,
+  "h3_print_middle": 84,
+  "h3_print_narrow": 159
+ },
+ "pipelines": [
+  "naive",
+  "chronos",
+  "chronos2",
+  "chronos2_cur",
+  "chronos2_curdw",
+  "chronos2_bk",
+  "catchg_D",
+  "catchg_DW",
+  "catchg_DWS"
+ ],
+ "missing_forecasts": {
+  "naive": 0,
+  "chronos": 0,
+  "chronos2": 0,
+  "chronos2_cur": 0,
+  "chronos2_curdw": 0,
+  "chronos2_bk": 0,
+  "catchg_D": 0,
+  "catchg_DW": 0,
+  "catchg_DWS": 0
+ },
+ "facts": {
+  "covariates_per_task": {
+   "chronos2": {
+    "0": 714
+   },
+   "chronos2_cur": {
+    "1": 714
+   },
+   "chronos2_curdw": {
+    "2": 714
+   },
+   "chronos2_bk": {
+    "2": 714
+   }
+  },
+  "n_train": {
+   "1": 111785,
+   "2": 110102,
+   "3": 109126
+  }
+ },
+ "last_demand_month": "2026-08",
+ "last_complete_interest_week": "2026-09-21",
+ "interest_weeks_used_up_to": "2026-08-24",
+ "input_sha256": {
+  "panel": "0a5544b672f41467c63ace4de4a4ff0c4d09c7125e6b7fbbcab2a8a324719036",
+  "nodes": "ea72572508f4d19931f437c241c2ca0e3b92798a8143c796f573ac85ed3ecad5",
+  "weekly_node": "5aa1a419b914c2f062aadaf1c6682a9800540fcc68212ded0f7d5b7cd611132b",
+  "shifts": "87e31a0088306258dfbd8c9f80b44f1cbc12dc0404325faad42d7a0412857218",
+  "shift_weekly": "bab87e8f980599b78d9d9628313a4160059ff41f72793fa0306339240dae057c",
+  "shift_effects": "d74e09488bd42e6b3d4bfc7d64da23695b49932fd23096446a5b4b9f042ef4e6",
+  "features_study4": "d7fd8ae2951ce31c31e06a7fb5f4adb137d88b270947bd7fc419b801efde51ae",
+  "features_study4b": "2838c879843103d282c20eaec51fa9ff98af059c84b1890ce0047629c8fa918f",
+  "monthly_cov": "59aa0f2754c34fb4f0ff14bb54f148eee18d92f21f2280dba6bc1fcacde28cbf"
+ },
+ "software": {
+  "pandas": "3.0.6",
+  "numpy": "2.5.4",
+  "scikit-learn": "1.9.1",
+  "lightgbm": "4.6.0",
+  "catboost": "1.2.10",
+  "arch": "8.0.0",
+  "torch": "2.14.1",
+  "chronos-forecasting": "2.0.1",
+  "transformers": "4.57.6",
+  "pyarrow": "26.0.0",
+  "scipy": "1.18.1",
+  "python": "3.12.11"
+ },
+ "settings": {
+  "study4_record_sha256": "040a7c7a7416d4a652b9fe5c52ef947447c1a5653db3839757819164f8917bd6",
+  "study4b_record_sha256": "a34ab8e2279d4f13409a8786848a1179bd28964d35766c647acbefd44eab9bb4",
+  "catboost": {
+   "iterations": 600,
+   "depth": 6,
+   "learning_rate": 0.05,
+   "loss": "RMSE",
+   "seed": 20261013
+  },
+  "chronos2_model": "amazon/chronos-2",
+  "chronos2_revision": "29ec3766d36d6f73f0696f85560a422f50e8498c",
+  "bolt_model": "amazon/chronos-bolt-small",
+  "seed": 20261013
+ },
+ "note": "Forecasts are log shares of a theme in a format (Study 4 target). The target months are scored once, as addendum d will fix; nothing about them was looked at."
+}
