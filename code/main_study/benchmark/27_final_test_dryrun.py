@@ -31,13 +31,13 @@ def mi_of(ym):
     return int(y) * 12 + int(m) - 1
 
 
-def raw_rows_since(before_mi):
+def raw_rows_since(before_mi, through_mi=None):
     """The stored rows from month index before_mi on, as raw API rows (strings), rebuilt from the stored records."""
     out = {}
     for fmt, f in X.FILE_OF.items():
         t = pq.read_table(X.V3 / f'spl_rows_{f}.parquet').to_pandas()
         mi = t.year.astype(np.int64) * 12 + t.month.astype(np.int64) - 1
-        t = t[mi >= before_mi].reset_index(drop=True)
+        t = t[(mi >= before_mi) & ((mi <= through_mi) if through_mi is not None else True)].reset_index(drop=True)
         ids = np.unique(t.record_id.to_numpy()).astype(np.int64).tolist()
         R = pq.read_table(X.V3 / 'spl_records.parquet', columns=['record_id', 'title', 'creator', 'creator_from_title', 'subjects', 'publisher', 'publicationyear', 'isbn'],
                           filters=[('record_id', 'in', ids)]).to_pandas().set_index('record_id')
@@ -53,7 +53,7 @@ def raw_rows_since(before_mi):
 def step_extend(a):
     before = mi_of(a.freeze)
     world = pathlib.Path(a.world)
-    new_raw = raw_rows_since(before)
+    new_raw = raw_rows_since(before, mi_of(a.through) if a.through else None)
     rep = X.extend(new_raw, world, before_mi=before, hash_cache=FT_DIR / 'record_keys.npz', log=say, restrict_vocab=a.unseen_vocab)
     link = world / 'taxonomy' / 'spl_api_counts.parquet'
     if link.is_symlink() or link.exists():
@@ -150,9 +150,10 @@ if __name__ == '__main__':
     ap.add_argument('--freeze', default='2026-06')
     ap.add_argument('--world', default=None)
     ap.add_argument('--step', default='all', choices=['extend', 'panel', 'compare', 'all'])
+    ap.add_argument('--through', default=None, help='last month brought in (with --step extend/panel only): a world with fewer new months, for rehearsing a later origin')
     ap.add_argument('--unseen-vocab', action='store_true', help='drop headings and terms that occur only on works first seen from the freeze month on')
     a = ap.parse_args()
-    a.world = a.world or str(FT_DIR / (f'dryrun_{a.freeze}' + ('_unseen_vocab' if a.unseen_vocab else '')))
+    a.world = a.world or str(FT_DIR / (f'dryrun_{a.freeze}' + (f'_through_{a.through}' if a.through else '') + ('_unseen_vocab' if a.unseen_vocab else '')))
     FT_DIR.mkdir(parents=True, exist_ok=True)
     if a.step in ('extend', 'all'):
         step_extend(a)

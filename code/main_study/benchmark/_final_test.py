@@ -91,13 +91,15 @@ def versions():
 
 
 # ---------------- feature table ----------------
-def build_table(BF, B, panel_months_upto=None):
+def build_table(BF, B, panel_months_upto=None, panel_path=None):
     """The Study 4b feature table for Seattle, horizons 1 to 3, built from the stored panel and interest series, INCLUDING rows whose target month is
     not observed (drop_missing_target=False). Returns (full table with S features, change and surge, inputs used)."""
     D = ST.DB
-    panel = pd.read_parquet(D / 'study3' / 'demand_panel.parquet')
+    panel_path = pathlib.Path(panel_path) if panel_path else D / 'study3' / 'demand_panel.parquet'
+    panel = pd.read_parquet(panel_path)
     nodes = pd.read_parquet(D / 'study3' / 'nodes.parquet')
-    meta = json.loads((D / 'study3' / 'demand_panel_meta.json').read_text())
+    meta_path = panel_path.parent / 'demand_panel_meta.json'
+    meta = json.loads(meta_path.read_text())
     if meta.get('development') or meta.get('settings_sha256') != ST.sha256_of(ST.PREREG / 'study3_settings_2026-10-13.json'):
         raise SystemExit('the demand panel is a development build or was built with another Study 3 record')
     wiki = pd.read_parquet(D / 'interest' / 'wiki' / 'weekly_node.parquet')
@@ -116,24 +118,27 @@ def build_table(BF, B, panel_months_upto=None):
         + FT.D_NUM + ['m12_last', 'm12_prev'] + FT.W_NUM + ['split_qok_shift8', 'last_week']
     F = BF.add_s_and_targets(full[keep], shifts, effects, B)
     F = F.sort_values(['h', 'origin_mi', 'format', 'node_id']).reset_index(drop=True)
-    inputs = dict(panel=D / 'study3' / 'demand_panel.parquet', nodes=D / 'study3' / 'nodes.parquet', weekly_node=D / 'interest' / 'wiki' / 'weekly_node.parquet',
+    inputs = dict(panel=panel_path, nodes=D / 'study3' / 'nodes.parquet', weekly_node=D / 'interest' / 'wiki' / 'weekly_node.parquet',
                   shifts=D / 'interest' / 'shifts.parquet', shift_weekly=D / 'interest' / 'shift_weekly.parquet', shift_effects=D / 'study3' / 'shift_effects.parquet',
                   features_study4=D / 'study4' / 'features.parquet', features_study4b=D / 'study4b' / 'features.parquet',
                   monthly_cov=C.OUT / 'monthly_cov.parquet')
     return F, inputs
 
 
-def check_against_stored(F, atol=1e-9):
-    """Rows of the rebuilt table that have an observed target must equal the stored Study 4b table (every feature, S feature and target)."""
+def check_against_stored(F, atol=1e-9, subset=False, before_mi=None):
+    """Rows of the rebuilt table that have an observed target must equal the stored Study 4b table (every feature, S feature and target).
+    subset=True (a table built from an extended panel, which has more rows with an observed target): every stored row must be in the rebuilt table and equal."""
     old = pd.read_parquet(ST.DB / 'study4b' / 'features.parquet')
     keys = ['group', 'format', 'level', 'node_id', 'origin_mi', 'h']
     new = F[F.target_ok]
-    if len(new) != len(old):
+    if before_mi is not None:                      # dry-run world: only rows whose target month is before the freeze month are expected to be identical
+        old, new = old[old.target_mi < before_mi], new[new.target_mi < before_mi]
+    if not subset and len(new) != len(old):
         raise SystemExit(f'rebuilt table has {len(new):,} rows with a target, the stored 4b table has {len(old):,}')
     cols = [c for c in old.columns if c not in keys and old[c].dtype.kind in 'fiub']
     m = old[keys + cols].merge(new[keys + cols], on=keys, suffixes=('_a', '_b'), validate='one_to_one')
     if len(m) != len(old):
-        raise SystemExit('rebuilt and stored tables have different keys')
+        raise SystemExit('rebuilt and stored tables have different keys' if not subset else f'{len(old) - len(m):,} stored rows are missing from the rebuilt table')
     worst = {}
     for c in cols:
         a, b = m[c + '_a'].to_numpy(float), m[c + '_b'].to_numpy(float)
@@ -155,19 +160,15 @@ def history(tables):
 
 
 def study4_seattle_table(F, t_new=None):
-    """The rows of the Study 4 table (horizons 1 and 2) on which the stage-1 Chronos-Bolt context was built: the stored Study 4 rows, plus, for a new origin
-    t_new whose target months are not observed, the rebuilt rows at h = 1, 2 of that origin only (rows of older origins whose target is missing stay out,
-    as in the benchmark: a month enters a context only where a row of the table exists)."""
-    old = pd.read_parquet(ST.DB / 'study4' / 'features.parquet', columns=C.SER + ['origin_mi', 'h', 'ls_t'])
-    old = old[old.group == 'seattle']
-    if t_new is None:
-        return old
-    new = F[(F.h.isin((1, 2))) & (F.origin_mi == t_new)][C.SER + ['origin_mi', 'h', 'ls_t']]
-    return pd.concat([old, new], ignore_index=True)
+    """The rows on which the stage-1 Chronos-Bolt context was built (the Study 4 table: horizons 1 and 2, rows whose target month is observed), taken from the
+    rebuilt table, which equals the stored Study 4 table on those rows (checked at the start of every run), plus the rows of the new origin t_new, whose target
+    months are not observed. A month enters a context only where such a row exists, as in the benchmark."""
+    keep = F.target_ok if t_new is None else (F.target_ok | (F.origin_mi == t_new))
+    return F[F.h.isin((1, 2)) & keep][C.SER + ['origin_mi', 'h', 'ls_t']]
 
 
 def table_for_history(F, t_new=None):
-    """Rows of the rebuilt table that make up the union history (the stored Study 4b rows, which have an observed target, plus the rows of the new origin)."""
+    """Rows of the rebuilt table that make up the union history (the Study 4b rows, which have an observed target, plus the rows of the new origin)."""
     return F[F.target_ok | (F.origin_mi == t_new)] if t_new is not None else F[F.target_ok]
 
 

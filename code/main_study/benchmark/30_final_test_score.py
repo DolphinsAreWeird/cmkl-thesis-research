@@ -42,14 +42,14 @@ def mi_of(ym):
     return int(y) * 12 + int(m) - 1
 
 
-def guard(allow_early=False):
+def guard():
     cand = sorted((PREREG / 'addenda_benchmark').glob('*_d_final_test_*.json'))
     if not cand:
         raise SystemExit('addendum d does not exist')
     f = cand[-1]
     if readme_hash(f.name) != sha256_file(f):
         raise SystemExit(f'{f.name} is not fingerprinted in prereg/README.md or was changed')
-    if datetime.date.today().isoformat() < SCORING_DATE and not allow_early:
+    if datetime.date.today().isoformat() < SCORING_DATE:
         raise SystemExit(f'scoring is not allowed before {SCORING_DATE} (addendum d)')
     return f.name, sha256_file(f)
 
@@ -88,6 +88,7 @@ def a2_reference():
     pipes52 = [p for p in a2.index if p in w.columns]
     w = w[(w.group == 'seattle') & (w.h == 1) & w.format.isin(SC.PRINT_EBOOK)].copy()
     w = w.dropna(subset=pipes52)
+    w = w[w.groupby(['format', 'level', 'node_id']).origin_mi.transform('size') >= 12]      # the record's rule: series with at least 12 months common to all 52 pipelines
     w['naive'] = w.y_t
     w['y_true'] = w['y_true']
     ref = {}
@@ -176,7 +177,6 @@ def main():
     ap.add_argument('--panel', default=str(DB / 'final_test' / 'world' / 'db' / 'demand_panel.parquet'))
     ap.add_argument('--rehearsal', default=None, help='origin of STORED forecasts to score against a dry-run world (a test of this script on known months)')
     ap.add_argument('--world', default=None)
-    ap.add_argument('--allow-early', action='store_true')
     a = ap.parse_args()
     ref = a2_reference()
     if a.rehearsal:
@@ -194,10 +194,14 @@ def main():
                   'months that are known; it is not a result of the final test.']
         report(attach_targets(F, panel), 'rehearsal', [a.rehearsal], ref, ROOT / 'data' / 'reports' / 'benchmark_final_test_rehearsal.md', DB / 'final_test' / 'rehearsal_scores.csv', header)
         return
-    name, sha = guard(a.allow_early)
+    name, sha = guard()
     origins = a.origins.split(',')
     F = load_frozen(origins)
     panel = pd.read_parquet(a.panel)
+    n1 = attach_targets(F, panel)
+    n1 = n1[(n1.h == 1) & (n1.series_group == 'print and ebook') & n1.y_true.notna()]
+    if len(n1) < MIN_ROWS_PRIMARY:
+        raise SystemExit(f'only {len(n1)} horizon-1 print and ebook rows have an observed target (addendum d needs {MIN_ROWS_PRIMARY}): not scored yet; wait for the next release')
     header = ['# Final unseen test: results', '', f'Scored {time.strftime("%Y-%m-%d %H:%M")} by code/main_study/benchmark/30_final_test_score.py. Protocol: prereg/addenda_benchmark/2026-10-17_c_final_test_forecasts.json (forecasts, '
               f'SHA-256 d893b6b386b3e7e1cd64f59455681b842457fff981c4fff82a8a30639a1e6729) and {name} (scoring, SHA-256 {sha}). Frozen forecast files: '
               + '; '.join(f'forecasts_origin_{o}.csv {sha256_file(FT / f"forecasts_origin_{o}.csv")}' for o in origins) + '.']
