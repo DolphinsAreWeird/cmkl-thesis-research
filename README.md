@@ -26,6 +26,12 @@ The thresholds, windows, controls, models and metrics for Studies 3 and 4 were f
 - `study3_settings_2026-10-13.json` and `forecast_settings_2026-10-13.json` are the records. Their SHA-256 fingerprints are in `prereg/README.md`, and the analysis code refuses to run if a record changes.
 - `DEVIATIONS.md` lists every later clarification or change, with its date, its reason and whether any outcome data had been seen. The machine-readable versions are in `prereg/addenda/` and `prereg/addenda_forecast/`.
 
+## Method benchmark and final test (15 to 17 October 2026)
+
+The thesis compares 52 forecasting pipelines for monthly demand by book category (Seattle Public Library borrowing) and asks which ways of organizing online behavior into categories built from books, and which models, predict demand best, how accurately, and when. The settings were fixed before any score: `prereg/benchmark_settings_2026-10-15.json` and the addenda in `prereg/addenda_benchmark/`, with their fingerprints in `prereg/README.md`. The code is in `code/main_study/benchmark/` (its README lists the scripts) and the result reports are `results/reports/benchmark_*.md`.
+
+A final test uses library months released after the settings were fixed. The forecasts of seven pipelines, of the simple forecast that repeats last month and of one reference pipeline, for September to November 2026, made from data to August 2026, are in `prereg/final_test/` with their SHA-256 in `prereg/README.md`. The commit time of the merge that added them is the date of their publication, before the library had released those months. `prereg/addenda_benchmark/2026-10-17_c_final_test_forecasts.json` fixes what was forecast and how, and `2026-10-17_d_final_test_scoring.json` fixes how the new months are built and scored, the metrics and the timing, before any of those months is downloaded. They are scored once, not before 5 December 2026; the scoring code refuses to run earlier.
+
 ## Repository layout
 
 | Folder | Contents |
@@ -33,7 +39,7 @@ The thresholds, windows, controls, models and metrics for Studies 3 and 4 were f
 | `code/` | Collection and analysis scripts. `code/main_study/` holds the category build, the interest timelines, Study 3 (`study3/`) and Study 4 (`study4/`), each with its own README and simulation tests |
 | `collectors/` | Scheduled collectors: New York Times best-seller lists, a daily Bluesky sample (post time, language and text only; account identifiers, handles, links and mentions are removed on arrival, and the text is never published), and weekly GDELT updates |
 | `jobs/` | Helpers that run long jobs in the background and the macOS launchd schedules |
-| `prereg/` | Fixed settings and the deviations log |
+| `prereg/` | Fixed settings, the final-test forecasts (made before their months were released) and the deviations log |
 | `results/reports/` | Markdown and CSV reports written by the analysis code |
 | `collect/` | The YouTube collector described below |
 
