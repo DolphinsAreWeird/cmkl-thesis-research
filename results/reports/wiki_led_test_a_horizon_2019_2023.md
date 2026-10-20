@@ -1,0 +1,1 @@
+# Source: exploratory check on Test A predictions (data/db/wiki_led/test_a_preds.parquet), test years 2019-2023 only, 20 Oct 2026 16:58 +07; mean within-month Spearman; models trained for t+1 (Wlgbm_D, Hlgbm_D, Hnaive_D) scored against later months.
