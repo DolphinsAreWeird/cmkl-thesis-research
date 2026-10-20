@@ -102,8 +102,8 @@ class Http:
                 if host in self.adaptive and self.recover:
                     with self.cnt_lock:
                         self.ok_run[host] += 1
-                        if self.ok_run[host] >= 200 and self.rates[host] > self.base[host]:
-                            self.rates[host] = max(self.base[host], self.rates[host] * 0.93)
+                        if self.ok_run[host] >= 60 and self.rates[host] > self.base[host]:
+                            self.rates[host] = max(self.base[host], self.rates[host] * 0.9)
                             self.ok_run[host] = 0
                 if r.status_code == 200 and check is not None:
                     wait = check(r.text)

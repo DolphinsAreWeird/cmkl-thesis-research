@@ -20,7 +20,8 @@ GAP = float(sys.argv[sys.argv.index('--gap') + 1]) if '--gap' in sys.argv else 0
 THREADS = int(sys.argv[sys.argv.index('--threads') + 1]) if '--threads' in sys.argv else 6
 # After the first 429/503 the rate drops to 50 per second (gap 0.02 s) for the rest of the run; a later, separate 429/503 episode halves it again.
 # The server's Retry-After pause is always honoured by all threads.
-H = Http({'rest': GAP}, adaptive=('rest',), throttle_gap=0.02, recover=False)
+RECOVER = '--recover' in sys.argv     # with --recover: a 429 makes the gap 1.3 times longer and 200 successes in a row shorten it again (never below GAP)
+H = Http({'rest': GAP}, adaptive=('rest',), throttle_gap=None if RECOVER else 0.02, recover=RECOVER)
 URL = 'https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/{t}/monthly/2015070100/2026093000'
 TEST = int(sys.argv[sys.argv.index('--test') + 1]) if '--test' in sys.argv else 0
 SUF = '_test' if TEST else ''
@@ -60,7 +61,7 @@ def main():
     df.to_parquet(OUT / f'author_monthly_views{SUF}.parquet', index=False)
     summ = dict(titles=len(titles), titles_with_views=int(df.enwiki_title.nunique()), titles_404=len(n404), titles_400=len(n400),
                 titles_400_examples=n400[:10], rows=int(len(df)), ym_min=int(df.ym.min()), ym_max=int(df.ym.max()),
-                network_requests=H.n_net, cache_hits=H.n_cache, backoffs=H.n_backoff, final_gap_s=round(H.rates['rest'], 3), throttle_episodes=H.episodes['rest'], threads=THREADS, start_gap_s=GAP, response_codes={str(k): v for k, v in H.codes.items()}, runtime_s=round(time.time() - T0))
+                network_requests=H.n_net, cache_hits=H.n_cache, backoffs=H.n_backoff, final_gap_s=round(H.rates['rest'], 3), throttle_episodes=H.episodes['rest'], threads=THREADS, start_gap_s=GAP, recover=RECOVER, response_codes={str(k): v for k, v in H.codes.items()}, runtime_s=round(time.time() - T0))
     (OUT / f'author_views_summary{SUF}.json').write_text(json.dumps(summ, indent=1))
     log(json.dumps(summ, indent=1))
 

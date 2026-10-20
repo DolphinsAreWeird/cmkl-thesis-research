@@ -1,0 +1,5 @@
+target,description,wikipedia_only_change_rank,library_history_change_rank,naive_change_rank
+D,next month (t+1) vs M6,0.138,0.352,0.242
+D2,month t+2 vs M6,0.132,0.336,0.219
+D3,month t+3 vs M6,0.124,0.324,0.196
+D123,mean of months t+1 to t+3 vs M6,0.156,0.426,0.264

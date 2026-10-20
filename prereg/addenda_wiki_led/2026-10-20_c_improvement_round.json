@@ -1,0 +1,26 @@
+{
+  "addendum": "Wikipedia-led tests, addendum c: improvement round v1 for existing books (Test A) and the alert list",
+  "parent_record": "prereg/wiki_led_settings_2026-10-20.json",
+  "fixed_on": "2026-10-20 17:09 +07",
+  "fixed_by": "Claude, for Khant Phyo Wai, who asked (20 Oct) to improve accuracy in a way that is useful and small enough to deploy, without overfitting",
+  "split": "Tuning only on test years 2019 to 2023 (walk-forward by year, training on target months before 1 January of each year, as in Test A). The chosen configuration is then run once on test years 2024 to 2026 and reported beside Test A's values for the same years. Disclosure: Test A's 2024-2026 results and the August 2026 alert list were seen before this addendum, so 2024-2026 is not blind to the existence of these results, only to the new configurations; the live October 2026 list and later library months are the blind checks.",
+  "uses_and_measures": {
+    "alert": "Primary: share of each month's top 20 that rose (ln(1+L(t+1)) - ln(1+M6) >= ln 1.5), averaged over months.",
+    "ranking": "Secondary: change rank (Spearman of predicted and actual D within month, averaged).",
+    "surge": "Secondary: surge average precision over the base rate."
+  },
+  "candidates_wikipedia_only": {
+    "W0": "Test A's W_lgbm (baseline).",
+    "W1": "W0 plus the extra features of code/main_study/wiki_led/40_extra_features.py for book and author (yoy4, peakr, spike4, age, d1) and the difference b_lvl4 - a_lvl4.",
+    "W2": "W1 trained with LightGBM's lambdarank objective, one query group per origin month, relevance 2 for a surge, 1 for a rise without surge, 0 otherwise (to rank for the alert list).",
+    "W3": "W1 with a small grid on the 2019-2023 walk-forward only: num_leaves {15, 63}, min_child_samples {200}, n_estimators {600} with learning_rate 0.03 (4 settings including W1's)."
+  },
+  "candidates_with_library": {
+    "HW0": "Test A's HW_lgbm (baseline).",
+    "HW1": "HW0 plus the W1 extra features.",
+    "HW2": "HW1 with the lambdarank objective as in W2."
+  },
+  "later_candidates": "Methods from the research note paper/lit_search/Improvement_Methods_2026-10-20.md (for example attention on adaptation pages) are added in a further addendum before any of their results are computed.",
+  "selection_rule": "Within each family (Wikipedia only; with library), the configuration with the highest 2019-2023 alert share is chosen; ties within 0.5 points go to the simpler one (fewer features, default objective). Only the chosen one per family is run on 2024-2026.",
+  "seen_before_fixing": "All Test A, Test C, placebo, accuracy-panel and alert-list results; the author-cap check (rejected); the univariate 2019-2023 correlations of the Test A features with D; the 2- and 3-month horizon check on 2019-2023; descriptive statistics of the extra features (no relation to loans)."
+}

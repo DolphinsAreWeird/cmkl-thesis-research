@@ -1,0 +1,25 @@
+{
+  "addendum": "Wikipedia-led tests, addendum d: improvement round v2 (changes 1, 2, 4, 5 of the research note), Test B v1 (change 3), Test D (all books, by format) and Test E (LibriVox, another platform)",
+  "parent_record": "prereg/wiki_led_settings_2026-10-20.json; follows addendum c (improvement round v1, which kept the original models)",
+  "fixed_on": "2026-10-20 17:20 +07",
+  "fixed_by": "Claude, for Khant Phyo Wai, who asked (20 Oct) for accuracy above 90% that holds on all books and on other data and platforms, without overfitting",
+  "spec_reference": "paper/lit_search/Improvement_Methods_2026-10-20.md, Section 3 (changes 1 to 5 and their shared rules), SHA-256 9eaf8ef29ba95cca2c85fd3ad0dd12d2619161d61cc49d739baf4d0cba858655. Its variants, metrics and decisions are adopted as written, with the adjustments below. Its proposed file name 2026-10-21_c is replaced by this addendum d.",
+  "adjustments_to_the_note": [
+    "Change 2: the same_name and other_r4 features need about 7,400 title lookups plus Wikimedia REST views of the pages found; the REST gateway tolerates about 3 requests a second from this machine and is busy with Test B. The third variant (with same_name) is run only if its data are complete before 2026-10-22 09:00 +07; otherwise it is reported as not run. Daily views for pk28, dpk, pre7, dec, hi28, rec and corr28 come from data/db/study2r/pv_daily (stored, to 2026-09-30); top500 from data/raw/wiki_top_daily.json.",
+    "Change 5: adaptation data come from data/db/wiki_led/adaptations.parquet (P144 items; P4969 is added in the same query only if cheap) and the adaptation article views fetched by code/main_study/wiki_led/50_adaptation_views.py after the Test B download ends; the author's death (P570) and dated awards (P166 with P585) come from Wikidata SPARQL. If the adaptation views are not complete before 2026-10-22 12:00 +07, the variant with adaptation views is reported as not run.",
+    "Change 3 (new books) runs only after Test B (record of 15:08, section test_B_new_books) has been scored as fixed; the v1 variants are scored after that, never before.",
+    "Shared rule kept: tune on 2019 to 2023, one pre-declared run on 2024 to 2026 for v0 and the chosen variant on the same rows, paired 3-month-block intervals (2,000 draws, seed 20261020), placebo of the chosen Wikipedia-only variant, May to June 2025 reported separately (Wikimedia bot traffic)."
+  ],
+  "test_D_all_books": {
+    "rows": "data/db/wiki_led/test_d_rows.parquet built by code/main_study/wiki_led/60_test_d_rows.py: a fixed 25% sample of all Seattle works (md5 of work_id, first hex digit 0 to 3) plus all 7,747 Test A works, one series per work and format (print, ebook, audiobook), eligible at origin t when loans over t-11..t sum to at least 24, Test A's definitions of L, M6, D, Sg, Y, history features and excluded months; Wikipedia features where the work has a Test A book page or shares a creator with a Test A author page, missing otherwise.",
+    "models": "Test A's H_lgbm, HW_lgbm and W_lgbm settings and walk-forward by year, fitted on all formats pooled with format as a feature, plus the naive change ranking; no tuning on Test D.",
+    "measures": "As Test A (change rank, surge AP ratio, accuracy in loans) and the alert hit rates: share of each month's top 20 and top 50 that rose (D >= ln 1.5) and that surged, for each format separately (lists drawn within the format) and overall; also the early-warning version on rows not yet risen.",
+    "question_90": "For the 90% question: is the HW_lgbm top-20 hit rate at least 0.90 in each format, over 2019 to 2026 and over 2024 to 2026? Reported yes or no with exact binomial intervals over all list slots; nothing is tuned to reach it."
+  },
+  "test_E_librivox": {
+    "rows": "data/db/wiki_led/test_e_rows.parquet: LibriVox books with monthly listens (Internet Archive views), Test A definitions with listens in place of loans, eligibility of at least 24 listens over t-11..t; Wikipedia features where links and stored views exist (no new downloads for Test E).",
+    "models": "E1: H, HW, W retrained on LibriVox rows with Test A settings, walk-forward by year. E2: the Seattle-trained Test A models (trained on rows with target month before 1 January of each test year) applied unchanged to LibriVox rows, as a transfer test.",
+    "measures": "As Test D, and the same 90% question for HW (E1 and E2)."
+  },
+  "seen_before_fixing": "All Test A, C, placebo, accuracy, alert-list, August-check and improvement-round-v1 results; the research note; counts of adaptations (1,615 books, 4,247 adaptations, 3,178 with an English article); counts of library works active since 2023 (465,432; 176,472 with at least 100 loans) and LibriVox listening rows (910,484). No Test D, Test E, Test B or v2 result."
+}
