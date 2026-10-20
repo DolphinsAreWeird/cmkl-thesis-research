@@ -21,7 +21,7 @@ rsync -a --delete "${EX[@]}" --exclude TASK_PROMPT.md "$ROOT/collectors/" "$CLON
 rsync -a --delete "${EX[@]}" "$ROOT/jobs/" "$CLONE/jobs/"
 rsync -a --delete "${EX[@]}" "$ROOT/prereg/" "$CLONE/prereg/"
 mkdir -p "$CLONE/results/reports"
-rsync -a --delete --exclude 'thesis_factcheck*' --exclude 'litreview_factcheck*' --exclude 'parameter_register*' --include '*.md' --include '*.csv' --exclude '*' "$ROOT/data/reports/" "$CLONE/results/reports/"
+rsync -a --delete --exclude 'thesis_factcheck*' --exclude 'litreview_factcheck*' --exclude 'wiki_led_examiner_review*' --exclude 'handoff_*' --exclude 'parameter_register*' --include '*.md' --include '*.csv' --exclude '*' "$ROOT/data/reports/" "$CLONE/results/reports/"
 # public root files (README, PRIVACY, TERMS, .gitignore, collect/) live in repo_public/
 rsync -a --exclude requirements.txt "$ROOT/repo_public/" "$CLONE/"
 cp "$ROOT/requirements.txt" "$ROOT/requirements.lock" "$CLONE/"

@@ -12,6 +12,10 @@
 # 95% intervals from 2,000 draws (seed 20261020): blocks of 3 consecutive months for Test A, author clusters for Test B, exact binomial for Test D list slots.
 # 'Rose' means ln(1 + L(t+1)) - ln(1 + M6) >= ln(1 + threshold), compared exactly (not in single-precision floating point) and with equality counted.
 # Lists: the k books with the highest predicted change in each month (Test D: in each format and month); ties are broken by a fixed random order (seed 20261020).
+# Review of 20 Oct 2026 (about 21:20 +07; prereg/DEVIATIONS.md, Wikipedia-led tests): part b adds L+0 and Lq to R5 (catalogue features from the records first
+# lent in the work's first month, see catalogue_month0) because the features as fixed use records of all years; part d reads each variant's own rows file
+# (test_d_rows_c.parquet for the corrected predictions) and adds the base rate averaged over lists; part a adds the month-by-month top-20 places.
+# ROB_TAG=_test writes the part files under another name (code tests only).
 import sys, os, json, time, pathlib, hashlib, resource
 import numpy as np, pandas as pd
 from scipy.stats import rankdata, beta
@@ -67,8 +71,11 @@ def clean(o):
     return o
 
 
+TAG = os.environ.get('ROB_TAG', '')               # code tests only: ROB_TAG=_test writes robustness_part_NAME_test.json instead
+
+
 def save_part(name, obj):
-    f = OUT / f'robustness_part_{name}.json'
+    f = OUT / f'robustness_part_{name}{TAG}.json'
     f.write_text(json.dumps(clean(obj), indent=1))
     log('wrote', f.name)
 
@@ -185,20 +192,37 @@ FMT_CODE = {'print': 0, 'ebook': 1, 'audiobook': 2}
 FMT_NAME = {v: k for k, v in FMT_CODE.items()}
 
 
-def part_d():
-    rows = pd.read_parquet(OUT / 'test_d_rows.parquet', columns=['work_id', 'format', 'mi', 'L_next', 'M6'])
+def d_rows(fn):
+    rows = pd.read_parquet(OUT / fn, columns=['work_id', 'format', 'mi', 'L_next', 'M6'])
     rows['fmt'] = rows.format.astype(str).map(FMT_CODE).astype('int8')
-    rows = rows.drop(columns='format')
+    return rows.drop(columns='format')
+
+
+def part_d():
     res = {}
-    for label, fn in (('original', 'test_d_preds.parquet'), ('corrected', 'test_d_preds_c.parquet')):
+    # each variant reads L_next and M6 from its own rows file (review, 20 Oct 2026: the corrected predictions come from test_d_rows_c.parquet)
+    for label, fn, rows_fn in (('original', 'test_d_preds.parquet', 'test_d_rows.parquet'), ('corrected', 'test_d_preds_c.parquet', 'test_d_rows_c.parquet')):
         f = OUT / fn
         if not f.exists():
             log('Test D', label, 'predictions not found:', fn)
             res[label] = None
             continue
+        rows = d_rows(rows_fn)
+        rows_check = None
+        if label == 'corrected':                     # the correction changes only Wikipedia features: loans must equal the original rows
+            r0 = d_rows('test_d_rows.parquet')
+            m = rows.merge(r0, on=['work_id', 'fmt', 'mi'], how='outer', suffixes=('', '_orig'), indicator=True)
+            both = m['_merge'] == 'both'
+            rows_check = dict(rows=int(len(rows)), rows_original=int(len(r0)), only_here=int((m['_merge'] == 'left_only').sum()),
+                              only_original=int((m['_merge'] == 'right_only').sum()),
+                              max_abs_diff_L_next=float((m.L_next[both] - m.L_next_orig[both]).abs().max()),
+                              max_abs_diff_M6=float((m.M6[both] - m.M6_orig[both]).abs().max()))
+            log('Test D corrected rows against the original rows:', rows_check)
+            del r0, m
         P = pd.read_parquet(f, columns=['work_id', 'format', 'mi', 'year', 'D', 'Sg', 'rose', 'W', 'H', 'HW', 'naive'])
         P['fmt'] = P.format.astype(str).map(FMT_CODE).astype('int8')
         P = P.drop(columns='format').merge(rows, on=['work_id', 'fmt', 'mi'], how='left', validate='one_to_one')
+        del rows
         assert P.L_next.notna().all() and P.M6.notna().all()
         models = ['W', 'H', 'HW', 'naive']
         pan = Panel(P, ['fmt', 'mi'], models)
@@ -211,7 +235,7 @@ def part_d():
         H = {m: pan.hits(m) for m in models}
         log('Test D', label, 'lists done')
         out = {'rows': int(len(pan.df)), 'groups': int(len(pan.starts)), 'rows_exact50_differs_from_stored_rose': n_diff,
-               'scopes': {}}
+               'files': dict(preds=fn, rows=rows_fn), 'rows_check_against_original': rows_check, 'scopes': {}}
         for scope in ['all', 'print', 'ebook', 'audiobook']:
             for period in ['2019-2026', '2024-2026']:
                 gm = np.ones(len(pan.starts), bool)
@@ -221,6 +245,8 @@ def part_d():
                     gm &= pan.gyear >= 2024
                 rm = np.repeat(gm, pan.sizes)
                 base = {FLAGS[i]: float(pan.flags[rm, i].mean()) for i in range(4)}
+                # added in review: the base rate averaged over the format-month lists (each list counts once, as in the hit rates)
+                base_gm = {FLAGS[i]: float(pan.base_g[gm, i].mean()) for i in range(4)}
                 ng = int(gm.sum())
                 lists = {}
                 for m in models:
@@ -233,7 +259,7 @@ def part_d():
                             lo, hi = cp(hits, slots)
                             cell[fl] = dict(rate=hits / slots, lo=lo, hi=hi, hits=hits, slots=slots)
                         lists[m][f'top{k}'] = cell
-                out['scopes'][f'{scope}|{period}'] = dict(rows=int(rm.sum()), list_groups=ng, base=base, lists=lists)
+                out['scopes'][f'{scope}|{period}'] = dict(rows=int(rm.sum()), list_groups=ng, base=base, base_group_mean=base_gm, lists=lists)
         res[label] = out
         del pan, H
     save_part('d', res)
@@ -368,6 +394,10 @@ def part_a(variant):
                 cell[fl] = d
             lists[m][f'top{k}'] = cell
     res['lists'] = dict(base_pooled=base_rows, base_monthly_mean=base_month, models=lists)
+    # added in review: places in each month's top 20 taken by a book that rose by 50% (to show the month-to-month spread behind R3)
+    j20 = KS.index(20)
+    res['per_month_top20_rose50'] = dict(origin_month=[f'{m // 12}-{m % 12 + 1:02d}' for m in months], test_year=[int(y) for y in pan.gyear],
+                                         **{m: hit[m][:, j20, 1].tolist() for m in ('Wlgbm_D', 'Hlgbm_D', 'HWlgbm_D')})
     log('R1 and R7 lists done')
     # ---- R3 (years), R4 (bot months)
     years = sorted(set(pan.gyear.tolist()))
@@ -404,7 +434,7 @@ def part_a_seeds():
     SETS = {'Wlgbm_D': WCOLS, 'Hlgbm_D': HCOLS, 'HWlgbm_D': HCOLS + WCOLS}
     scored = R[R.mi >= SCORE0].reset_index(drop=True)          # the file's own row order is kept (LightGBM's row sampling depends on it)
     assert len(scored) == len(stored), 'scored rows differ from the stored corrected predictions'
-    part_f = OUT / 'robustness_part_a_seeds.json'
+    part_f = OUT / f'robustness_part_a_seeds{TAG}.json'
     res = json.loads(part_f.read_text()) if part_f.exists() else {'seeds': {}}
     for seed in SEEDS:
         if str(seed) in res['seeds']:
@@ -451,6 +481,136 @@ def ym_add(ym, k):
     return (i // 12) * 100 + i % 12 + 1
 
 
+def fix_cp850(s):
+    """Copied unchanged from code/main_study/11_v3_work_table.py (the print headings were written in code page 850 and read as Latin-1)."""
+    if s.isascii():
+        return s
+    out = []
+    for ch in s:
+        if ch.isascii():
+            out.append(ch); continue
+        try:
+            b = ch.encode('cp1252')
+        except UnicodeEncodeError:
+            b = bytes([ord(ch)]) if ord(ch) < 256 else None
+        out.append(b.decode('cp850') if b is not None and len(b) == 1 else ch)
+    return ''.join(out)
+
+
+def catalogue_month0(R):
+    """R5, added in the review of 20 Oct 2026. The three catalogue features of addendum e come from records of all years: spl_works.parquet
+    takes pub_year_min and creator_from_title_only over every record of the work, and work_theme.parquet weighs the subjects of every record by
+    its loans over all months. A record enters the Seattle data only when it is first lent, so a record first lent after the work's first month
+    was not visibly held when the work arrived, and its arrival can follow loans inside the six-month outcome window. Here the same three
+    features are computed only from the records first lent in the work's first month (month 0): the level-1 (B-level) theme node with the highest
+    strength, built as in 11_v3_work_table.py and 16_v3_assign.py from the OverDrive terms of digital records and the subject headings of print
+    records, each record counting once (no loans used) and without Goodreads shelves; the smallest publication year of those records; and
+    whether every one of those records lacks a creator. The replication is checked first: from all records with loans over all months as
+    weights it must give work_theme.parquet's top node for works without Goodreads evidence."""
+    TX = D / 'db' / 'taxonomy_v3'
+    W0 = R[['work_id', 'first_ym']].drop_duplicates('work_id')
+    RW = pd.read_parquet(TX / 'spl_record_work.parquet')
+    RW = RW[RW.work_id.isin(W0.work_id)]
+    recs = np.unique(RW.record_id.to_numpy())
+    first, cko = [], []
+    for f in ('book', 'ebook', 'audiobook'):
+        x = pd.read_parquet(TX / f'spl_rows_{f}.parquet', columns=['record_id', 'year', 'month', 'checkouts'])
+        x = x[np.isin(x.record_id.to_numpy(), recs)]
+        ym = x.year.astype(np.int32) * 100 + x.month.astype(np.int32)
+        first.append(ym.groupby(x.record_id).min())
+        cko.append(x.checkouts.groupby(x.record_id).sum())
+        del x, ym
+    rfirst = pd.concat(first).groupby(level=0).min()
+    rcko = pd.concat(cko).groupby(level=0).sum()
+    SR = pd.read_parquet(TX / 'spl_records.parquet', columns=['record_id', 'format', 'creator_from_title', 'subjects', 'pub_year'])
+    SR = SR[np.isin(SR.record_id.to_numpy(), recs)].copy()
+    SR['format'] = SR.format.astype(str)
+    SR = SR.merge(RW, on='record_id', how='left', validate='one_to_one').merge(W0, on='work_id', how='left', validate='many_to_one')
+    SR['rec_first'] = SR.record_id.map(rfirst)
+    SR['cko'] = SR.record_id.map(rcko).astype(float)
+    SR['one'] = 1.0
+    lag = ((SR.rec_first // 100) * 12 + SR.rec_first % 100) - ((SR.first_ym // 100) * 12 + SR.first_ym % 100)
+    assert SR.rec_first.notna().all() and (lag.groupby(SR.work_id).min() == 0).all(), 'each work must have a record first lent in its first month'
+    SR['m0'] = lag == 0
+    SR['after5'] = lag > 5
+    # theme evidence maps, as in 16_v3_assign.py
+    P2 = pd.read_parquet(D / 'db' / 'taxonomy_v2' / 'phrases.parquet', columns=['source', 'raw', 'components_json'])
+    spl_th = {r: th for r, c in zip(P2.raw[P2.source == 'spl'], P2.components_json[P2.source == 'spl'])
+              if (th := [v for f, v in json.loads(c) if f == 'theme'])}
+    HP = pd.read_parquet(TX / 'headings_parsed.parquet', columns=['heading_id', 'components_json'])
+    hth = {h: th for h, cj in zip(HP.heading_id, HP.components_json)
+           if (th := [(v, 1.0 if f == 'core_theme' else 0.5) for f, v in json.loads(cj) if f in ('core_theme', 'theme')])}
+    HH = pd.read_parquet(TX / 'headings.parquet', columns=['heading', 'heading_id'])
+    hid_of = dict(zip(HH.heading, HH.heading_id))
+    VN = pd.read_parquet(TX / 'theme_value_node.parquet', columns=['theme', 'node_id'])
+    v2node = dict(zip(VN.theme, VN.node_id))
+    del P2, HP, HH, VN
+
+    def top_theme(X, wcol):
+        X = X[X.subjects.fillna('').str.strip() != '']
+        ev = []
+        d = X[X.format != 'BOOK'][['work_id', 'subjects', wcol]]
+        d = d.assign(term=d.subjects.str.split(', ')).explode('term')
+        d['term'] = d.term.str.strip()
+        d = d[d.term != ''].groupby(['work_id', 'term'], as_index=False)[wcol].sum()
+        for wid, t, wt in zip(d.work_id, d.term, d[wcol]):
+            for v in spl_th.get(t, ()):
+                ev.append((wid, 'spl', v, wt / len(spl_th[t])))
+        p = X[X.format == 'BOOK'][['work_id', 'subjects', wcol]]
+        p = p.assign(h=p.subjects.str.split(', ')).explode('h')
+        p['h'] = p.h.str.strip()
+        p = p[p.h != '']
+        p['hid'] = p.h.map(lambda s: hid_of.get(fix_cp850(s)))
+        p = p[p.hid.notna()].groupby(['work_id', 'hid'], as_index=False)[wcol].sum()
+        for wid, hid, wt in zip(p.work_id, p.hid, p[wcol]):
+            for v, k in hth.get(int(hid), ()):
+                ev.append((wid, 'lcsh', v, wt * k))
+        E = pd.DataFrame(ev, columns=['work_id', 'source', 'theme', 'weight']).groupby(['work_id', 'source', 'theme'], as_index=False).weight.sum()
+        E['node'] = E.theme.map(v2node)
+        E = E[E.node.notna()].copy()
+        E['share'] = E.weight / E.groupby(['work_id', 'source']).weight.transform('sum')
+        E['b'] = E.node.str.split('.').str[0]
+        nsrc = E.groupby('work_id').source.nunique()
+        T = E.groupby(['work_id', 'b'], as_index=False).share.sum()
+        T['strength'] = T.share / T.work_id.map(nsrc)
+        T = T.sort_values(['work_id', 'strength', 'b'], ascending=[True, False, True], kind='mergesort').drop_duplicates('work_id')
+        return T.set_index('work_id').b
+
+    works = pd.Index(W0.work_id)
+    WT = pd.read_parquet(TX / 'work_theme.parquet', columns=['work_id', 'node_id', 'level', 'rank_in_level', 'sources'])
+    WT = WT[(WT.level == 1) & (WT.rank_in_level == 1) & WT.work_id.isin(works)].drop_duplicates('work_id').set_index('work_id')
+    orig, src = WT.node_id.reindex(works), WT.sources.reindex(works).fillna('')
+    rep = top_theme(SR, 'cko').reindex(works)
+    nogr = ~src.str.contains('gr')
+    rep_same = float((orig.fillna('-') == rep.fillna('-'))[nogr].mean())
+    log('replication of work_theme.parquet (all records, loans as weights, works without Goodreads evidence): same top node', round(rep_same, 5))
+    assert rep_same > 0.99, 'the theme replication does not match work_theme.parquet'
+    M0 = SR[SR.m0]
+    th0 = top_theme(M0, 'one').reindex(works)
+    g = M0.groupby('work_id')
+    py0 = M0.pub_year.where(M0.pub_year > 0).groupby(M0.work_id).min().reindex(works)
+    C = pd.DataFrame({'theme_m0': th0.to_numpy(), 'pub_year_m0': py0.to_numpy(),
+                      'cft_m0': g.creator_from_title.min().reindex(works).astype(float).to_numpy()}, index=works)
+    pyall = SR.pub_year.where(SR.pub_year > 0).groupby(SR.work_id).min().reindex(works)
+    cftall = SR.groupby('work_id').creator_from_title.min().reindex(works).astype(float)
+    nrec = SR.groupby('work_id').size().reindex(works)
+    info = dict(
+        works=int(len(works)), records=int(len(SR)),
+        works_with_records_first_lent_after_month0=float((nrec > g.size().reindex(works)).mean()),
+        works_with_records_first_lent_after_month5=float(SR.groupby('work_id').after5.any().reindex(works).mean()),
+        theme_replication_same_top_node_no_goodreads=rep_same, theme_replication_works_compared=int(nogr.sum()),
+        theme_present_as_fixed=float(orig.notna().mean()), theme_present_month0=float(th0.notna().mean()),
+        theme_same_node=float((orig.fillna('-') == th0.fillna('-')).mean()),
+        theme_only_from_later_records=int((orig.notna() & th0.isna()).sum()),
+        theme_only_month0=int((orig.isna() & th0.notna()).sum()),
+        theme_different_node=int((orig.notna() & th0.notna() & (orig != th0)).sum()),
+        pub_year_differs=int(((pyall != py0) & py0.notna()).sum()), pub_year_missing_month0=int(py0.isna().sum()),
+        creator_flag_differs=int((cftall != C.cft_m0).sum()))
+    log('month-0 catalogue features', info)
+    del SR, M0, RW, rfirst, rcko
+    return C, info
+
+
 def part_b():
     # --- rows with the corrections of 30_test_b.py, copied unchanged (time-safe matched and writer_type, left-out shifted books, merged clusters)
     R = pd.read_parquet(OUT / 'test_b_rows.parquet')
@@ -492,19 +652,43 @@ def part_b():
     R = R.merge(SW, on='work_id', how='left', validate='many_to_one')
     R['age0'] = R.first_ym // 100 - R.pub_year_min
     R['cft_only'] = R.creator_from_title_only.astype(float)
+    # added in review: the same three features from the records first lent in the work's first month (see catalogue_month0)
+    C0, m0_info = catalogue_month0(R)
+    R = R.join(C0, on='work_id')
+    R['theme_m0'] = pd.Categorical(R.theme_m0, categories=nodes)
+    R['age0_m0'] = R.first_ym // 100 - R.pub_year_m0
+    fp = R.fmt_print == 1
+    y6 = np.expm1(R.Y6)
+
+    def loans_by(col):
+        return {str(k): dict(works=int(len(v)), mean_loans6=float(v.mean()), median_loans6=float(v.median())) for k, v in y6.groupby(R[col].astype(str))}
+
+    def loans_by_mask(y, mask):
+        return {k: dict(works=int(m.sum()), mean_loans6=float(y[m].mean()), median_loans6=float(y[m].median())) for k, m in (('yes', mask), ('no', ~mask))}
+
     extra_info = dict(
         works_with_theme=float(R.theme.notna().mean()), themes=nodes,
         theme_from_goodreads_share=float(top.set_index('work_id').loc[R.work_id[R.theme.notna()].unique(), 'sources'].str.contains('gr').mean()),
         age0_missing=float(R.age0.isna().mean()), age0_counts={int(k): int(v) for k, v in R.age0.value_counts().sort_index().items()},
-        creator_from_title_only_share=float(R.cft_only.mean()))
-    log('extra features', {k: v for k, v in extra_info.items() if k != 'themes'})
+        creator_from_title_only_share=float(R.cft_only.mean()),
+        month0=m0_info,
+        works_with_theme_m0=float(R.theme_m0.notna().mean()), creator_from_title_only_share_m0=float(R.cft_m0.mean()),
+        age0_m0_counts={int(k): int(v) for k, v in R.age0_m0.value_counts().sort_index().items()}, age0_m0_missing=int(R.age0_m0.isna().sum()),
+        # descriptive: is the theme tied to print loans in month 0 (the information correction B2 of the code audit took out of L)?
+        theme_present_if_print_loans_month0=dict(as_fixed=float(R.theme[fp].notna().mean()), month0=float(R.theme_m0[fp].notna().mean())),
+        theme_present_if_no_print_loans_month0=dict(as_fixed=float(R.theme[~fp].notna().mean()), month0=float(R.theme_m0[~fp].notna().mean())),
+        # descriptive: loans in the first six months by publication-year gap, creator flag and theme presence (all kept works, all years)
+        loans6_by_age0=loans_by('age0'), loans6_by_age0_m0=loans_by('age0_m0'),
+        loans6_by_theme_present=dict(as_fixed=loans_by_mask(y6, R.theme.notna()), month0=loans_by_mask(y6, R.theme_m0.notna())))
+    log('extra features', {k: v for k, v in extra_info.items() if k not in ('themes', 'month0')})
     WCOLS = ['matched_pre', 'v6', 'v12', 'trend', 'vmax', 'writer_type_pre']
     LCOLS = ['n_prior_works', 'ln_prior_loans', 'month']
-    LPCOLS = LCOLS + ['theme', 'age0', 'cft_only']          # L+ of addendum e
-    LQCOLS = LCOLS + ['age0', 'cft_only']                  # added diagnostic: the same without the theme (the one feature built from records of all years)
-    MODELS = ['W_lgbm', 'L_lgbm', 'LW_lgbm', 'Lp_lgbm', 'LpW_lgbm', 'Lq_lgbm', 'LqW_lgbm']
+    LPCOLS = LCOLS + ['theme', 'age0', 'cft_only']          # L+ of addendum e, as fixed (features from records of all years)
+    L0COLS = LCOLS + ['theme_m0', 'age0_m0', 'cft_m0']     # added in review: the same three features from the records first lent in month 0
+    LQCOLS = LCOLS + ['age0_m0', 'cft_m0']                 # added: no theme (month-0 records); the theme is the feature that moves most with the record set
+    MODELS = ['W_lgbm', 'L_lgbm', 'LW_lgbm', 'Lp_lgbm', 'LpW_lgbm', 'L0_lgbm', 'L0W_lgbm', 'Lq_lgbm', 'LqW_lgbm']
     SETS = {'W_lgbm': WCOLS, 'L_lgbm': LCOLS, 'LW_lgbm': LCOLS + WCOLS, 'Lp_lgbm': LPCOLS, 'LpW_lgbm': LPCOLS + WCOLS,
-            'Lq_lgbm': LQCOLS, 'LqW_lgbm': LQCOLS + WCOLS}
+            'L0_lgbm': L0COLS, 'L0W_lgbm': L0COLS + WCOLS, 'Lq_lgbm': LQCOLS, 'LqW_lgbm': LQCOLS + WCOLS}
     preds = []
     for Y in range(2019, 2027):
         te = R[R.year == Y]
@@ -518,7 +702,7 @@ def part_b():
         preds.append(p)
         log('year', Y, 'train', len(tr), 'test', len(te))
     P = pd.concat(preds, ignore_index=True).rename(columns={'cluster': 'creator_key'})
-    P.to_parquet(OUT / 'robustness_b_preds.parquet', index=False)
+    P.to_parquet(OUT / f'robustness_b_preds{TAG}.parquet', index=False)
     # --- the refit of W, L and LW must equal the stored predictions of 30_test_b.py
     S = pd.read_parquet(OUT / 'test_b_preds.parquet', columns=['work_id', 'W_lgbm', 'L_lgbm', 'LW_lgbm'])
     M = P[['work_id', 'W_lgbm', 'L_lgbm', 'LW_lgbm']].merge(S, on='work_id', suffixes=('', '_stored'), validate='one_to_one')
@@ -536,9 +720,10 @@ def part_b():
             t10.append(float((a & pr).sum() / max(pr.sum(), 1)))
         return np.array(sp), np.array(t10)
 
-    DIFFS = [('LW_minus_L', 'LW_lgbm', 'L_lgbm'), ('LpW_minus_Lp', 'LpW_lgbm', 'Lp_lgbm'), ('Lp_minus_L', 'Lp_lgbm', 'L_lgbm'),
-             ('LpW_minus_LW', 'LpW_lgbm', 'LW_lgbm'), ('LqW_minus_Lq', 'LqW_lgbm', 'Lq_lgbm'), ('Lq_minus_L', 'Lq_lgbm', 'L_lgbm'),
-             ('Lp_minus_Lq', 'Lp_lgbm', 'Lq_lgbm')]
+    DIFFS = [('LW_minus_L', 'LW_lgbm', 'L_lgbm'), ('LpW_minus_Lp', 'LpW_lgbm', 'Lp_lgbm'), ('L0W_minus_L0', 'L0W_lgbm', 'L0_lgbm'),
+             ('LqW_minus_Lq', 'LqW_lgbm', 'Lq_lgbm'), ('Lp_minus_L', 'Lp_lgbm', 'L_lgbm'), ('L0_minus_L', 'L0_lgbm', 'L_lgbm'),
+             ('Lq_minus_L', 'Lq_lgbm', 'L_lgbm'), ('L0_minus_Lq', 'L0_lgbm', 'Lq_lgbm'), ('Lp_minus_L0', 'Lp_lgbm', 'L0_lgbm'),
+             ('LpW_minus_LW', 'LpW_lgbm', 'LW_lgbm')]
 
     def boot(df, label):
         """Author-cluster bootstrap as 30_test_b.py: same seed, same draws, Spearman within test year averaged over years; the per-year
