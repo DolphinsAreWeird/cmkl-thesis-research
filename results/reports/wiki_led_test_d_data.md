@@ -1,6 +1,6 @@
 # Test D rows (all books, by format): data build
 
-Built 2026-10-20 17:38 by `code/main_study/wiki_led/60_test_d_rows.py`. Rows file: `data/db/wiki_led/test_d_rows.parquet` (2,767,485 rows, 38 columns, 106 MB, float32 for all measures and features, rows ordered by format, origin month and work_id). Data only: no model was fitted and no feature was related to an outcome; every number below is a count or the distribution of one column. Settings: addendum d of 20 Oct 2026 (SHA-256 checked in the script), section test_D_all_books. Rebuild: `bash jobs/bg.sh wl_test_d_data main_study/wiki_led/60_test_d_rows.py` (add `--elig raw` for the other reading of the 12-month sum, see the choices at the end).
+Built 2026-10-20 17:47 by `code/main_study/wiki_led/60_test_d_rows.py`. Rows file: `data/db/wiki_led/test_d_rows.parquet` (2,767,485 rows, 38 columns, 106 MB, float32 for all measures and features, rows ordered by format, origin month and work_id). Data only: no model was fitted and no feature was related to an outcome; every number below is a count or the distribution of one column. Settings: addendum d of 20 Oct 2026 (SHA-256 checked in the script), section test_D_all_books. Rebuild: `bash jobs/bg.sh wl_test_d_data main_study/wiki_led/60_test_d_rows.py` (add `--elig raw` for the other reading of the 12-month sum, see the choices at the end).
 
 ## What the rows are
 
@@ -205,9 +205,9 @@ For reference, Test A (all formats added together, 556,735 scored rows) had a su
 | audiobook | 60.0% | 60.0% | 70.1% | 67.2% |
 | all formats | 48.1% | 48.1% | 58.2% | 55.7% |
 
-- Author links: 3,115 creator keys map to an author article (19,871 of the 259,825 sampled works have one; 7,590 Test A works have one and 157 do not). 86,364 sampled works have an empty creator key and never get author features.
-- 3 creator keys have more than one author article among the Test A works; the article used by most of those works is taken (ties between two articles, 1: margret rey; the alphabetically first article is taken). 3 Test A works therefore get a different author article than Test A gave them, and 9 Test A works that had none now get one.
-- 64 of the 3,063 author articles in use have no weekly view data, so their works carry the author page flag with `a_*` missing; every book article has data (0 without).
+- Author links: 3,115 `creator_key` values map to an author article (19,871 of the 259,825 sampled works have one; 7,590 Test A works have one and 157 do not). 86,364 sampled works have an empty `creator_key` and never get author features.
+- 3 `creator_key` values have more than one author article among the Test A works; the article used by most of those works is taken (1 tie between two articles, for `margret rey`; the alphabetically first article is taken). 3 Test A works therefore get a different author article than Test A gave them, and 9 Test A works that had none now get one.
+- 64 of the 3,063 author articles in use have no weekly view data (this is a gap in `weekly_author.parquet`, as in Test A; the most frequent among the Test A works are Robert B. Parker, Jim Butcher, Clive Cussler), so their works carry the author page flag with `a_*` missing: 67,999 of the 1,609,615 rows with the flag (4.2%). Every book article has data (0 without).
 
 ## Distributions of single columns (all rows)
 
@@ -232,7 +232,7 @@ For reference, Test A (all formats added together, 556,735 scored rows) had a su
 | audiobook | h_age | 6.0 | 22.0 | 58.0 | 114.0 | 190.0 | 224.0 | 73.71 |
 | audiobook | D | -0.92 | -0.29 | 0.00 | 0.18 | 0.55 | 0.98 | -0.08 |
 
-## Checks against Test A (no model involved)
+## Checks (no model involved)
 
 1. **Loans.** For the Test A works, the monthly loans per format built here equal `study2r/counts_work.parquet` cell by cell: print: 0 differing cells (loans 8,323,715 here, 8,323,715 there); ebook: 0 differing cells (loans 8,030,332 here, 8,030,332 there); audiobook: 0 differing cells (loans 6,922,613 here, 6,922,613 there).
 2. **Rows.** For Test A works with loans in one format only, the rows here are compared with `test_a_rows.parquet` on (work_id, origin month). Test D rows are a subset of Test A rows (an eligible row needs 24 loans, Test A needed one); where both exist the values are compared exactly (float32).
@@ -243,21 +243,38 @@ For reference, Test A (all formats added together, 556,735 scored rows) had a su
 | ebook | 85 | 6,508 | 6,972 | 6,508 | 0 | 0 | 0 | 0 |
 | audiobook | 45 | 3,446 | 3,620 | 3,446 | 0 | 0 | 0 | 0 |
 
-3. **Order and keys.** Inside each format the rows are strictly increasing in (origin month, work_id): 2,767,482 adjacent pairs checked, all increasing = True. Rows dropped because M6 had no available month: 0.
-4. **Excluded months** equal the list in the request (10 months); the panel has a total for every month of every format from 2015-01.
+3. **Rules inside the file.** Every one of the 2,767,485 rows was tested against the rules below (rows that fail each rule are counted); rows dropped during the build because M6 had no available month: 0.
+
+| rule | rows failing |
+| --- | ---: |
+| rows ordered by format, then origin month, then work_id | 0 |
+| eligible: loans12 is at least 24 | 0 |
+| origin month is one of the allowed origins | 0 |
+| year is the year of the target month | 0 |
+| h_lt, h_m6, Y and D equal their formulas | 0 |
+| Sg equals its rule | 0 |
+| no missing value in the measures | 0 |
+| loans are whole numbers, M6 is a multiple of 0.5 | 0 |
+| h_age is a whole number from 0 to the length of the month grid | 0 |
+| flags are 0 or 1 and the book page flag equals in_test_a | 0 |
+| b_ features are all present (book page) or all missing | 0 |
+| a_ features are all present or all missing, and present only with an author page | 0 |
+
+4. **Plain-Python recomputation.** 570 random series (450 of works outside Test A, the rest of Test A works; up to 150 and 40 per format) were rebuilt from the raw row files with simple loops written from the request text, and the 18,355 rows compared with the file. Series whose set of origin months differs: 0. Rows with a differing value: L_t 0, L_next 0, M6 0, h_lt 0, h_lt1 0, h_m6 0, h_m12 0, h_lyago 0, h_age 0, D 0, Y 0, loans12 0, Sg 0 (the 338 rows on the D = ln 2 boundary are left out of the Sg comparison, see choice 3). 182 further series of the same works are not in the file; 0 of them have an eligible origin by the recomputation.
+5. **Excluded months** equal the list in the request (10 months); the panel has a total for every month of every format from 2015-01.
 
 ## Choices where the request left room
 
-1. **Eligibility and excluded months.** The 12-month sum of 24 loans skips excluded months, like M6 and the 12-month mean (the request says excluded months are missing inside windows). Summing the recorded loans of all 12 months instead would make 109,859 more series-origin pairs eligible (4.0% on top of 2,767,485); they all sit at origins whose 12-month window contains an excluded month. Run the script with `--elig raw` to build that version.
+1. **Eligibility and excluded months.** The 12-month sum of 24 loans skips excluded months, like M6 and the 12-month mean (the request says excluded months are missing inside windows). Summing the recorded loans of all 12 months instead would make 109,859 more series-origin pairs eligible (4.0% on top of 2,767,485); they all sit at origins whose 12-month window contains an excluded month. Run the script with `--elig raw` to build that version. A consequence of skipping the excluded months: the number of eligible rows dips at origins whose window contains them, also for formats whose loans were not affected (rows per origin month in 2020-02, 2020-10 and the lowest month from 2020-10 to 2021-08: print 12,028, 5,022, 2,051; ebook 8,700, 4,928, 4,928; audiobook 6,293, 3,620, 3,620; the monthly table below has all months).
 2. **Test A's handling of single months.** `h_lt1` and `h_lyago` use the recorded loans of month t-1 and t-11 even if that month is excluded (Test A applies the exclusion to the M6 and 12-month windows only); a month before the first loan counts as 0 there. `L_t` and `L_next` are never excluded months.
-3. **Rounding.** D and Sg are computed in float32 as in Test A. Exact doublings (L_next = 2 x M6 + 1) sit on the boundary D = ln 2 and follow float32 rounding, the same as in Test A.
+3. **Rounding.** D and Sg are computed in float32 as in Test A. Exact doublings (L_next = 2 x M6 + 1, with L_next - M6 >= 5) sit on the boundary D = ln 2: 6,839 rows (0.25% of all rows); float32 rounding labels 92.5% of them as surges and the rest as not, the same rule as in Test A. The pooled surge rate is 1.78% and would be 1.80% if every one of them counted as a surge.
 4. **First loan.** The first loan month of a series is its first month with a recorded loan in that format. Series already in the collection when the data begin (2005-04 for print, 2005-09 for ebook and audiobook) have a first loan month equal to the first data month, so `h_age` is cut off at the start of the data (sampled series whose first loan is the first data month: print 20,878, ebook 116, audiobook 223).
-5. **Flags.** `has_book_page` is 1 for the Test A works; `has_author_page` is 1 when the work's creator key maps to an author article, whether or not that article has weekly data. The share of rows with the features present is in the Wikipedia table above.
+5. **Flags.** `has_book_page` is 1 for the Test A works; `has_author_page` is 1 when the work's `creator_key` maps to an author article, whether or not that article has weekly data. The share of rows with the features present is in the Wikipedia table above.
 6. **Extra column.** `loans12` is not in the request; it holds the loan sum used for the eligibility rule so stricter cut-offs can be applied without a rebuild.
 7. **Format labels.** `print`, `ebook`, `audiobook` (the labels of `counts_work.parquet` and the demand panel); the print row files are named `spl_rows_book`.
 8. **Same name, different person.** `creator_key` is a normalised name, so two authors with the same name share author features.
 
 ## Memory and runtime
 
-- Peak memory of the build process: 1,259 MB physical footprint (what `time -l` reports as peak memory footprint) and 790 MB resident (limit set for the job: 3,000 MB). One format at a time; the biggest object is the series by month loan matrix (float32, 232 MB for the largest format).
-- Runtime 23 s in all: print 9 s, ebook 4 s, audiobook 2 s; the rest is set-up, the checks and this report. The job ran with `nice` 5 beside the Wikipedia views download.
+- Peak memory of the build process: 1,556 MB physical footprint (what `time -l` reports as peak memory footprint) and 806 MB resident (limit set for the job: 3,000 MB). One format at a time; the biggest object is the matrix of sampled works by month with the loans of the format (float32, 255 MB, rebuilt for each format).
+- Runtime 21 s in all: print 5 s, ebook 4 s, audiobook 4 s; the rest is set-up, the checks and this report. The job ran with `nice` 5 beside the Wikipedia views download.

@@ -1,6 +1,6 @@
 # Adaptation pages: data build and 5-title test (Wikipedia signal from the film and TV adaptations of a book)
 
-Written 2026-10-20. Code: code/main_study/wiki_led/50_adaptation_views.py (screen the pages, download daily views) and 51_adaptation_features.py (features by origin month). Settings: prereg/addenda_wiki_led/2026-10-20_d_v2_all_books_platforms.json, change 5. Data only: no model was fitted and no feature was related to loans. The full download has not been run yet (section 4). The publication-date column of data/db/wiki_led/adaptations.parquet is not read by either script.
+Written 2026-10-20 17:43. Code: code/main_study/wiki_led/50_adaptation_views.py (screen the pages, download daily views) and 51_adaptation_features.py (features by origin month). Settings: prereg/addenda_wiki_led/2026-10-20_d_v2_all_books_platforms.json, change 5. Data only: no model was fitted and no feature was related to loans. The full download has not been run yet (section 4). The publication-date column of data/db/wiki_led/adaptations.parquet is not read by either script.
 
 ## 1. What was built
 
@@ -20,7 +20,7 @@ Columns of adaptation_features.parquet (per work and origin month, over the kept
 | ad_lvl4 | maximum of lvl4 |
 | ad_new_weeks | weeks from the first week with views of the newest page to the last week used at the origin (the "new adaptation" signal) |
 
-All columns except ad_n are missing when ad_n is 0. ad_new_weeks ignores pages that already had views in the first week of the data (2015-06-29): their age is unknown, so it is also missing when all pages with data are of that kind. Every work with at least one kept page has a row for each of the 127 origin months; works without a kept page are not in the table (treat them as ad_n = 0). Several works can share one book (196 books have more than one work in works.parquet); they get the same values.
+All columns except ad_n are missing when ad_n is 0. ad_new_weeks ignores pages that already had views in the first week of the data (2015-06-29): their age is unknown, so it is also missing when all pages with data are of that kind. Every work with at least one kept page has a row for each of the 127 origin months (the table ends at origin 2026-09 because the views end on 2026-09-30); works without a kept page are not in the table (treat them as ad_n = 0). Several works can share one book (196 books have more than one work in works.parquet); they get the same values.
 
 ## 2. Counts from the screen (run on 2026-10-20)
 
@@ -40,7 +40,7 @@ All columns except ad_n are missing when ad_n is 0. ad_new_weeks ignores pages t
 | Books with at least one kept page | 1,400 |
 | **Works with at least one kept page** | **1,461** (the exclusions remove 9 works) |
 
-The rule: a page is excluded for a book when, after following any redirect, it is a disambiguation page (pageprops), or when the title is a redirect to the book's own article (the target has the book's Wikidata item, or is the book's English article in works.parquet), or when the title is the book's own article. No page failed on more than one reason. There are no disambiguation pages among the 3,178 pages. The same call finds them (the author-name lookups of Test B flagged 4,017 with it), so zero is a result here: Wikidata does not allow a disambiguation page to be linked from a normal item. Nine books lose their only page. The 17 excluded pages:
+The rule: a page is excluded for a book when, after following any redirect, it is a disambiguation page (pageprops), or when the title is a redirect to the book's own article (the target has the book's Wikidata item, or is the book's English article in works.parquet), or when the title is the book's own article. There are no disambiguation pages among the 3,178 pages. The same lookup method flagged 4,017 disambiguation pages in the author-name step of Test B, and the parser was tested on a crafted disambiguation answer (section 3), so zero is a result of the screen. Nine books lose their only page. The 17 excluded pages:
 
 | Page | The book's own article | Where the title leads | Reason |
 | --- | --- | --- | --- |
@@ -62,9 +62,9 @@ The rule: a page is excluded for a book when, after following any redirect, it i
 | The Seven Husbands of Evelyn Hugo (film) | The Seven Husbands of Evelyn Hugo | The Seven Husbands of Evelyn Hugo (section: Film adaptation) | redirect_to_book |
 | Tilting at windmills | Don Quixote | Don Quixote (section: Tilting at windmills) | redirect_to_book |
 
-Most of the 16 redirects lead to a section of the book's article (Adaptations, Film adaptation, Films), so their views are views of the book. One page (Harry Potter and the Cursed Child) is one article that covers both the play and the published script, and works.parquet gives that article to the book.
+12 of the 16 redirects lead to a section of the book's article (Adaptations, Film adaptation, Films and similar) and 4 to its top. In both cases the title only forwards readers to the book's article, so there is no separate page about the adaptation. One page (Harry Potter and the Cursed Child) is one article that covers both the play and the published script, and works.parquet gives that article to the book.
 
-Kept but flagged: 16 pages are redirects to a page that is not the book's own article. The rule does not exclude them, so they are kept. The download asks for the views of the title itself, which are the visits that came through that title. Their targets are mostly studio, filmography or list pages, so the targets' own views would not describe the adaptation, and the flag redirect_other in adaptation_pages.parquet lets them be dropped later.
+Kept but flagged: 16 pages are redirects to a page that is not the book's own article. The rule does not exclude them, so they are kept. The download asks for the views of the title itself, which are the visits that came through that title. 13 of the 16 targets are pages about a studio, a person or a list (for example Burbank Animation Studios, Tom and Jerry filmography), so the targets' own views would not describe the adaptation; the other 3 appear to lead to a film or television page (judged from their titles). The flag redirect_other in adaptation_pages.parquet lets these pages be dropped later.
 
 | Page (redirect) | Leads to |
 | --- | --- |
@@ -89,7 +89,9 @@ Other facts about the 3,161 kept pages:
 
 - 47 pages are linked to more than one book (a series or a box set), up to 3 books. Each of those books gets the full attention of the page, not a share.
 - Pages per work: 1,010 works have 1 page, 199 have 2, 140 have 3 to 5 and 112 have 6 or more (most: 66). Median 1, mean 2.49.
-- The pages are not all film and television. The most frequent kinds in Wikidata (a page with two kinds counts in both):
+- 16 kept pages lead (after a redirect) to a page whose Wikidata item is not the adaptation's item: these are the redirects flagged above. For all others the page's item is the adaptation item.
+
+The pages are not all film and television. The most frequent kinds in Wikidata (a page with two kinds counts in both):
 
 | Kind (Wikidata P31) | Pages |
 | --- | ---: |
@@ -106,10 +108,9 @@ Other facts about the 3,161 kept pages:
 | television series episode | 29 |
 | anime television series | 25 |
 
-  Grouped by label (any kind whose English label contains film, television, miniseries or anime), 2,694 kept pages are film or television and 467 are other kinds (mostly stage works 164, literary works 109 and video games 47); 1,416 works have at least one film or television page. No filter by kind was applied. The kinds are in the columns classes and class_labels of adaptation_pages.parquet. Six pages have no kind.
-- 16 kept pages lead (after a redirect) to a page whose Wikidata item is not the adaptation's item: these are the redirects flagged above. For all others the page's item is the adaptation item.
+Grouped by label (any kind whose English label contains film, television, miniseries or anime), 2,694 kept pages are film or television and 467 are other kinds (mostly stage works 164, literary works 109 and video games 47); 1,416 works have at least one film or television page. No filter by kind was applied. The kinds are in the columns classes and class_labels of adaptation_pages.parquet. Six pages have no kind.
 
-Requests made to build the screen: 92 Action API batches, 3 Wikidata label requests (the English names of the kinds) and 3 answers with status 429, retried after the pause (one pause of about 70 seconds). Everything is in the cache, so a rerun of the screen makes no request.
+Requests made to build the screen: 92 Action API batches, 3 Wikidata label requests (the English names of the kinds) and 3 answers with status 429, retried after their pause (about 70 seconds in all). Everything is in the cache, so a rerun of the screen makes no request (as long as adaptations.parquet is unchanged).
 
 ## 3. Test on 5 titles
 
@@ -149,7 +150,7 @@ How the features behave, for the work "Dune" (work 13343; the pages are the 1984
 | 2024-03 | 4 | 2.97 | 3.56 | 10 | 64.4 | -7.39 | 128 |
 | 2026-09 | 4 | 0.00 | 0.16 | 0 | 2.2 | -10.70 | 258 |
 
-For "The Lincoln Lawyer" (work 13339, one page: the 2011 film; the television series came out on 2022-05-13 and is not in this 5-title test):
+For "The Lincoln Lawyer" (work 13339, one page in this test: the 2011 film; the rise in May and June 2022 matches the release of the Netflix series, a date from memory that was not checked, and the series page is not in the 5-title test):
 
 | Origin | ad_n | ad_r4 | ad_rmax | ad_run | ad_dw | ad_lvl4 | ad_new_weeks |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -161,13 +162,13 @@ For "The Lincoln Lawyer" (work 13339, one page: the 2011 film; the television se
 
 Things to know before using the columns:
 
-- **A new page looks like a very large rise.** Weeks before a page has views are 0 and the normal is floored at 1e-12, so r4 and rmax of a page in its first weeks are about +17 on the log scale (Dune 2021 film, origin 2020-10). The same happens for book articles created late in Test A. In the first months ad_r4, ad_rmax and ad_dw of a work are therefore a new-page marker as much as a rise; ad_new_weeks says how old the newest page is, and adaptation_page_features.parquet allows a version that ignores pages younger than 30 weeks.
+- **A new page looks like a very large rise.** Weeks before a page has views are 0 and the normal is floored at 1e-12, so r4 and rmax of a page in its first weeks are large (+17 for the very busy Dune 2021 page at origin 2020-10). The same happens for book articles created late in Test A: for the 2,878 of them that had no views in early 2016, r4 at the first origin with views has median 10.3, 10th to 90th percentile 7.6 to 12.9 and maximum 17.8 (stored test_a_wiki_features.parquet). In the first months ad_r4, ad_rmax and ad_dw of a work are therefore a new-page marker as much as a rise; ad_new_weeks says how old the newest page is, and adaptation_page_features.parquet allows a version that ignores pages younger than 30 weeks.
 - **Views before a page move stay under the old title.** The Dune 2021 page has views only from 2020-10-05 although the film was announced years before; the likely reason is a move of the page to this title (not checked, no further request was allowed). Such a page starts at its move, so it looks new then. Redirects with traffic are not added, unlike the book articles of study2r.
-- Three of the five test pages (and, in the synthetic size test, 40% by construction) already had views in the first week of the data; for them the age is unknown.
+- Three of the five test pages already had views in the first week of the data; for them the age is unknown.
 
 ## 4. Full download: command and time
 
-The 3,161 kept pages need 3,161 REST requests, 5 of them already in the cache, so 3,156 requests. At 3 requests a second that is 1,052 seconds, about 17.5 minutes (16 minutes at the script's gap of 0.30 s, about 3.3 a second; about 26 minutes at the 2 a second that wiki_led_views managed in its last half hour, when the gateway answered 429). Disk: about 24 KB of cache per page (under 80 MB) and about 60 MB for the daily file (about 10 million rows).
+The 3,161 kept pages need 3,161 REST requests, 5 of them already in the cache, so 3,156 requests. At 3 requests a second that is 1,052 seconds, about 17.5 minutes (16 minutes at the script's gap of 0.30 s, about 3.3 a second). If the gateway throttles again the time grows: wiki_led_views slowed from about 3.2 to between 1.3 and 2 requests a second after 17:26 today, which would make 26 to 40 minutes. Disk: about 20 KB of cache per page (about 65 MB in all) and an estimated 60 MB for the daily file (about 10 million rows). Memory: the download keeps 250 pages at a time (peak 215 MB on 500 fake answers of 3,310 days, 6 ms of processing per page).
 
 Run from handoff/code, only when wiki_led_views has stopped (the script refuses to start otherwise):
 

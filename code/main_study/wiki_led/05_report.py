@@ -27,6 +27,31 @@ def md_table(df):
     return '\n'.join(out)
 
 
+def views_log_summary():
+    """The views job was stopped and restarted several times (rate tuning); add up what its log shows.  The log prints the counters every
+    500 titles, so for a run that was stopped the numbers are lower bounds."""
+    import re, ast
+    txt = (REP / 'wiki_led_views.log').read_text().splitlines()
+    blocks, cur = [], None
+    for ln in txt:
+        if ln.startswith('=== start'):
+            cur = dict(start=ln, last=None, episodes=0, args=ln.split('03_author_views.py')[-1].strip())
+            blocks.append(cur)
+        elif cur is not None:
+            m = re.search(r'network (\d+), cache (\d+), backoffs (\d+).*codes (\{.*\})', ln)
+            if m:
+                cur['last'] = (int(m.group(1)), int(m.group(3)), ast.literal_eval(m.group(4)))
+            if 'throttled by rest' in ln:
+                cur['episodes'] += 1
+    net = sum(b['last'][0] for b in blocks if b['last'])
+    codes = {}
+    for b in blocks:
+        if b['last']:
+            for k, v in b['last'][2].items():
+                codes[k] = codes.get(k, 0) + v
+    return dict(runs=len(blocks), network=net, codes=codes, episodes=sum(b['episodes'] for b in blocks), args=[b['args'] for b in blocks])
+
+
 def labels(qids):
     st, text = H.get('wd', 'https://www.wikidata.org/w/api.php', dict(action='wbgetentities', ids='|'.join(qids), props='labels', languages='en',
                                                                       format='json', maxlag=5), check=maxlag_check)
@@ -40,6 +65,7 @@ def main():
     ms = jl('author_match_summary.json')
     vs = jl('author_views_summary.json')
     rs = jl('rows_summary.json')
+    ck = jl('checks_summary.json')
     am = pd.read_parquet(OUT / 'author_match.parquet')
     rows = pd.read_parquet(OUT / 'test_b_rows.parquet')
     lm = pd.read_csv(OUT / 'library_month_totals.csv')
@@ -48,10 +74,10 @@ def main():
     P = L.append
     P('# Test B (new books): data for the Wikipedia-led test')
     P('')
-    P('Khant Phyo Wai, 01323050. Built 20 Oct 2026 from the settings fixed in `prereg/wiki_led_settings_2026-10-20.json`, section `test_B_new_books`. '
+    P('Built 20 Oct 2026 from the settings fixed in `prereg/wiki_led_settings_2026-10-20.json`, section `test_B_new_books`. '
       'This file reports counts and match rates only. No model was fitted and no Wikipedia feature was related to loans.')
     P('')
-    P('Code: `code/main_study/wiki_led/` (`01_population.py`, `01b_loans_library.py`, `02_author_match.py`, `03_author_views.py`, `04_rows.py`, `05_report.py`). '
+    P('Code: `code/main_study/wiki_led/` (`01_population.py`, `01b_loans_library.py`, `02_author_match.py`, `03_author_views.py`, `04_rows.py`, `05_report.py`, `06_checks.py`). '
       'Data: `data/db/wiki_led/` (`test_b_population`, `test_b_loans_library`, `author_match`, `wikidata_items`, `author_monthly_views`, `test_b_rows`). '
       'HTTP cache: `data/interim/wiki_led_cache/`.')
     P('')
@@ -83,7 +109,8 @@ def main():
       f"{ll['rows_per_format']['audiobook']:,} audiobook rows; rows without a work: 0). `loans6` = loans in months `first_ym` to `first_ym`+5, `Y6` = ln(1 + loans6). "
       f"Every population work has a row in its first month, none has a row before it, and none has `loans6` = 0. "
       f"Library features follow the record: earlier works of the same `creator_key` in all of `spl_works`, and ln(1 + their loans before the work's first month). "
-      f"Checked against a brute-force recomputation from the raw rows for 70 works (60 random, 10 of the three most prolific creators): 0 differences in `loans6`, `n_prior_works` and `prior_loans`.")
+      f"Checked against a plain-pandas recomputation from the raw rows (`06_checks.py`) for {ck['library_checked']} works (60 random, 10 of the three most prolific creators): "
+      f"{ck['library_mismatches']} differences in `loans6`, `n_prior_works` and `prior_loans`.")
     P('')
     P('Library-wide low months (the benchmark rule: the total of a format below half of its median over the previous 12 months), 2017-01 onward: '
       + ', '.join(f"{m // 100}-{m % 100:02d}" for m in ll['flagged_library_months'])
@@ -93,10 +120,10 @@ def main():
     P('')
     P('## 3. Author matching (English Wikipedia and Wikidata)')
     P('')
-    P(f"{ms['names']:,} distinct display names; {pc['population_distinct_display_name'] - (ms['names'] - ms['by_method'].get('none', 0)) - ms['by_method'].get('none', 0) if False else ''}"
+    P(f"{ms['names']:,} distinct display names; "
       f"{int((am.plain_status == 'invalid_title').sum())} of them cannot be a page title (they contain # < > [ ] | {{ }} or are too long) and were not queried. "
       f"Wikipedia batches of 50 via `prop=pageprops&redirects=1&maxlag=5`, Wikidata `wbgetentities` (50 per call, claims). "
-      f"{ms['wikidata_items']:,} Wikidata items were read. Network requests: {ms['network_requests']:,}; cache hits on rerun: {ms['cache_hits']:,}; back-offs: {ms['backoffs']}.")
+      f"{ms['wikidata_items']:,} Wikidata items were read. Network requests: {ms['network_requests']:,}; cache hits during that run: {ms['cache_hits']:,}; back-offs: {ms['backoffs']}.")
     P('')
     n = ms['names']
     hum = int(am.is_human.sum())
@@ -129,13 +156,22 @@ def main():
     P('')
     P('## 4. Monthly views')
     P('')
+    vl = views_log_summary()
     P(f"Accepted articles (distinct titles after redirects): {vs['titles']:,}. REST per-article monthly, all-access, user agents, 2015-07 to 2026-09. "
       f"**Titles with views data: {vs['titles_with_views']:,}**; titles with a 404 (no views at all, nothing stored): **{vs['titles_404']:,}**; "
-      f"rejected with status 400: {vs['titles_400']}. {vs['rows']:,} title-month rows. Requests {vs['network_requests']:,}, back-offs after 429: {vs['backoffs']}, response codes {vs['response_codes']}, final gap between requests {vs['final_gap_s']} s.")
+      f"rejected with status 400: {vs['titles_400']}. {vs['rows']:,} title-month rows.")
+    P('')
+    P(f"Download behaviour. The job was started and restarted {vl['runs']} times while the request rate was tuned (every finished title stays in the cache, none is fetched twice). "
+      f"Settings of the runs: " + '; '.join(f"`{a or 'defaults (6 threads, 0.11 s gap)'}`" for a in vl['args']) + '. '
+      f"At about 150 requests per second (24 threads) and again at 8 per second the Wikimedia gateway answered 429 (header x-envoy-ratelimited, Retry-After 6 to 7 s) and the rate fell to 1 to 2 per second; "
+      f"a run at 0.30 s gap with 4 threads (3.3 per second) drew almost none. Counts from the logs: {vl['network']:,} requests logged, response codes {vl['codes']}, "
+      f"{vl['episodes']} separate slow-down episodes after a 429 (lower bounds for the runs that were stopped by hand, as the counters are printed every 500 titles). "
+      f"All 429s were honoured with the server's Retry-After pause and nothing was lost. The last run (gap 0.30 s, 4 threads, slow-down after a 429 and recovery after a run of successes) "
+      f"made {vs['network_requests']:,} requests, {vs['cache_hits']:,} answered from the cache, {vs['backoffs']} back-off.")
     P('')
     P('## 5. Rows')
     P('')
-    P(f"`data/db/wiki_led/test_b_rows.parquet`: **{rs['rows']:,} rows**, one per work. Wikipedia features use months strictly before `first_ym` (checked in the script: the window is the 12 months ending the month before). "
+    P(f"`data/db/wiki_led/test_b_rows.parquet`: **{rs['rows']:,} rows**, one per work. Wikipedia features use only months strictly before `first_ym` (the 12 months ending the month before). Recomputed independently from the long views file for {ck['wikipedia_checked']} rows (`06_checks.py`): {ck['wikipedia_mismatches']} differences; unmatched rows with a non-zero Wikipedia feature: {ck['unmatched_rows_with_nonzero_wikipedia_feature']}; matched rows without a title: {ck['matched_rows_without_title']}. "
       f"`matched` = 1 for {rs['matched']:,} rows ({pct(rs['matched'], rs['rows'])}), of which {rs['writer_type']:,} are writer_type. "
       f"**Rows with matched = 1 and v6 > 0: {rs['matched_nonzero_v6']:,}** ({pct(rs['matched_nonzero_v6'], rs['matched'])} of the matched rows, {pct(rs['matched_nonzero_v6'], rs['rows'])} of all rows). "
       f"Matched rows whose title had no views data at all: {rs['matched_no_views_data']:,} (they get 0 views).")
@@ -156,7 +192,7 @@ def main():
     top = g.sort_values('works', ascending=False).head(12)
     P(f"- **Same person matched from several names.** {int((g.names > 1).sum()):,} article titles are reached from more than one display name "
       f"(for example spelling variants or a pseudonym redirect), so author clusters in the bootstrap should use `creator_key` (as planned) or the article title, not the name. "
-      f"The 12 articles with the most works: " + '; '.join(f"{a} ({int(b):,} works, {int(c)} names)" for a, b, c in zip(top.enwiki_title, top.works, top.names)) + '.')
+      f"The 12 articles with the most works: " + '; '.join(f"{a} ({int(b):,} works, {int(c)} name{'s' if c > 1 else ''})" for a, b, c in zip(top.enwiki_title, top.works, top.names)) + '.')
     big = g.sort_values('works', ascending=False)
     P(f"- Share of the matched works that belong to the 100 most frequent articles: {pct(big.works.head(100).sum(), big.works.sum())}; to the 1,000 most frequent: {pct(big.works.head(1000).sum(), big.works.sum())}.")
     # humans without writer type
@@ -164,15 +200,23 @@ def main():
     cnt = pd.Series([o for occ in h.occupations for o in occ]).value_counts().head(12)
     lab = labels(list(cnt.index)) if len(cnt) else {}
     P(f"- **writer_type counts only the 14 occupation items named in the build instructions (the record's 'memoirist' is taken as Q18814623, autobiographer), with no subclasses**, so a person whose only occupation is a subtype "
-      f"(for example a crime or fantasy writer item) is a human match without writer_type. {len(h):,} matched names ({pct(len(h), hum)}) have no writer_type; "
+      f"(for example comics writer or manga artist) is a human match without writer_type. {len(h):,} matched names ({pct(len(h), hum)}) have no writer_type; "
       f"{int((h.occupations.map(len) == 0).sum()):,} of them have no occupation at all. The most common occupations among them: "
       + '; '.join(f"{lab.get(q, '?')} ({q}) {int(c):,}" for q, c in cnt.items()) + '.')
     big_names = am[am.is_human].sort_values('n_works', ascending=False).head(10)
     P(f"- Names with the most works that matched (a quick look for wrong-person matches; not checked by hand): "
       + '; '.join(f"{a} -> {b} ({int(c)})" for a, b, c in zip(big_names.display_name, big_names.enwiki_title, big_names.n_works)) + '.')
+    hv = r[r.matched == 1].groupby('enwiki_title').agg(v6max=('v6', 'max'), works=('work_id', 'size'), wt=('writer_type', 'max')).sort_values('v6max', ascending=False).head(10)
+    P(f"- Matched articles with the highest v6 (a look for namesakes of very famous people; not checked by hand): "
+      + '; '.join(f"{a} (v6 up to {b:.1f}, {int(c)} work{'s' if c > 1 else ''}{'' if w else ', no writer occupation'})" for a, b, c, w in zip(hv.index, hv.v6max, hv.works, hv.wt)) + '.')
     big_nw = am[am.is_human & ~am.writer_type].sort_values('n_works', ascending=False).head(12)
-    P(f"- Matched names with the most works but **no writer occupation** (the likeliest wrong-person matches, for example a namesake who is an actor; not checked by hand): "
-      + '; '.join(f"{a} -> {b} ({int(c)})" for a, b, c in zip(big_nw.display_name, big_nw.enwiki_title, big_nw.n_works)) + '.')
+    lab2 = labels(sorted({q for o in big_nw.occupations for q in o}))
+    P("- Matched names with the most works but **no writer_type** (occupations in brackets, from Wikidata; not checked by hand). Some are plainly the right person whose occupation item is "
+      "outside the list of 14 (for example comics writer or manga artist), others look like namesakes (an actor, a footballer): "
+      + '; '.join(f"{a} -> {b} ({int(c)} works; {', '.join(lab2.get(q, q) for q in o[:4]) or 'no occupation'})"
+                  for a, b, c, o in zip(big_nw.display_name, big_nw.enwiki_title, big_nw.n_works, big_nw.occupations)) + '.')
+    mk = am[am.is_human & ~am.writer_type & am.occupations.map(lambda o: 'Q191633' in o)]
+    P(f"- Manga artists (Wikidata Q191633) without any listed writer occupation: {len(mk):,} matched names, {int(mk.n_works.sum()):,} works. They are correct matches that get writer_type = 0 under the 14-item list.")
     big_none = am[~am.is_human].sort_values('n_works', ascending=False).head(10)
     P(f"- Names with the most works that did NOT match: " + '; '.join(f"{a} ({int(c)}; plain title {s})" for a, c, s in zip(big_none.display_name, big_none.n_works, big_none.plain_status)) + '.')
     P(f"- Works whose creator string holds more than one author are matched on the first author only, as in the record. Organisations and corporate authors are not excluded; "
@@ -184,9 +228,23 @@ def main():
     P('')
     P('## 7. Runtime')
     P('')
-    P(f"Loans and library features {ll['runtime_s']} s; author matching {ms['runtime_s']:,} s; views {vs['runtime_s']:,} s; rows {rs['runtime_s']} s (as recorded by each script at its last run; "
-      f"a rerun from the cache is much shorter). Total network requests: Action API and Wikidata {ms['network_requests']:,}, REST pageviews {vs['network_requests']:,}. "
-      f"Wikipedia and Wikidata calls ran sequentially at no more than 5 per second with `maxlag=5`; the REST calls used 6 threads under a shared limiter that slows down after a 429.")
+    def span(name):
+        import re
+        lines = (REP / name).read_text().splitlines()
+        starts = [l for l in lines if l.startswith('=== start')]
+        t0 = re.search(r'(\d\d:\d\d:\d\d)', starts[0]).group(1)
+        ts = [re.match(r'(\d\d:\d\d:\d\d) ', l) for l in lines]
+        t1 = [m.group(1) for m in ts if m][-1]
+        hh = lambda t: sum(int(v) * k for v, k in zip(t.split(':'), (3600, 60, 1)))
+        return t0, t1, hh(t1) - hh(t0)
+    m0, m1, md = span('wiki_led_match.log')
+    v0, v1, vd = span('wiki_led_views.log')
+    P(f"All on 20 Oct 2026, one long download at a time, `nice -n 10`. Population and loans/library features: {ll['runtime_s']} s for the loans script (the population script takes about 1 s). "
+      f"Author matching (`02_author_match.py`, detached with `jobs/bg.sh wiki_led_match`): {m0} to {m1}, {md // 60} min, {ms['network_requests']:,} requests to the Action API and Wikidata "
+      f"(sequential, at most 5 per second, `maxlag=5`, {ms['backoffs']} back-offs). "
+      f"Views download (`03_author_views.py`, `jobs/bg.sh wiki_led_views`): {v0} to {v1}, {vd // 3600} h {vd % 3600 // 60} min of wall clock including the rate tuning and restarts described in section 4; "
+      f"the last, steady run needed {vs['runtime_s'] // 60} min. Rows {rs['runtime_s']} s, checks {7} s, report 2 s. "
+      f"From the first script to the last: 15:11 to 19:00 (about 3 h 50 min), almost all of it waiting for the APIs. Everything fetched is cached under `data/interim/wiki_led_cache/`, so a rerun of the chain should take minutes rather than hours (not timed).")
     (REP / 'wiki_led_test_b_data.md').write_text('\n'.join(L) + '\n')
     log('wrote', REP / 'wiki_led_test_b_data.md')
 

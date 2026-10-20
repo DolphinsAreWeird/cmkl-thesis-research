@@ -53,7 +53,6 @@ SUF = '_test' if TEST else ''
 WP_API = 'https://en.wikipedia.org/w/api.php'
 WD_API = 'https://www.wikidata.org/w/api.php'
 REST = 'https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/{t}/daily/20150701/20260930'
-D0, D1 = pd.Timestamp('2015-07-01'), pd.Timestamp('2026-09-30')
 REST_JOBS = ('wiki_led_views',)                   # background jobs (data/reports/NAME.pid) that use the same Wikimedia gateway
 H = Http({'wp': 0.21, 'wd': 0.21, 'rest': GAP}, adaptive=('rest',), throttle_gap=None, recover=True)
 if '--offline' in sys.argv:

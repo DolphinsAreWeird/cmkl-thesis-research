@@ -65,6 +65,8 @@ NAMES = ['pk28', 'dpk', 'pre7', 'dec', 'hi28', 'rec', 'top500', 'top500_lists', 
 TEST = int(sys.argv[sys.argv.index('--test') + 1]) if '--test' in sys.argv else 0
 SUF = '_test' if TEST else ''
 CHUNK = 400
+ZERO = {'book': [0, 0], 'author': [0, 0]}      # windows with no views: [before the article's first day with views, after it]
+PEAK = {'windows': 0, 'same_day': 0}      # windows with views: is the day with the largest share the day with the most views?
 LN15 = float(np.log(1.5))
 
 
@@ -146,6 +148,8 @@ for key, lst in iter_top_days(D / 'raw' / 'wiki_top_daily.json'):
         if title in want:
             TOPDAYS[title].append(di)
 n_list_days = int(LISTED.sum())
+MISSING_LIST_DAYS = [str(DAYS[i].date()) for i in range(T) if not LISTED[i] and DAYS[i] >= pd.Timestamp('2016-01-01')]
+ORIGINS_NO_LIST = [int(m) for m, e in zip(ORIGINS, E) if not LISTED[e - 27:e + 1].all()]
 log(f'top-500 lists: {n_list_days} days with a list, {len(TOPDAYS)} of our titles appear at least once')
 
 
@@ -161,11 +165,12 @@ def top_matrix(titles_per_row):
 
 
 # ---------------------------------------------------------------- the feature block (vectorised over articles, loop over origins)
-def block(V, B, VA=None, skip_corr=None):
+def block(V, B, VA=None, skip_corr=None, kind='book'):
     """V (n, T) raw daily views of the articles; B (n, T) top-500 flags; VA (n, T) raw views of each row's author article, or None.
     skip_corr (n,) bool: corr28 not defined for the row (no author series, or same page).  Returns {name: (n, K) float32}."""
     n = V.shape[0]
     S = V / TOT
+    first_view = np.where((V > 0).any(1), (V > 0).argmax(1), T)          # index of the article's first day with views
     CM = np.maximum.accumulate(S, axis=1)
     SA = VA / TOT if VA is not None else None
     out = {k: np.full((n, K), np.nan, np.float32) for k in NAMES}
@@ -179,6 +184,10 @@ def block(V, B, VA=None, skip_corr=None):
         tot = wv.sum(1)
         pos = tot > 0
         off = wv[:, ::-1].argmax(1)                                   # days from the latest maximum to the month end
+        ZERO[kind][0] += int((~pos & (e < first_view)).sum())
+        ZERO[kind][1] += int((~pos & (e >= first_view)).sum())
+        PEAK['windows'] += int(pos.sum())
+        PEAK['same_day'] += int(((ws[:, ::-1].argmax(1) == off) & pos).sum())
         p = e - off                                                   # index of the peak day
         with np.errstate(divide='ignore', invalid='ignore'):
             pk = np.where(pos, wv.max(1) / tot, np.nan)
@@ -240,7 +249,7 @@ for k in range(0, len(have_i), CHUNK):
     ii = have_i[k:k + CHUNK]
     V = AV[ii].astype(np.float64)
     B = top_matrix([[authors[i]] for i in ii])
-    parts.append(to_frame([authors[i] for i in ii], 'author', block(V, B)))
+    parts.append(to_frame([authors[i] for i in ii], 'author', block(V, B, kind='author')))
     log(f'  authors {min(k + CHUNK, len(have_i))}/{len(have_i)}')
 nofile = [authors[i] for i in np.where(~a_have)[0]]
 if nofile:
@@ -270,7 +279,7 @@ for k in range(0, len(books), CHUNK):
     VA = np.where(has_a[:, None], AV[np.maximum(ai, 0)], 0.0).astype(np.float64)
     same = np.array([b2a.get(b) == b for b in bs])
     B = top_matrix(titles)
-    res = block(V, B, VA, skip_corr=~has_a | same)
+    res = block(V, B, VA, skip_corr=~has_a | same, kind='book')
     df = to_frame(bs, 'book', res)
     if (~ok).any():
         bad_rows = np.repeat(~ok, K)
@@ -455,9 +464,11 @@ def quant(x):
 summ = dict(rows=int(len(F)), articles_book=int((F.kind == 'book').sum() // K), articles_author=int((F.kind == 'author').sum() // K), origins=K,
             mi_first=int(ORIGINS[0]), mi_last=int(ORIGINS[-1]), book_articles_without_any_series=no_series_books, author_articles_without_file=len(nofile),
             zero_window_share={kd: float(F.loc[F.kind == kd, 'pk28'].isna().mean()) for kd in ('book', 'author')},
+            zero_window_before_first_view={kd: dict(before=ZERO[kd][0], after=ZERO[kd][1]) for kd in ('book', 'author')},
             zero_normal_share={kd: float(F.loc[(F.kind == kd) & F.pk28.notna(), 'nrm0'].mean()) for kd in ('book', 'author')},
             peak_memory_mb=round(peak_mb()),
-            top500_days_with_list=n_list_days, top500_titles_seen=len(TOPDAYS), checks=chk | checks, test=TEST,
+            top500_days_with_list=n_list_days, top500_days_without_list_from_2016=MISSING_LIST_DAYS, top500_origins_with_a_missing_list_day=ORIGINS_NO_LIST,
+            peak_day_share_vs_views=dict(PEAK, share_same=PEAK['same_day'] / max(PEAK['windows'], 1)), top500_titles_seen=len(TOPDAYS), checks=chk | checks, test=TEST,
             share_missing={kd: {c: float(F.loc[F.kind == kd, c].isna().mean()) for c in NAMES + ['co']} for kd in ('book', 'author')},
             quantiles={kd: {c: quant(F.loc[F.kind == kd, c]) for c in NAMES + ['co']} for kd in ('book', 'author')},
             runtime_s=round(time.time() - T0))

@@ -8,14 +8,24 @@
 #   --stage c4      change 4: Tweedie count loss (2 variants), gate between library and Wikipedia, split-conformal 80% intervals
 #   --stage c2      change 2: burst-shape features (needs data/db/wiki_led/burst_features.parquet)
 #   --stage c5      change 5: events and adaptation views (needs data/db/wiki_led/events.parquet, adaptation_features.parquet)
-#   --stage report  writes data/reports/wiki_led_improve_v2.md and .json from the stage files
+#   --stage imp_c2, imp_c5   descriptive only: which columns the models chosen in c2 or c5 use (gain importance, models for test year 2026)
+#   --stage seed_c1, seed_c2, seed_c5   descriptive only: the ranker refitted with four other LightGBM seeds
+#   --stage noise_c2, noise_c5          descriptive only: the same models with random columns in place of the new columns
+#   (the report data/reports/wiki_led_improve_v2.md and .json is written by 81_improve_v2_report.py from the stage files)
 #   --sample 0.05   develop on a random 5% of the books; everything is written to data/interim/wiki_led_v2_sample/
 #
+# Order of a full rerun (from handoff/; check `bash jobs/status.sh` first, one heavy job at a time; c2, c5 and the seed and importance
+# stages read the choice of c1 from data/reports/wiki_led_improve_v2_c1.json):
+#   nice -n 10 bash jobs/bg.sh wl_v2_c1 main_study/wiki_led/80_improve_v2.py --stage c1        (about 6 minutes)
+#   nice -n 10 bash jobs/bg.sh wl_v2_c4 main_study/wiki_led/80_improve_v2.py --stage c4        (about 1 minute)
+#   nice -n 10 bash jobs/bg.sh wl_v2_c2 main_study/wiki_led/80_improve_v2.py --stage c2        (about 10 minutes)
+#   nice -n 10 bash jobs/bg.sh wl_v2_c5 main_study/wiki_led/80_improve_v2.py --stage c5        (about 15 minutes, needs the adaptation views)
+#   then, from code/: ../.venv/bin/python main_study/wiki_led/81_improve_v2_report.py
 # v0 = the stored Test A predictions (data/db/wiki_led/test_a_preds.parquet); nothing is refitted for v0.
 # Tuning: test years 2019-2023, walk-forward by year (a model for year Y trains on rows whose target month is before 1 January of Y).
 # Test: one run on 2024-2026 of v0 and the chosen variant on the same rows; paired differences by month with 95% intervals from
 # 2,000 draws of circular blocks of 3 consecutive scored months (numpy default_rng(20261020)), as in 10_test_a.py.
-import sys, json, time, pathlib, hashlib, argparse, resource
+import sys, json, time, pathlib, hashlib, argparse, resource, warnings
 import numpy as np, pandas as pd
 from scipy.stats import rankdata
 from sklearn.linear_model import Ridge
@@ -33,7 +43,7 @@ assert hashlib.sha256(ADD.read_bytes()).hexdigest() == '5f7f4ef33070f466951c7e37
 assert hashlib.sha256(NOTE.read_bytes()).hexdigest() == '9eaf8ef29ba95cca2c85fd3ad0dd12d2619161d61cc49d739baf4d0cba858655', 'note changed'
 
 ap = argparse.ArgumentParser()
-ap.add_argument('--stage', required=True, choices=['c1', 'c4', 'c2', 'c5', 'report'])
+ap.add_argument('--stage', required=True, choices=['c1', 'c4', 'c2', 'c5', 'imp_c2', 'imp_c5', 'seed_c1', 'seed_c2', 'seed_c5', 'noise_c2', 'noise_c5'])
 ap.add_argument('--sample', type=float, default=1.0)
 ap.add_argument('--dev-force', action='store_true', help='development only (needs --sample): force Tweedie 1.5 and the gate to exercise the code paths')
 ARGS = ap.parse_args()
@@ -101,8 +111,11 @@ def test_rows(R, Y):
 
 
 # ====================================================================== fitting helpers
+LGB_SEED = [SEED]          # only the seed check changes this
+
+
 def fit_reg(tr, cols, target, params=None, objective=None):
-    p = {**LGB, **(params or {})}
+    p = {**LGB, 'random_state': LGB_SEED[0], **(params or {})}
     if objective:
         p['objective'] = objective
     return lgb.LGBMRegressor(**p).fit(tr[cols], target)
@@ -111,7 +124,7 @@ def fit_reg(tr, cols, target, params=None, objective=None):
 def fit_rank(tr, cols, label, trunc):
     """LGBMRanker, lambdarank, one group per origin month (tr is sorted by month), default label gains."""
     grp = tr.groupby('mi', sort=True).size().values
-    m = lgb.LGBMRanker(objective='lambdarank', lambdarank_truncation_level=trunc, **LGB)
+    m = lgb.LGBMRanker(objective='lambdarank', lambdarank_truncation_level=trunc, **{**LGB, 'random_state': LGB_SEED[0]})
     return m.fit(tr[cols], np.asarray(label).astype(int), group=grp)
 
 
@@ -279,9 +292,14 @@ def make_BD(n, nb=2000, block=3):
 
 
 def ci_mean(x, BD):
+    """Mean over months and 95% interval from the month-block draws; months with a missing value are skipped."""
     x = np.asarray(x, dtype='float64')
-    b = np.nanmean(x[BD], axis=1)
-    return dict(value=float(np.nanmean(x)), lo=float(np.percentile(b, 2.5)), hi=float(np.percentile(b, 97.5)))
+    if np.isnan(x).all():
+        return dict(value=float('nan'), lo=float('nan'), hi=float('nan'))
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', RuntimeWarning)
+        b = np.nanmean(x[BD], axis=1)
+    return dict(value=float(np.nanmean(x)), lo=float(np.nanpercentile(b, 2.5)), hi=float(np.nanpercentile(b, 97.5)))
 
 
 def ci_pooled(t, num, den, BD):
@@ -314,7 +332,8 @@ def ap_draws(y, score, mpos, BD):
         cw = np.cumsum(w)
         cwy = np.cumsum(w * ys)
         tot = cwy[-1]
-        out[t] = (np.sum(w * ys * cwy / np.maximum(cw, 1e-12)) / tot) / (tot / cw[-1])
+        with np.errstate(invalid='ignore', divide='ignore'):          # a draw without any surge in its months gives NaN, skipped by the interval
+            out[t] = (np.sum(w * ys * cwy / np.maximum(cw, 1e-12)) / tot) / (tot / cw[-1])
     return out
 
 
@@ -325,7 +344,7 @@ def ap_ratio(y, score, mpos=None, BD=None):
     if BD is None:
         return v
     d = ap_draws(y, score, mpos, BD)
-    return dict(value=v, lo=float(np.percentile(d, 2.5)), hi=float(np.percentile(d, 97.5))), d
+    return dict(value=v, lo=float(np.nanpercentile(d, 2.5)), hi=float(np.nanpercentile(d, 97.5))), d
 
 
 def jdump(obj, path):
@@ -767,7 +786,13 @@ def reidx(t, months):
 
 
 def paired_block(tabs, a, b, keys, BD):
-    return {k: ci_paired_mean(tabs[a][k].values, tabs[b][k].values, BD) for k in keys}
+    out = {}
+    for k in keys:
+        d = ci_paired_mean(tabs[a][k].values, tabs[b][k].values, BD)
+        x = tabs[a][k].values - tabs[b][k].values
+        d['share_months_positive'] = float(np.mean(x[~np.isnan(x)] > 0)) if (~np.isnan(x)).any() else float('nan')
+        out[k] = d
+    return out
 
 
 def bundle(Sx, Dm, Ym, Rm, months, BD, min_rows, pairs):
@@ -785,6 +810,9 @@ def bundle(Sx, Dm, Ym, Rm, months, BD, min_rows, pairs):
     tE = {'W:' + k: reidx(ee.month_table(np.asarray(v)[em]), months) for k, v in Dm.items()}
     tE.update({'R:' + k: reidx(ee.month_table(v), months) for k, v in Rm.items()})
     out['change'], out['early'], out['level'] = {}, {}, {}
+    yr_of = (np.asarray(months) + 1) // 12
+    out['early_by_year'] = {int(y): {k: float(np.nanmean(t.p20_rise.values[yr_of == y])) if np.isfinite(t.p20_rise.values[yr_of == y]).any() else float('nan')
+                                     for k, t in tE.items()} for y in sorted(set(yr_of))}
     apd = {}
     for k, v in Dm.items():
         r = dict(change_rank=ci_mean(tD[k].change_rank.values, BD), alert20_all=ci_mean(tD[k].alert20_all.values, BD))
@@ -813,7 +841,7 @@ def bundle(Sx, Dm, Ym, Rm, months, BD, min_rows, pairs):
             if a in apd and b in apd:
                 dd = apd[a] - apd[b]
                 d['surge_ap_ratio'] = dict(diff=float(out['change'][a]['surge_ap_ratio']['value'] - out['change'][b]['surge_ap_ratio']['value']),
-                                           lo=float(np.percentile(dd, 2.5)), hi=float(np.percentile(dd, 97.5)))
+                                           lo=float(np.nanpercentile(dd, 2.5)), hi=float(np.nanpercentile(dd, 97.5)))
             out['paired'][key] = d
         elif kind == 'R':
             out['paired'][key] = paired_block(tE, a, b, EARLY_KEYS, BD)
@@ -847,11 +875,7 @@ def point_summary(Sx, Dm, Ym, Rm):
     return out
 
 
-def sub_rows(df, idx_arrays, mask):
-    return df[mask]
-
-
-def variant_stage(tag, R, variants, subgroup, placebo_frame_fn, label):
+def variant_stage(tag, R, variants, subgroup, placebo_frame_fn, label, placebo_mode='donor'):
     """Generic stage: baseline v0 = Test A's W_lgbm (and the change-1 ranker) on the 18 Test A features; each variant adds columns.
     Tuning on 2019-2023 chooses one W variant (by the mean within-month Spearman of D) and one ranker variant (by precision@20 of rises on
     eligible rows); both are then run once on 2024-2026 beside v0 on the same rows; the placebo reruns them with another book's pages."""
@@ -862,7 +886,8 @@ def variant_stage(tag, R, variants, subgroup, placebo_frame_fn, label):
                variants={k: v for k, v in variants.items()})
     S = R[R.scored]
     Stune = S[S.year.isin(TUNE_YEARS)]
-    tune_months = np.sort(Stune.mi.unique())
+    allcols = sorted({c for v in variants.values() for c in v})
+    res['missing_share_scored_rows'] = {c: float(S[c].isna().mean()) for c in allcols}
     # ---------------- tuning
     pD, pY, pR = {}, {}, {}
     pR['base'] = walk_rank(R, WCOLS, TUNE_YEARS, trunc, allr)
@@ -907,8 +932,6 @@ def variant_stage(tag, R, variants, subgroup, placebo_frame_fn, label):
                 Eg = E[E[col].values]
                 tes = EarlyEval(Eg, 40).month_table(pR[v].loc[Eg.index].values)
                 tune['ranker_' + v][f'sub_{sg_name}'] = dict(rows=int(len(Eg)), early_p20_rise=float(tes.p20_rise.mean()))
-            if True:
-                pass
     res['tuning_2019_2023'] = tune
     order = list(variants)
     wv = max(order, key=lambda v: (tune[v]['change_rank'], -order.index(v)))
@@ -960,22 +983,45 @@ def variant_stage(tag, R, variants, subgroup, placebo_frame_fn, label):
     res['excluding_may_june_2025'] = point_summary(Sx, {k: v[~mj] for k, v in Dm.items()}, {k: v[~mj] for k, v in Ym.items()},
                                                    {'ranker_c1': tR0.loc[gx].values, 'ranker_v2': tR_.loc[gx].values})
     # ---------------- placebo
+    # donor mode: every Wikipedia feature of a book is replaced by that of a similar-traffic book (placebo of v0 = the stored pW_D);
+    # shift mode: only the new columns are moved 12 months later and the baseline is the real v0 and the real ranker of change 1.
     P = placebo_frame_fn(R, variants[wv], variants[rv])
     assert (P.work_id.values == R.work_id.values).all() and (P.mi.values == R.mi.values).all()
     P['elig'] = R.elig.values
     pl_D = walk_reg(P, WCOLS + variants[wv], 'D', TEST_YEARS)
+    pl_Y = walk_reg(P, WCOLS + variants[wv], 'Y', TEST_YEARS)
     pl_R = walk_rank(P, WCOLS + variants[rv], TEST_YEARS, trunc, allr)
-    pl_R0 = walk_rank(P, WCOLS, TEST_YEARS, trunc, allr)
-    pl0 = pd.read_parquet(IN / 'placebo_a_preds.parquet', columns=['work_id', 'mi', 'pW_D']).set_index(['work_id', 'mi']).pW_D
-    pl0 = pl0.reindex(pd.MultiIndex.from_arrays([Stest.work_id.values, Stest.mi.values])).values
-    assert not np.isnan(pl0).any()
     Pt = P.loc[Stest.index]
     pgx = Pt.index[Pt.elig.values]
+    if placebo_mode == 'donor':
+        pl_R0 = walk_rank(P, WCOLS, TEST_YEARS, trunc, allr)
+        pla = pd.read_parquet(IN / 'placebo_a_preds.parquet', columns=['work_id', 'mi', 'pW_D', 'pW_Y']).set_index(['work_id', 'mi'])
+        key = pd.MultiIndex.from_arrays([Stest.work_id.values, Stest.mi.values])
+        pl0, pl0Y = pla.pW_D.reindex(key).values, pla.pW_Y.reindex(key).values
+        assert not np.isnan(pl0).any() and not np.isnan(pl0Y).any()
+        rk0_series = pl_R0
+        rk0 = pl_R0.loc[pgx].values
+        note = 'placebo features of another book (donor map of 11_placebo_a.py) for every feature of the variant; the gain over placebo v0 should vanish'
+    else:
+        pl0, pl0Y = Stest.Wlgbm_D.values, Stest.Wlgbm_Y.values
+        rk0_series = tR0
+        rk0 = tR0.loc[pgx].values
+        note = 'the new columns moved 12 months later (value at origin t taken from origin t - 12) with the Test A features left as they are; the gain over the real v0 should vanish'
     Dm_p = {'placebo_v0': pl0, 'placebo_v2': pl_D.loc[Pt.index].values}
-    Rm_p = {'placebo_ranker_c1': pl_R0.loc[pgx].values, 'placebo_ranker_v2': pl_R.loc[pgx].values}
-    pairs_p = [('D', 'placebo_v2', 'placebo_v0'), ('R', 'W:placebo_v2', 'W:placebo_v0'), ('R', 'R:placebo_ranker_v2', 'R:placebo_ranker_c1')]
-    res['placebo'] = bundle(Pt, Dm_p, {}, Rm_p, months, BD, 2, pairs_p)
-    res['placebo']['note'] = 'placebo features of another book (donor map of 11_placebo_a.py) for every feature of the variant; the gain over placebo v0 should vanish'
+    Ym_p = {'placebo_v0': pl0Y, 'placebo_v2': pl_Y.loc[Pt.index].values}
+    Rm_p = {'placebo_ranker_c1': rk0, 'placebo_ranker_v2': pl_R.loc[pgx].values}
+    pairs_p = [('D', 'placebo_v2', 'placebo_v0'), ('Y', 'placebo_v2', 'placebo_v0'), ('R', 'W:placebo_v2', 'W:placebo_v0'), ('R', 'R:placebo_ranker_v2', 'R:placebo_ranker_c1')]
+    res['placebo'] = bundle(Pt, Dm_p, Ym_p, Rm_p, months, BD, 2, pairs_p)
+    res['placebo']['note'] = note
+    res['placebo']['mode'] = placebo_mode
+    if subgroup:                                   # the same placebo on the rows of the subgroup (flags from the real data)
+        res['placebo']['subgroups'] = {}
+        for sg_name, col in subgroup.items():
+            m_ = Stest[col].values
+            Sg_ = Pt[m_]
+            gx_ = Sg_.index[Sg_.elig.values]
+            Rg_ = {'placebo_ranker_c1': rk0_series.loc[gx_].values, 'placebo_ranker_v2': pl_R.loc[gx_].values}
+            res['placebo']['subgroups'][sg_name] = bundle(Sg_, {k: v[m_] for k, v in Dm_p.items()}, {k: v[m_] for k, v in Ym_p.items()}, Rg_, months, BD, 40, pairs_p)
     # ---------------- save
     parts = [R.loc[pD[v].index, ['work_id', 'mi', 'year', 'D']].assign(phase='tuning', model='W_D_' + v, score=pD[v].values) for v in variants]
     parts.append(R.loc[tD_.index, ['work_id', 'mi', 'year', 'D']].assign(phase='test', model='W_D_' + wv, score=tD_.values))
@@ -999,12 +1045,9 @@ def merge_burst(R, B):
     return R.sort_values(['mi', 'work_id']).reset_index(drop=True)
 
 
-def stage_c2():
-    path = IN / 'burst_features.parquet'
-    if not path.exists():
-        jdump(dict(stage='c2', status='not run: data/db/wiki_led/burst_features.parquet does not exist'), REP / 'wiki_led_improve_v2_c2.json')
-        return
-    B = pd.read_parquet(path)
+def c2_setup():
+    """Frame with the burst columns merged, the variants and notes (shared by stage c2 and the importance stage)."""
+    B = pd.read_parquet(IN / 'burst_features.parquet')
     R = merge_burst(load(), B)
     v1 = ['b_' + c for c in DAILY7] + ['a_' + c for c in DAILY7] + ['b_corr28', 'b_co']
     v2 = [p + '_' + c for c in ('pk28', 'pre7', 'hi28', 'rec') for p in ('b', 'a')] + ['b_co']
@@ -1018,6 +1061,15 @@ def stage_c2():
             variants['B3_same_name'] = v1 + ['b_same_name', 'b_other_r4']
     else:
         notes['B3'] = 'not run: same_name and other_r4 are not in burst_features.parquet (they need the Wikimedia REST API)'
+    return R, B, variants, notes
+
+
+def stage_c2():
+    path = IN / 'burst_features.parquet'
+    if not path.exists():
+        jdump(dict(stage='c2', status='not run: data/db/wiki_led/burst_features.parquet does not exist'), REP / 'wiki_led_improve_v2_c2.json')
+        return
+    R, B, variants, notes = c2_setup()
     log('variants', {k: len(v) for k, v in variants.items()}, notes)
     donor, info = donor_map()
     burst_tab = B
@@ -1028,18 +1080,225 @@ def stage_c2():
         return placebo_frame(Rx, donor, info, extra_tables=[(burst_tab, 'book', cols_b), (burst_tab, 'author', cols_a)])
 
     variant_stage('c2', R, variants, {'burst_book': 'burst_book'}, pf, 'burst-shape and noise features (change 2)')
-    # variant notes into the JSON
     f = REP / 'wiki_led_improve_v2_c2.json'
     r = json.loads(f.read_text())
     r['notes'] = notes
     jdump(r, f)
 
 
+# ====================================================================== stage c5: dated events and adaptation views
+def build_event_columns(R, EV, EL, PG, AD):
+    """Merge the event columns onto R. EV: events.parquet; EL: events_long.parquet; PG: adaptation_page_features (has_data per page and origin) or None;
+    AD: adaptation_features.parquet or None. Returns (R, notes)."""
+    notes = {}
+    ev = EV[['work_id', 'mi', 'died', 'award', 'ad_rel', 'months_since_event']].copy()
+    ev['ad_rel'] = ev.ad_rel.astype(float)
+    if PG is not None and EL is not None:
+        a = EL[(EL.event == 'adaptation') & EL.type_group.isin(['film', 'tv']) & EL.mi_event.notna()].copy()
+        a['page'] = a.en_title.astype(str).str.replace(' ', '_')
+        rows = [a[['subject', 'page']].assign(mi=(a.mi_event.astype(int) + k)) for k in (-1, 0, 1)]
+        X = pd.concat(rows, ignore_index=True)                       # origin months t in which this adaptation is released within t-1..t+1
+        has = PG[['article', 'mi', 'has_data']].rename(columns={'article': 'page'})
+        X = X.merge(has, on=['page', 'mi'], how='left')
+        pub = X[X.has_data == True][['subject', 'mi']].drop_duplicates()
+        pub['public'] = 1.0
+        item = EV[['work_id', 'item']].drop_duplicates('work_id')
+        ev = ev.merge(item, on='work_id', how='left').merge(pub.rename(columns={'subject': 'item'}), on=['item', 'mi'], how='left').drop(columns='item')
+        ev['public'] = ev.public.fillna(0.0)
+        if 'ad_rel_public' in EV.columns and EV.ad_rel_public.notna().any():       # a column filled by another job: compare, but use the one computed here
+            other = EV[['work_id', 'mi', 'ad_rel', 'ad_rel_public']].merge(ev[['work_id', 'mi', 'public']], on=['work_id', 'mi'])
+            on = other[other.ad_rel > 0]
+            notes['ad_rel_public_in_file'] = f"agrees with the one computed here in {float(((on.ad_rel_public > 0).astype(float) == on.public).mean()):.4f} of the {len(on):,} work-months with a release in t-1..t+1"
+        n_raw = int(ev.ad_rel.sum())
+        ev['ad_rel'] = ev.ad_rel * ev.public
+        notes['ad_rel'] = f"ad_rel requires that the adaptation article already had views before the end of t: {n_raw:,} work-months with a release in t-1..t+1 become {int(ev.ad_rel.sum()):,}"
+        ev = ev.drop(columns='public')
+    else:
+        notes['ad_rel'] = 'ad_rel uses the release date only (the adaptation-page views were not available, so the public check could not be made)'
+    ev = ev.rename(columns={'died': 'e_died', 'award': 'e_award', 'ad_rel': 'e_ad_rel', 'months_since_event': 'e_since'})
+    R = R.merge(ev, on=['work_id', 'mi'], how='left')
+    if AD is not None:
+        R = R.merge(AD[['work_id', 'mi', 'ad_lvl4', 'ad_r4', 'ad_rmax']], on=['work_id', 'mi'], how='left')
+    # rows within 2 months of an event: an event month e of the book or its author (death, dated award, film or tv release) with t-2 <= e <= t+2
+    near = pd.DataFrame(columns=['work_id', 'mi'])
+    if EL is not None:
+        L2 = EL[EL.mi_event.notna() & ((EL.event != 'adaptation') | EL.type_group.isin(['film', 'tv']))][['subject', 'mi_event']]
+        W2 = EV[['work_id', 'item', 'author_item']].drop_duplicates('work_id')
+        pairs = pd.concat([W2[['work_id', 'item']].rename(columns={'item': 'subject'}), W2[['work_id', 'author_item']].rename(columns={'author_item': 'subject'})]).dropna()
+        pe = pairs.merge(L2, on='subject')[['work_id', 'mi_event']].drop_duplicates()
+        near = pd.concat([pe.assign(mi=pe.mi_event.astype(int) + k) for k in range(-2, 3)])[['work_id', 'mi']].drop_duplicates()
+    near['near_event'] = True
+    R = R.merge(near, on=['work_id', 'mi'], how='left')
+    R['near_event'] = R.near_event.fillna(False).astype(bool)
+    notes['near_event_share_of_rows'] = float(R.near_event.mean())
+    return R.sort_values(['mi', 'work_id']).reset_index(drop=True), notes
 
-STAGES = {'c1': stage_c1, 'c4': stage_c4, 'c2': stage_c2}
+
+def shift_columns(R, cols, k=12):
+    """Value of each column at origin t taken from origin t - k of the same work (the placebo: events moved k months later)."""
+    x = R[['work_id', 'mi'] + cols].copy()
+    x['mi'] = x['mi'] + k
+    P = R.drop(columns=cols).merge(x, on=['work_id', 'mi'], how='left')
+    return P.sort_values(['mi', 'work_id']).reset_index(drop=True)
+
+
+def c5_setup():
+    """Frame with the event and adaptation columns merged, the variants and notes (shared by stage c5 and the importance stage)."""
+    EV = pd.read_parquet(IN / 'events.parquet')
+    el_path, pg_path, ad_path = IN / 'events_long.parquet', IN / 'adaptation_page_features.parquet', IN / 'adaptation_features.parquet'
+    EL = pd.read_parquet(el_path) if el_path.exists() else None
+    have_views = pg_path.exists() and ad_path.exists()
+    PG = pd.read_parquet(pg_path) if have_views else None
+    AD = pd.read_parquet(ad_path) if have_views else None
+    R, notes = build_event_columns(load(), EV, EL, PG, AD)
+    flags = ['e_died', 'e_award', 'e_ad_rel', 'e_since']
+    variants = {'E1_flags': flags}
+    if have_views:
+        variants['E2_flags_views'] = flags + ['ad_lvl4', 'ad_r4', 'ad_rmax']
+    else:
+        notes['E2'] = 'not run: the adaptation-page views (adaptation_features.parquet) were not complete'
+    sc = R.loc[R.scored]
+    notes['rows_with_flag'] = {c: int((sc[c] > 0).sum()) for c in ('e_died', 'e_award', 'e_ad_rel')}
+    return R, variants, notes
+
+
+def stage_c5():
+    if not (IN / 'events.parquet').exists():
+        jdump(dict(stage='c5', status='not run: data/db/wiki_led/events.parquet does not exist'), REP / 'wiki_led_improve_v2_c5.json')
+        return
+    R, variants, notes = c5_setup()
+    log('variants', {k: len(v) for k, v in variants.items()}, notes)
+
+    def pf(Rx, wcols, rcols):
+        return shift_columns(Rx, sorted(set(c for c in wcols + rcols)), 12)
+
+    variant_stage('c5', R, variants, {'event': 'near_event'}, pf, 'dated events and adaptation views (change 5)', placebo_mode='shift')
+    f = REP / 'wiki_led_improve_v2_c5.json'
+    r = json.loads(f.read_text())
+    r['notes'] = notes
+    jdump(r, f)
+
+
+# ====================================================================== descriptive: which columns the chosen models use
+def stage_importance(tag):
+    """Gain importance (share of the total) of the columns in the models chosen in stage `tag`, fitted for test year 2026 (training rows with
+    target months before 1 January 2026). Descriptive only: not part of any choice."""
+    r = json.loads((REP / f'wiki_led_improve_v2_{tag}.json').read_text())
+    if tag == 'c2':
+        R, _, variants, _ = c2_setup()
+    else:
+        R, variants, _ = c5_setup()
+    wv, rv = r['choice']['W']['chosen'], r['choice']['ranker']['chosen']
+    trunc, allr = r['ranker_config']['truncation'], r['ranker_config']['all_rows']
+    tr = train_rows(R, 2026)
+    out = dict(stage=tag + '_importance', note='gain importance, share of total, models fitted for test year 2026; descriptive only')
+    m = fit_reg(tr, WCOLS + variants[wv], tr.D)
+    g = pd.Series(m.booster_.feature_importance('gain'), index=WCOLS + variants[wv])
+    out['W_model_change'] = {k: float(v) for k, v in (g / g.sum()).sort_values(ascending=False).items()}
+    trn = tr if allr else tr[tr.elig]
+    mr = fit_rank(trn, WCOLS + variants[rv], trn.rel.where(trn.elig, 0), trunc)
+    g = pd.Series(mr.booster_.feature_importance('gain'), index=WCOLS + variants[rv])
+    out['ranker'] = {k: float(v) for k, v in (g / g.sum()).sort_values(ascending=False).items()}
+    out['new_columns_share'] = dict(W_model=float(sum(out['W_model_change'][c] for c in variants[wv])), ranker=float(sum(out['ranker'][c] for c in variants[rv])))
+    jdump(out, REP / f'wiki_led_improve_v2_{tag}_importance.json')
+
+
+# ====================================================================== descriptive: does the ranker result depend on the LightGBM seed?
+def stage_seed_check(tag):
+    """Refit the ranker(s) of stage `tag` for 2024-2026 with four other seeds (rows and columns are subsampled by LightGBM) and give the
+    precision@20 of rises on the eligible rows. c1: the change-1 ranker against v0; c2 and c5: the ranker with and without the new columns.
+    Descriptive only: nothing is chosen or changed by it."""
+    c1 = json.loads((REP / 'wiki_led_improve_v2_c1.json').read_text())
+    trunc, allr = C1_VARIANTS[c1['choice']['chosen']]
+    if tag == 'c1':
+        R = load()
+        extra = None
+    else:
+        r = json.loads((REP / f'wiki_led_improve_v2_{tag}.json').read_text())
+        if tag == 'c2':
+            R, _, variants, _ = c2_setup()
+        else:
+            R, variants, _ = c5_setup()
+        extra = variants[r['choice']['ranker']['chosen']]
+    S = R[R.scored]
+    Stest = S[S.year.isin(TEST_YEARS)]
+    E = Stest[Stest.elig].sort_values(['mi', 'work_id'])
+    ee = EarlyEval(E)
+    out = dict(stage=tag + '_seed_check', note='descriptive: precision@20 of rises on the eligible rows of 2024-2026 for different LightGBM seeds', seeds={})
+    v0 = ee.month_table(E.Wlgbm_D.values).p20_rise.mean()
+    out['v0_W_lgbm_p20_rise'] = float(v0)
+    for seed in (SEED, 1, 2, 3, 4):
+        LGB_SEED[0] = seed
+        a = walk_rank(R, WCOLS, TEST_YEARS, trunc, allr).loc[E.index].values
+        d = dict(ranker_without_new_columns=float(ee.month_table(a).p20_rise.mean()))
+        if extra:
+            b = walk_rank(R, WCOLS + extra, TEST_YEARS, trunc, allr).loc[E.index].values
+            d['ranker_with_new_columns'] = float(ee.month_table(b).p20_rise.mean())
+            d['difference'] = d['ranker_with_new_columns'] - d['ranker_without_new_columns']
+        else:
+            d['difference_from_v0'] = d['ranker_without_new_columns'] - float(v0)
+        out['seeds'][str(seed)] = d
+        log('seed', seed, d)
+    LGB_SEED[0] = SEED
+    key = 'difference' if extra else 'difference_from_v0'
+    vals = np.array([v[key] for v in out['seeds'].values()])
+    out['summary'] = dict(key=key, mean=float(vals.mean()), min=float(vals.min()), max=float(vals.max()))
+    jdump(out, REP / f'wiki_led_improve_v2_{tag}_seed_check.json')
+
+
+# ====================================================================== descriptive: what does adding columns with no information do?
+def stage_noise_check(tag, seeds=(SEED, 1, 2)):
+    """Refit the Wikipedia model of the change and the ranker for 2024-2026 with columns of random numbers in place of the new columns of
+    stage `tag` (same number of columns), for three LightGBM seeds, and compare each with the same model without extra columns and the same seed.
+    This shows how much the change ranking and precision@20 move when columns with no information are added (LightGBM subsamples
+    columns and rows, so any change of the column set changes the trees). Descriptive only."""
+    c1 = json.loads((REP / 'wiki_led_improve_v2_c1.json').read_text())
+    trunc, allr = C1_VARIANTS[c1['choice']['chosen']]
+    r = json.loads((REP / f'wiki_led_improve_v2_{tag}.json').read_text())
+    if tag == 'c2':
+        R, _, variants, _ = c2_setup()
+    else:
+        R, variants, _ = c5_setup()
+    wv, rv = r['choice']['W']['chosen'], r['choice']['ranker']['chosen']
+    n_w, n_r = len(variants[wv]), len(variants[rv])
+    rng = np.random.default_rng(777)
+    names = [f'noise{i}' for i in range(max(n_w, n_r))]
+    for c in names:
+        R[c] = rng.standard_normal(len(R))
+    S = R[R.scored]
+    Stest = S[S.year.isin(TEST_YEARS)]
+    ce = ChangeEval(Stest)
+    E = Stest[Stest.elig].sort_values(['mi', 'work_id'])
+    ee = EarlyEval(E)
+    em = Stest.elig.values
+    out = dict(stage=tag + '_noise_check', n_noise_columns=dict(W_model=n_w, ranker=n_r), seeds={},
+               note='descriptive: random columns added in place of the new columns; same seed for the model with and without them')
+    for seed in seeds:
+        LGB_SEED[0] = seed
+        d0 = walk_reg(R, WCOLS, 'D', TEST_YEARS).loc[Stest.index].values
+        d1 = walk_reg(R, WCOLS + names[:n_w], 'D', TEST_YEARS).loc[Stest.index].values
+        r0 = walk_rank(R, WCOLS, TEST_YEARS, trunc, allr).loc[E.index].values
+        r1 = walk_rank(R, WCOLS + names[:n_r], TEST_YEARS, trunc, allr).loc[E.index].values
+        row = dict(change_rank_without=float(ce.month_table(d0).change_rank.mean()), change_rank_with_noise=float(ce.month_table(d1).change_rank.mean()),
+                   early_p20_W_without=float(ee.month_table(d0[em]).p20_rise.mean()),
+                   early_p20_W_with_noise=float(ee.month_table(d1[em]).p20_rise.mean()),
+                   ranker_p20_without=float(ee.month_table(r0).p20_rise.mean()), ranker_p20_with_noise=float(ee.month_table(r1).p20_rise.mean()))
+        row['change_rank_diff'] = row['change_rank_with_noise'] - row['change_rank_without']
+        row['early_p20_W_diff'] = row['early_p20_W_with_noise'] - row['early_p20_W_without']
+        row['ranker_p20_diff'] = row['ranker_p20_with_noise'] - row['ranker_p20_without']
+        out['seeds'][str(seed)] = row
+        log('noise check seed', seed, row)
+    LGB_SEED[0] = SEED
+    for k in ('change_rank_diff', 'early_p20_W_diff', 'ranker_p20_diff'):
+        v = np.array([x[k] for x in out['seeds'].values()])
+        out[k] = dict(mean=float(v.mean()), min=float(v.min()), max=float(v.max()))
+    jdump(out, REP / f'wiki_led_improve_v2_{tag}_noise_check.json')
+
+
+STAGES = {'c1': stage_c1, 'c4': stage_c4, 'c2': stage_c2, 'c5': stage_c5,
+          'imp_c2': lambda: stage_importance('c2'), 'imp_c5': lambda: stage_importance('c5'),
+          'seed_c1': lambda: stage_seed_check('c1'), 'seed_c2': lambda: stage_seed_check('c2'), 'seed_c5': lambda: stage_seed_check('c5'),
+          'noise_c2': lambda: stage_noise_check('c2'), 'noise_c5': lambda: stage_noise_check('c5')}
 
 if __name__ == '__main__':
-    if ARGS.stage in STAGES:
-        STAGES[ARGS.stage]()
-    else:
-        log('stage', ARGS.stage, 'not implemented yet')
+    STAGES[ARGS.stage]()
