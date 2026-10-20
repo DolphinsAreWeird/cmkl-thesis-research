@@ -114,6 +114,19 @@ Qa, Qb = pd.read_parquet(DB / 'test_d_preds.parquet', columns=['work_id', 'forma
 dq_same = len(Qa) == len(Qb) and bool((Qa.work_id.to_numpy() == Qb.work_id.to_numpy()).all() and (Qa.mi.to_numpy() == Qb.mi.to_numpy()).all())
 maxd_dh = {c: float(np.abs(Qa[c].to_numpy(np.float64) - Qb[c].to_numpy(np.float64)).max()) for c in ['H', 'naive', 'H_Y', 'naive_Y']} if dq_same else {}
 del Qa, Qb
+# Test C: same rows and the same reference forecasts (they do not use Wikipedia)
+CREF = ['y_true', 'y_t', 'naive', 'seasonal_naive', 'revert6', 'chronos2', 'chronos2_cur', 'median_all']
+Ca, Cb = pd.read_parquet(DB / 'test_c_preds.parquet'), pd.read_parquet(DB / 'test_c_preds_c.parquet')
+c_rows_same = len(Ca) == len(Cb) and all(bool((Ca[k].astype(str).to_numpy() == Cb[k].astype(str).to_numpy()).all()) for k in ['format', 'level', 'node_id', 'origin_mi'])
+c_ref_bad = same_cols(Ca, Cb, [c for c in CREF if c in Ca.columns]) if c_rows_same else {'rows': 1}
+del Ca, Cb
+# placebo: same scored rows, and the library-history predictions it carries are the same
+PLa, PLb = pd.read_parquet(DB / 'placebo_a_preds.parquet', columns=['work_id', 'mi', 'D', 'Hlgbm_D']), pd.read_parquet(DB / 'placebo_a_preds_c.parquet', columns=['work_id', 'mi', 'D', 'Hlgbm_D'])
+pl_rows_same = len(PLa) == len(PLb) and bool((PLa.work_id.to_numpy() == PLb.work_id.to_numpy()).all() and (PLa.mi.to_numpy() == PLb.mi.to_numpy()).all())
+pl_bad = same_cols(PLa, PLb, ['D']) if pl_rows_same else {'rows': 1}
+pl_maxd_h = float(np.abs(PLa.Hlgbm_D.to_numpy(np.float64) - PLb.Hlgbm_D.to_numpy(np.float64)).max()) if pl_rows_same else float('nan')
+n_pl_rows = len(PLb)
+del PLa, PLb
 
 # ================================================================ header and what was corrected
 WFc_ = pd.read_parquet(DB / 'test_a_wiki_features_c.parquet', columns=['kind', 'article'])
@@ -139,7 +152,7 @@ add('- **C1, time-safe candidates in Test C.** For test year Y the candidate boo
     'The look-ahead version `Wsel_insample` (used only for C2) keeps the full pool, because it is the version that deliberately uses everything.')
 add('')
 add('Scripts (all in `code/main_study/wiki_led/`, each a copy of the original with only these changes, every one asserts the SHA-256 of its record and of addendum e and runs with `nice`): '
-    '`10c_test_a.py`, `11c_placebo_a.py`, `20c_test_c.py`, `60c_test_d_rows.py`, `61c_test_d_models.py`, `13c_accuracy_alert_panels.py`, the checks `10c_check_features.py` and this report script. '
+    '`10c_test_a.py`, `11c_placebo_a.py`, `20c_test_c.py`, `60c_test_d_rows.py`, `61c_test_d_models.py`, `13c_accuracy_alert_panels.py`, the checks `10c_check_features.py` and `20c_check_series.py`, and this report script. '
     f'Run times and peak memory of the corrected jobs: Test A {A1["runtime_s"]} s and {A1["peak_rss_mb"]:,} MB; placebo {P1["runtime_s"]} s and {P1["peak_rss_mb"]:,} MB; '
     f'Test C {C1["runtime_s"]} s and {C1["peak_rss_mb"]:,} MB; Test D models {T1["runtime_s"]} s and {T1["peak_rss_mb"]:,} MB (the Test D rows build prints its own footprint in `wiki_led_test_d_data_c.md`).')
 add('')
@@ -155,6 +168,10 @@ add(f'- **Models that do not use Wikipedia.** The predictions of N0, the naive r
 add(f'- **Test D rows.** {n_d_rows:,} rows in both files; same rows in the same order: {yn(d_rows_same)}; library columns with a differing value: {sum(d_lib_bad.values())}. Share of rows with a book-article feature: '
     f'{d_shares["b0"]:.4f} original, {d_shares["b1"]:.4f} corrected; with an author-article feature: {d_shares["a0"]:.4f} original, {d_shares["a1"]:.4f} corrected. '
     + ('Predictions of the models that do not use Wikipedia (H, naive): largest absolute difference ' + ', '.join(f'{c} {v:.2e}' for c, v in maxd_dh.items()) + '.' if maxd_dh else ''))
+add(f'- **Test C rows.** Same rows (format, level, theme, origin) in the same order: {yn(c_rows_same)}; differing values in the target and in the forecasts that do not use Wikipedia (repeat last month, seasonal repeat, mean of 6 months, Chronos-2, Chronos-2 + concept pages, median): '
+    f'{sum(c_ref_bad.values())}.')
+add(f'- **Placebo rows.** {n_pl_rows:,} scored rows in both runs, same rows in the same order: {yn(pl_rows_same)}; differing values of the outcome D: {sum(pl_bad.values())}; '
+    f'library-history predictions carried beside the placebo (from Test A): largest absolute difference {pl_maxd_h:.2e}.')
 add('- **Recomputation from the saved predictions.** The change rank of W LightGBM, library history and history + Wikipedia, recomputed here from `test_a_preds.parquet` and `test_a_preds_c.parquet` '
     '(Spearman within each month, averaged over the 78 months): ' + '; '.join(f'{c.replace("_D", "")} {RECOMP[(c, "original")]:.4f} original, {RECOMP[(c, "corrected")]:.4f} corrected' for c in ('Wlgbm_D', 'Hlgbm_D', 'HWlgbm_D'))
     + '; the values in the tables below come from the result files and agree to four decimals: ' + yn(all(abs(RECOMP[(c, "original")] - A0["change_rank"][c]["mean"]) < 5e-5 and abs(RECOMP[(c, "corrected")] - A1["change_rank"][c]["mean"]) < 5e-5 for c in ("Wlgbm_D", "Hlgbm_D", "HWlgbm_D"))) + '.')
@@ -237,29 +254,34 @@ add('')
 add('### Alert lists (top 20 and top 50 books by predicted rise each month; share that rose at least 50% above M6, share that surged)')
 add('')
 tie = float(np.abs(AL0.to_numpy(float)[:, :2] - AL0r.to_numpy(float)[:, :2]).max()) if AL0.shape == AL0r.shape else float('nan')
-add(f'"Original (stored)" is the file written on 20 Oct 17:52; "original (recomputed)" is the same code run on the original predictions (they differ by at most {tie:.4f} because tied scores are ordered differently, '
-    'as the audit noted); the difference column compares the corrected value with the recomputed original, so that it contains no tie noise.')
+add(f'The same code, run on the original predictions (`13c_accuracy_alert_panels.py --orig`), reproduces the stored original alert file with a largest difference of {tie:.1e} and the stored accuracy file with {maxd_acc_r:.1e}, '
+    'so the original column below is the file written on 20 Oct 17:52 and the differences contain no change of method.')
 add('')
 rows = []
 for (name, k) in AL1.index:
     for c, cn in (('rose', 'rose'), ('surged', 'surged'), ('months_beating_base', 'months beating the base rate')):
-        o_s, o_r, cc = AL0.loc[(name, k), c], AL0r.loc[(name, k), c], AL1.loc[(name, k), c]
+        o_s, cc = AL0.loc[(name, k), c], AL1.loc[(name, k), c]
         if nan(o_s) and nan(cc):
             continue
-        r = row('alert_list', f'{name}, top {k}: {cn}', o_r, cc, 4)
-        rows.append([r[0], f(o_s, 4), r[1], r[2], r[3]])
-add(table(['list and measure', 'original (stored)', 'original (recomputed)', 'corrected', 'difference'], rows))
+        rows.append(row('alert_list', f'{name}, top {k}: {cn}', o_s, cc, 4))
+add(table(['list and measure', 'original', 'corrected', 'difference'], rows))
 add('')
 
 # ================================================================ placebo
 add('## 3. Placebo: each book given another book\'s Wikipedia pages (corrected rows, P1 donors)')
 add('')
 p1 = P1['p1_donors']
-add(f'Donors: {P1["donors"]:,} of the {A1["n"]["books"]:,} books have one (the other books have no Wikipedia feature at all, {P1["rows_without_donor"]} rows, and keep their own); {p1["donors_used"]:,} different donors are used, no donor serves more than {p1["max_books_per_donor"]} books '
-    f'(donors by number of books served: {", ".join(f"{k} book(s): {v:,}" for k, v in p1["donor_reuse_counts"].items())}). In the original run one donor served 1,564 books, 19% of the scored rows; now the most used donor has '
-    f'{p1["rows_of_most_used_donor_scored"]:,} scored rows ({100 * p1["share_of_scored_rows_of_most_used_donor"]:.2f}%). The nearest donor in the order was found after a median of {p1["median_search_steps"]:.0f} steps '
-    f'(at most {p1["max_search_steps"]}); the median absolute gap in matching value is {p1["median_abs_gap_matching_value"]:.3f} (90th percentile {p1["p90_abs_gap_matching_value"]:.3f}). '
-    f'The different-article rule changes the donor of {p1["recipients_whose_donor_changes_with_different_article_rule"]} books; without it {p1["recipients_that_would_get_their_own_article_without_that_rule"]} books would have been given their own article.')
+n_pass2 = int(p1['recipients_second_pass'])                              # books matched on the author-article value
+n_nodonor = int(A1['n']['books'] - P1['donors'])                         # books with neither matching value
+def books(n):
+    return f'{n:,} book' + ('' if n == 1 else 's')
+
+
+add(f'Donors: {P1["donors"]:,} of the {A1["n"]["books"]:,} books have one (the other {books(n_nodonor)} have no Wikipedia feature at all, {P1["rows_without_donor"]} rows, and keep their own); {p1["donors_used"]:,} different donors are used, no donor serves more than {p1["max_books_per_donor"]} books '
+    f'(donors by number of books served: {", ".join(f"{k}: {v:,}" for k, v in p1["donor_reuse_counts"].items())}). In the original run one donor served 1,564 books, 19% of the scored rows; now the most used donor has '
+    f'{p1["rows_of_most_used_donor_scored"]:,} scored rows ({100 * p1["share_of_scored_rows_of_most_used_donor"]:.2f}%). The nearest donor in the order was found after a median of {p1["median_search_steps"]:.0f} '
+    f'step{"" if p1["median_search_steps"] == 1 else "s"} (at most {p1["max_search_steps"]}); the median absolute gap in matching value is {p1["median_abs_gap_matching_value"]:.4f} (90th percentile {p1["p90_abs_gap_matching_value"]:.4f}). '
+    f'The different-article rule changes the donor of {books(p1["recipients_whose_donor_changes_with_different_article_rule"])}; without it {books(p1["recipients_that_would_get_their_own_article_without_that_rule"])} would have been given its own article.')
 add('')
 rows = []
 for k, nm in (('Wlgbm_D', 'W LightGBM, real pages'), ('pW_D', 'W LightGBM, placebo pages'), ('HWlgbm_D', 'HW LightGBM, real pages'), ('pHW_D', 'HW LightGBM, placebo pages'), ('Hlgbm_D', 'H LightGBM (library history)')):
@@ -324,23 +346,32 @@ add(f'Rows scored: {sum(T1["n"].values()):,} (print {T1["n"]["print"]:,}, ebook 
 add('')
 FM = ['print', 'ebook', 'audiobook', 'all']
 MD = {'W': 'W (Wikipedia only)', 'H': 'H (library history)', 'HW': 'HW (history + Wikipedia)', 'naive': 'naive (repeat last month)'}
-add('### Alert hit rate: share of each month\'s top 20 books (drawn within the format) that rose at least 50% above M6')
+add('Base rates (same rows in both runs, so unchanged): share of rows that rose ' + ', '.join(f'{f_} {T1["base_rose"][f_]:.4f}' for f_ in FM)
+    + '; share that surged ' + ', '.join(f'{f_} {T1["base_surge"][f_]:.4f}' for f_ in FM)
+    + f'. Same in the original file: {yn(all(abs(T0["base_rose"][f_] - T1["base_rose"][f_]) < 1e-12 and abs(T0["base_surge"][f_] - T1["base_surge"][f_]) < 1e-12 for f_ in FM))}.')
+add('')
+for key_, title_, sec_ in (('alert', 'Alert hit rate: share of each month\'s top 20 and top 50 books (drawn within the format) that rose at least 50% above M6', 'test_d.alert'),
+                           ('early', 'Early-warning hit rate: the same, among rows that had not yet risen (ln(1 + L_t) - ln(1 + M6) below ln 1.5)', 'test_d.early')):
+    add(f'### {title_}')
+    add('')
+    rows = []
+    for f_ in FM:
+        for m_ in MD:
+            k_ = f'{f_}|{m_}'
+            r20 = row(f'{sec_}_top20', f'{f_}, {MD[m_]}', T0[key_][k_]['top20']['rose'], T1[key_][k_]['top20']['rose'])
+            r50 = row(f'{sec_}_top50', f'{f_}, {MD[m_]}', T0[key_][k_]['top50']['rose'], T1[key_][k_]['top50']['rose'])
+            rows.append(r20 + [ci(*T1[key_][k_]['top20']['ci'])] + r50[1:])
+    add(table(['format and model', 'top 20 original', 'top 20 corrected', 'difference', 'corrected exact 95% interval', 'top 50 original', 'top 50 corrected', 'difference'], rows))
+    add('')
+add('### Accuracy of the level predictions in loans (models that predict the level; W has no level model in Test D)')
 add('')
 rows = []
 for f_ in FM:
-    for m_ in MD:
-        r = row('test_d.alert_top20', f'{f_}, {MD[m_]}', T0['alert'][f'{f_}|{m_}']['top20']['rose'], T1['alert'][f'{f_}|{m_}']['top20']['rose'])
-        rows.append(r + [ci(*T1['alert'][f'{f_}|{m_}']['top20']['ci'])])
-add(table(['format and model', 'original', 'corrected', 'difference', 'corrected exact 95% interval'], rows))
-add('')
-add('### Early-warning hit rate: the same, among rows that had not yet risen (ln(1 + L_t) - ln(1 + M6) below ln 1.5)')
-add('')
-rows = []
-for f_ in FM:
-    for m_ in MD:
-        r = row('test_d.early_top20', f'{f_}, {MD[m_]}', T0['early'][f'{f_}|{m_}']['top20']['rose'], T1['early'][f'{f_}|{m_}']['top20']['rose'])
-        rows.append(r + [ci(*T1['early'][f'{f_}|{m_}']['top20']['ci'])])
-add(table(['format and model', 'original', 'corrected', 'difference', 'corrected exact 95% interval'], rows))
+    for m_, nm_ in (('naive', 'naive (repeat last month)'), ('H', 'H (library history)'), ('HW', 'HW (history + Wikipedia)')):
+        k_ = f'{f_}|{m_}'
+        for c_, cn_, d_ in (('mae_loans', 'MAE in loans', 3), ('wape', 'WAPE', 4), ('within_25pct', 'within 25%', 4)):
+            rows.append(row('test_d.accuracy', f'{f_}, {nm_}: {cn_}', T0['accuracy'][k_][c_], T1['accuracy'][k_][c_], d_))
+add(table(['format, model and measure', 'original', 'corrected', 'difference'], rows))
 add('')
 add('### Change rank (Spearman of predicted and actual change within format and month, averaged) and surge AP ratio')
 add('')
@@ -367,6 +398,21 @@ for k in T1['q90']:
                  sf(c['hit_rate'] - o['hit_rate'], 4), 'no' if o['at_least_90'] == c['at_least_90'] else 'YES'])
 add(table(['format, period', 'list slots', 'original hit rate', 'original interval', 'at least 0.90', 'corrected hit rate', 'corrected interval', 'at least 0.90', 'difference', 'answer changed'], rows))
 add('')
+FMT3 = ['print', 'ebook', 'audiobook']
+q_each = {(tag, per): all(T_['q90'][f'{f_}|{per}']['at_least_90'] for f_ in FMT3) for tag, T_ in (('original', T0), ('corrected', T1)) for per in ('2019-2026', '2024-2026')}
+for per in ('2019-2026', '2024-2026'):
+    DECISIONS.append((f'Test D q90, every format at least 0.90, {per}', q_each[('original', per)], q_each[('corrected', per)]))
+txt = ('Addendum d asks whether the rate is at least 0.90 in each format. Every format at least 0.90: '
+       + '; '.join(f'{per}: {yn(q_each[("original", per)])} in the original run, {yn(q_each[("corrected", per)])} in the corrected run' for per in ('2019-2026', '2024-2026')) + '.')
+flips = [k for k in T1['q90'] if T0['q90'][k]['at_least_90'] != T1['q90'][k]['at_least_90']]
+for k in flips:
+    o, c = T0['q90'][k], T1['q90'][k]
+    ho, hc = int(round(o['hit_rate'] * o['slots'])), int(round(c['hit_rate'] * c['slots']))
+    inside = (o['ci'][0] <= 0.9 <= o['ci'][1]) and (c['ci'][0] <= 0.9 <= c['ci'][1])
+    txt += (f' The line that changes is {k.replace("|", ", ")}: {ho:,} of {o["slots"]:,} list slots rose in the original run and {hc:,} in the corrected run ({hc - ho:+d} slots), '
+            f'which moves the rate from {o["hit_rate"]:.4f} to {c["hit_rate"]:.4f}, across 0.90; the exact 95% interval contains 0.90 in {"both runs" if inside else "only one run"}.')
+add(txt)
+add('')
 
 # ================================================================ what changed
 changed = [n for n, o, c in DECISIONS if o != c]
@@ -376,7 +422,7 @@ add('')
 SUMMARY_PLACEHOLDER = '@@SUMMARY@@'
 add(SUMMARY_PLACEHOLDER)
 add('')
-add('## 7. Choices made while coding (not yet in `prereg/DEVIATIONS.md`)')
+add('## 7. Choices made while coding (logged in `prereg/DEVIATIONS.md`, section "Wikipedia-led tests", entry of 20 Oct 2026 21:30 +07)')
 add('')
 add('The addendum fixes the three corrections; these are the points it left open. They were written into the scripts before the run that uses them (the scripts are saved under the `c` names) and were not changed after a result was seen.')
 add('')
@@ -385,17 +431,21 @@ add(f'1. **A1, how "missing" is represented.** The weeks before the first week w
     f'{7427 - n_art_c["book"]} of the 7,427 book articles and {3001 - n_art_c["author"]} of the 3,001 author articles of Test A with weekly data (1 book and 2 author articles have no view at all; the others have their first view in the last weeks of the data). '
     'In an article\'s first months some features are still missing because their windows need data (r4, r1 and rmax need 13 weekly values before the last 4 weeks, chg needs 5 weeks), exactly as at the start of the original series.')
 add('2. **P1, open points.** Books are processed in the sorted order (matching value, then the fixed random order). The random order is `numpy.random.default_rng(20261020).permutation` over the 7,747 work ids in ascending order. '
-    'A donor must also have a different book article than the recipient (this changes the donor of one book). Books with no book-article matching value (24 books) are matched on the author-article value in a second pass over the same rule; '
-    '3 books have neither and keep their own (empty) features. The stepwise donor search is checked in the script against an independent brute-force search (identical donors).')
+    f'A donor must also have a different book article than the recipient (this changes the donor of {p1["recipients_whose_donor_changes_with_different_article_rule"]} book). '
+    f'The {n_pass2 + n_nodonor} books with no book-article matching value are matched on the author-article value in a second pass over the same rule ({n_pass2} books); '
+    f'the other {n_nodonor} have neither value, have no Wikipedia feature in any row, and keep their own features, which are all missing ({P1["rows_without_donor"]} rows). '
+    'The stepwise donor search is checked in the script against an independent brute-force search (identical donors).')
 add('3. **C1, open points.** An article is a candidate in test year Y when at least one of the theme\'s works that carries it (strength at least 0.25 on that theme) had its first loan before 1 January of Y. '
     'The look-ahead version `Wsel_insample` keeps the full pool, as it is the version that uses everything on purpose. The concept-term series are not article series and are unchanged.')
 add('4. **Test D rows, checks.** The data script checks the rows against fixed rules; two of them said "all b_ (or a_) features present or all missing". With corrected features an article\'s first months have some features missing, so these rules now read: features are missing for works without the page, and lvl4 is missing exactly when the whole set is.')
-add('5. **Alert and accuracy panels.** The corrected panels are written by `13c_accuracy_alert_panels.py`; the original panels were also recomputed with the same code (`--orig`, written to `data/interim/wiki_led_panels_orig_recomputed/`), because the stored original alert file differs from a recomputation by the order of tied scores.')
+add('5. **Alert and accuracy panels.** The corrected panels are written by `13c_accuracy_alert_panels.py`, the same logic as `13_accuracy_alert_panels.py`. The original panels were also recomputed with this code (`--orig`, written to `data/interim/wiki_led_panels_orig_recomputed/`): '
+    'they equal the stored original files exactly, so the differences in section 2 contain no change of method. (The code audit\'s own recomputation of the alert list had differed by up to 0.0007 because it ordered tied scores differently.)')
 add('')
 add('## 8. Not rerun here')
 add('')
 add('The live October list (frozen and published) is not changed; improvement rounds v1 and v2 keep their stored results and are labelled as run on the uncorrected features; Test B is unaffected (monthly author views, `matched_pre` already time-safe). '
-    'The robustness checks R1 to R7 of addendum e were not part of this task and have not been run.')
+    'The robustness checks R1 to R7 of addendum e are reported separately (`data/reports/wiki_led_robustness.md`), not here. Figures quoted in the results draft that are not stored in the result files compared above '
+    '(for example the overlap of the Wikipedia and library lists, or the share of each list already up at the origin) are not recomputed here; the summary-checks task (`data/reports/handoff_summary_checks.md`) plans to report them for the original and the corrected files.')
 add('')
 add(f'Decisions compared: {len(DECISIONS)}; changed: {len(changed)}' + (' (' + '; '.join(changed) + ')' if changed else '') + '.')
 add('')
