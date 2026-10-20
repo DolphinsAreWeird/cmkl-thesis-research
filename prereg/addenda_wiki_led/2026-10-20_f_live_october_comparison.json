@@ -1,0 +1,19 @@
+{
+  "addendum": "Wikipedia-led tests, addendum f: comparison lists and stricter pass rules for the live October 2026 test",
+  "parent_record": "prereg/live_alert/README.md (Wikipedia-only list, frozen 2026-10-20 17:00 and published in PR #7); examiner review data/reports/wiki_led_examiner_review.md",
+  "fixed_on": "2026-10-20 21:00 +07",
+  "fixed_by": "Claude, for Khant Phyo Wai",
+  "data_state": "The Seattle open data held months to 2026-08; no later month has been downloaded or read.",
+  "comparison_lists": {
+    "library": "prereg/live_alert/library_list_2026-10.csv (top 50) and library_rankings_all_2026-10.csv: Test A's library-history model (H_lgbm, change target, trained on every Test A row whose target month is at most 2026-08) applied at origin August 2026, the latest month a library could have on 1 October (made by code/main_study/wiki_led/14_live_library_october.py).",
+    "persistence": "prereg/live_alert/persistence_list_2026-10.csv and the same rankings file: books ranked by ln(1 + August loans) - ln(1 + median of March to August 2026).",
+    "books": "The same 7,650 books as the Wikipedia list. Timing note: the Wikipedia list uses Wikipedia views to 30 September; the library lists use loans to 31 August, as a library would have on 1 October."
+  },
+  "scoring": "Once, when the library has released September and October 2026, with the definitions of prereg/live_alert/README.md (rose: ln(1+L_Oct) - ln(1+M6) >= ln 1.5 with M6 the median of April to September 2026; surged: at least double and at least 5 more loans).",
+  "pass_rules": {
+    "P1_signal": "Wikipedia list: the share of its top 20 that rose has an exact binomial 95% lower bound above the base rate over the 7,650 books.",
+    "P2_new_information": "Wikipedia's own picks (books in its top 20 that are not in the library list's top 50): their share that rose has an exact binomial 95% lower bound above the base rate (reported as not testable if fewer than 5 such books).",
+    "P3_comparison": "Descriptive: top-20 and top-50 rose and surge shares of the Wikipedia, library and persistence lists, and of the library's next picks (ranks 51 to 70), side by side. No claim that Wikipedia beats the library is made unless its top-20 share exceeds the library list's with the two exact intervals not overlapping."
+  },
+  "seen_before_fixing": "All backtest results; the examiner review (library two months behind still ranks better than Wikipedia one month ahead in the backtest: 0.336 against 0.138); the top 10 of the library list printed when it was made. No October or September 2026 loans."
+}
