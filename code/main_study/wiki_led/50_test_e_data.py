@@ -15,29 +15,33 @@
 #   (2) Eligibility: listens summed over t-11..t (months not excluded, months before the book's first public month skipped) >= 24.
 #   (3) Months before a book's first public month (earliest IA public date of its recordings) are missing, not zero; M6 and the
 #       12-month mean skip them, h_lt1 and h_lyago read them as 0 (as Test A does for months before the first loan).
+#       Option --raw-hist: h_lt1 and h_lyago keep the recorded value of an excluded month, as Test A and Test D do (output
+#       test_e_rows_rawhist.parquet; the default sets them missing).
 #   (4) Excluded months (not an origin or target; missing inside M6, the 12-month mean, the eligibility sum, h_lt1 and h_lyago):
 #       2023-12 and 2024-10 (Internet Archive outages: at least 3 days of the 887-recording daily sample under half of the local
 #       median) and 2025-01 (a one-day flood: month total more than twice its trailing 12-month median). Test A's half-of-median
 #       rule is computed for every month and shown in test_e_months.csv, but it also fires on 2018-11 and 2018-12 because the
 #       platform level halved on 2018-08-02, which is not missing data; those two months stay in (flag regime).
-#   (5) h_age = months since the book's first public month (true age); h_age_obs = Test A's formula (months since the first
-#       month with listens > 0 in this panel, which is 2017-01 for every older book). regime flags the 2018-08 level break.
+#   (5) h_age is Test A's formula (months since the first month with listens > 0 in this panel, which is 2017-01 for every book
+#       that was public before 2017); h_age_pub is the true age (months since the book's first public month, the earliest
+#       Internet Archive public date of its recordings). regime flags the 2018-08 level break.
 #   (6) flag_jump = 1 when the origin month or its target month is a month in which the median listens of the books already public in
 #       2017-01 moved by a factor of 1.5 or more from the previous month (platform-wide traffic, not demand for single books). It looks
 #       at the target month's platform median and is a filter for scoring, never a feature.
-# Output: data/db/wiki_led/test_e_rows.parquet, test_e_links.parquet, test_e_months.csv, test_e_wiki_features.parquet,
-#         test_e_articles_needed.csv, data/reports/wiki_led_test_e_data.md
-#   nice ../.venv/bin/python main_study/wiki_led/50_test_e_data.py     (from code/; about 2 minutes, under 1 GB)
-import sys, json, time, pathlib, hashlib, gc, warnings
+# Output (data/db/wiki_led/): test_e_rows.parquet, test_e_links.parquet, test_e_months.csv, test_e_wiki_features.parquet,
+#         test_e_articles_needed.csv, test_e_build_info.json. The report data/reports/wiki_led_test_e_data.md and the independent
+#         checks of the rows are made by 51_test_e_report.py, which must be run after this script.
+#   nice ../.venv/bin/python main_study/wiki_led/50_test_e_data.py     (from code/; about 30 seconds, under 1 GB)
+import sys, json, time, pathlib, gc, warnings, re, unicodedata, resource
 import numpy as np, pandas as pd
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 from config import D
 
+RAW_HIST = '--raw-hist' in sys.argv
 D = pathlib.Path(D)
 OUT = D / 'db' / 'wiki_led'
 OUT.mkdir(parents=True, exist_ok=True)
-REP = D / 'reports'
 T0 = time.time()
 
 
@@ -59,7 +63,6 @@ def month_end(mi):
 
 
 ORIG0, ORIG1 = mi_of('2016-03'), mi_of('2026-07')    # the origins of Test A
-SCORE0 = mi_of('2019-01')                            # Test A's first scored origin (training only before it)
 MIN12 = 24                                           # listens over t-11..t needed for a book to be eligible
 BREAK = mi_of('2018-08')                             # the Internet Archive level break (2018-08-02)
 EPS = 1e-12
@@ -71,6 +74,7 @@ lis = pd.read_parquet(D / 'db' / 'listening.parquet')
 bks = pd.read_parquet(D / 'db' / 'books.parquet')
 assert lis.book_id.nunique() == len(bks) == 7849 and set(lis.book_id) == set(bks.book_id)
 n_listen_rows = len(lis)
+minus1_listens = int(lis.listens[lis.book_id == '-1'].sum())
 lis = lis[lis.book_id != '-1']
 P = lis.pivot(index='book_id', columns='period', values='listens')
 P = P.loc[sorted(P.index, key=int)]
@@ -143,8 +147,24 @@ L['pub_known'] = ~no_pub
 L['first_listen_mi'] = first_pos
 L['listens_total'] = np.nansum(A.astype(np.float64), axis=1)
 L['book_article_paren'] = L.book_article.str.contains(r'\(', na=False)
-L['book_title_tag_nonbook'] = L.book_article.str.contains(r'\((?:[^)]*\b)?(?:film|play|opera|musical|TV|television|miniseries|series|ballet|song|album|comics|game|radio|drama|movie)\b[^)]*\)$', case=False, na=False)
+L['book_title_tag_nonbook'] = L.book_article.str.contains(r'\((?:[^)]*\b)?(?:film|play|opera|musical|TV|television|miniseries|series|ballet|song|album|comics|graphic novel|game|radio|drama|movie)\b[^)]*\)$', case=False, na=False)
 L['author_article_paren'] = L.author_article.str.contains(r'\(', na=False)
+HON = {'sir', 'saint', 'st', 'captain', 'dr', 'rev', 'reverend', 'the', 'mr', 'mrs', 'lord', 'lady', 'father', 'professor', 'prof', 'general', 'colonel'}
+
+
+def name_key(x):
+    """A name without accents, parentheses, punctuation, honorifics and initials, for a cheap same-person check."""
+    if not isinstance(x, str):
+        return None
+    x = unicodedata.normalize('NFKD', x).encode('ascii', 'ignore').decode().lower()
+    x = re.sub(r'\([^)]*\)', ' ', x)
+    x = re.sub(r"[^a-z0-9' ]", ' ', x)
+    return ' '.join(t for t in x.split() if len(t) > 1 and t not in HON)
+
+
+L['author_name_exact'] = [(name_key(a) == name_key(t)) if isinstance(t, str) else None for a, t in zip(L.author, L.author_article)]
+L['author_name_exact'] = L.author_name_exact.astype('boolean')
+L['author_link_clean'] = (L.author_name_exact == True) & ~L.author_article_paren          # same name and no disambiguator
 log('links: book', L.book_article.notna().sum(), 'author', L.author_article.notna().sum(),
     '| conflicts', int((L.book_link == 'conflict').sum()), int((L.author_link == 'conflict').sum()))
 
@@ -247,6 +267,15 @@ s2_book_titles = set(WB_s2.article.unique())
 raw_only = sorted(raw_titles - s2_book_titles)
 RAWW = pd.concat([weekly_from_daily(t, raw_daily[t]) for t in raw_only], ignore_index=True)
 FB_s2, FA_s2 = features_of(WB_s2), features_of(WA_s2)
+
+
+def late_articles(frames, cut='2017-06-01'):
+    """Articles whose first week with views is after the cut: before it their weekly share is a stored zero (as in Test A)."""
+    f = frames[frames.views > 0].groupby('article').week.min()
+    return int((f > pd.Timestamp(cut)).sum()), int(len(f))
+
+
+LATE = dict(book_study2r=late_articles(WB_s2), book_raw=late_articles(RAWW), author=late_articles(WA_s2))
 FB_raw = features_of(RAWW)
 log('features: study2r book', FB_s2.article.nunique(), 'raw book', FB_raw.article.nunique(), 'author', FA_s2.article.nunique())
 
@@ -306,11 +335,15 @@ def daily_sample():
         np.add.at(tt, idx[ok], val[ok])
     nrec = len(Lr)
     ids = set(Lr)
+    j12 = np.array([d.get('2025-01-12', 0) for d in Lr.values()], float)
+    flood = dict(jan12_share_over_100=float((j12 > 100).mean()), jan12_max=float(j12.max()), jan12_n_recordings=int(len(j12)))
     del Lr
-    return pd.Series(tt, index=pd.date_range('2017-01-01', periods=n)), nrec, ids
+    return pd.Series(tt, index=pd.date_range('2017-01-01', periods=n)), nrec, ids, flood
 
 
-DS, n_sample, sample_ids = daily_sample()
+DS, n_sample, sample_ids, FLOOD = daily_sample()
+sample_last_day = str(DS[DS > 0].index.max().date())                     # last day the Internet Archive API had data (the pull was on 12 Oct 2026)
+break_ratio = float(DS.loc['2018-08-03':'2018-08-31'].mean() / DS.loc['2018-07-01':'2018-07-31'].mean())   # level after / before the 2018-08-02 break
 DS = DS.loc[:'2026-08-31']
 med29 = DS.rolling(29, center=True, min_periods=15).median()
 dr = DS / med29
@@ -353,7 +386,7 @@ def reason(r):
 
 
 M['reason'] = [reason(r) if r.excluded else '' for r in M.itertuples()]
-M['regime'] = np.where(M.mi < BREAK, 'before 2018-08 break', 'after break')
+M['regime_label'] = np.where(M.mi < BREAK, 'before the 2018-08 break', 'after the break')
 rule_fired = set(M.mi[M.outage_rule | M.flood_rule_high])
 assert rule_fired == EXCL, (sorted(map(ym_of, rule_fired)), sorted(map(ym_of, EXCL)))   # the written reasons match the rules
 log('median-jump months:', [ym_of(m) for m in sorted(JUMP)])
@@ -378,10 +411,10 @@ for m in ORIGINS:
     m12 = np.nanmean(win, axis=1)
     Lt, Lnext = A[:, j], A[:, j + 1]
     Lt1 = np.nan_to_num(A[:, j - 1])
-    if ex_mask[j - 1]:
+    if ex_mask[j - 1] and not RAW_HIST:
         Lt1 = np.full(len(A), np.nan, np.float32)
     Lya = np.nan_to_num(A[:, j - 11])
-    if ex_mask[j - 11]:
+    if ex_mask[j - 11] and not RAW_HIST:
         Lya = np.full(len(A), np.nan, np.float32)
     base_ok = ~np.isnan(M6) & ~np.isnan(Lnext) & ~np.isnan(Lt)
     n_drop_elig += int((base_ok & ~present).sum())
@@ -395,7 +428,7 @@ for m in ORIGINS:
         'L_t': Lt[k], 'L_next': Lnext[k], 'M6': M6[k].astype(np.float32),
         'h_lt': np.log1p(Lt[k]), 'h_lt1': np.log1p(Lt1[k]), 'h_m6': np.log1p(M6[k]).astype(np.float32),
         'h_m12': np.log1p(m12[k]).astype(np.float32), 'h_lyago': np.log1p(Lya[k]),
-        'h_age': (m - pub_use[k]).astype(np.float32), 'h_age_obs': (m - first_pos[k]).astype(np.float32),
+        'h_age': (m - first_pos[k]).astype(np.float32), 'h_age_pub': (m - pub_use[k]).astype(np.float32),
         'n_rec': NREC[k, j], 'regime': np.int8(reg), 'flag_jump': np.int8(int(m in JUMP or (m + 1) in JUMP))}))
 R = pd.concat(rows, ignore_index=True)
 del rows
@@ -410,12 +443,21 @@ R = R.merge(FB, on=['article', 'mi'], how='left')
 R = R.merge(FA.rename(columns={'article': 'author_article'}), on=['author_article', 'mi'], how='left')
 R['year'] = (R.mi + 1) // 12                                             # year of the target month
 R['test_year'] = R['year']
+R['has_book_page'] = R.article.notna().astype(np.int8)                   # a book article is linked (views stored or not: see b_src)
+R['has_author_page'] = R.author_article.notna().astype(np.int8)
 cols = (['book_id', 'mi', 'L_t', 'L_next', 'M6', 'h_lt', 'h_lt1', 'h_m6', 'h_m12', 'h_lyago', 'h_age', 'D', 'Sg', 'Y', 'article', 'author_article']
-        + ['b_' + c for c in FEATS] + ['a_' + c for c in FEATS] + ['year', 'test_year', 'h_age_obs', 'n_rec', 'regime', 'flag_jump', 'b_src', 'a_src'])
+        + ['b_' + c for c in FEATS] + ['a_' + c for c in FEATS] + ['year', 'test_year', 'h_age_pub', 'n_rec', 'regime', 'flag_jump', 'has_book_page', 'has_author_page', 'b_src', 'a_src'])
 R = R[cols]
 R['b_src'] = R.b_src.astype(np.int8)
 R['a_src'] = R.a_src.astype(np.int8)
-R.to_parquet(OUT / 'test_e_rows.parquet', index=False)
+R['mi'] = R.mi.astype(np.int32)
+R['year'] = R.year.astype(np.int16)
+R['test_year'] = R.test_year.astype(np.int16)
+R['Sg'] = R.Sg.astype(np.int8)
+assert R.duplicated(['book_id', 'mi']).sum() == 0
+ROWS_FILE = OUT / ('test_e_rows_rawhist.parquet' if RAW_HIST else 'test_e_rows.parquet')
+R.to_parquet(ROWS_FILE, index=False)
+assert (np.diff(R.mi.values) >= 0).all()
 log('rows', R.shape, 'origins', R.mi.nunique(), 'first', ym_of(R.mi.min()), 'last', ym_of(R.mi.max()), '| dropped by the 24-listen rule', n_drop_elig)
 
 # platform-level outcome statistics by origin month (counts and base rates only)
@@ -432,8 +474,12 @@ mon_auth = json.load(open(D / 'raw' / 'wiki_author_pageviews_monthly.json'))
 mon_have = {k.replace('_', ' ') for k in mon_books} | set(mon_auth)
 need = []
 for kind, col, srccol in [('book', 'book_article', 'book_src'), ('author', 'author_article', 'author_src')]:
-    x = L[L[col].notna() & (L[srccol] == 0)]
+    x = L[L[col].notna() & (L[srccol] == 0)].copy()
+    x['name_exact'] = x.author_name_exact if kind == 'author' else pd.array([None] * len(x), dtype='boolean')
+    x['tag_nonbook'] = x.book_title_tag_nonbook if kind == 'book' else False
+    top = x.sort_values('listens_total', ascending=False).drop_duplicates(col)      # the most listened book that uses the article
     t = x.groupby(col).agg(n_books=('title', 'size'), listens_total=('listens_total', 'sum'), n_rows=('rows', 'sum')).reset_index().rename(columns={col: 'article'})
+    t = t.merge(top[[col, 'author', 'title', 'name_exact', 'tag_nonbook']].rename(columns={col: 'article', 'author': 'lv_author', 'title': 'lv_title'}), on='article')
     t.insert(0, 'kind', kind)
     need.append(t)
 NEED = pd.concat(need, ignore_index=True)
@@ -441,9 +487,12 @@ NEED['api_title'] = NEED.article.str.replace(' ', '_')
 NEED['title_has_parenthesis'] = NEED.article.str.contains(r'\(')
 NEED['monthly_views_stored'] = NEED.article.isin(mon_have)
 NEED['listens_total'] = NEED.listens_total.astype(np.int64)
+NEED['likely_ok'] = np.where(NEED.kind == 'author', NEED.name_exact.fillna(False).astype(bool) & ~NEED.title_has_parenthesis, ~NEED.tag_nonbook.astype(bool))
 NEED = NEED.sort_values(['kind', 'listens_total'], ascending=[True, False]).reset_index(drop=True)
 NEED['priority_in_kind'] = NEED.groupby('kind').cumcount() + 1
-NEED = NEED[['kind', 'priority_in_kind', 'article', 'api_title', 'n_books', 'n_rows', 'listens_total', 'title_has_parenthesis', 'monthly_views_stored']]
+NEED['name_exact'] = NEED.name_exact.astype('boolean')
+NEED = NEED[['kind', 'priority_in_kind', 'article', 'api_title', 'lv_author', 'lv_title', 'n_books', 'n_rows', 'listens_total', 'likely_ok',
+             'name_exact', 'title_has_parenthesis', 'tag_nonbook', 'monthly_views_stored']]
 NEED.to_csv(OUT / 'test_e_articles_needed.csv', index=False)
 log('articles still needed', len(NEED), NEED.kind.value_counts().to_dict())
 
@@ -468,8 +517,14 @@ del V
 gc.collect()
 log('listening.parquet vs raw monthly file: books that differ', bad, '| raw 2026-09 over 2026-08', round(tot_raw_sep / tot_raw_aug, 3))
 
-STATE = dict(sample_share_of_views=sample_views / all_views, check=check, n_listen_rows=n_listen_rows, n_rec_all=n_rec_all, n_rec_minus1=n_rec_minus1, n_drop_elig=n_drop_elig,
+later = lk[lk.pub_mi.notna() & (lk.pub_mi >= MI[0]) & (lk.pub_mi > lk.book_id.map(pub_first))]   # recordings public after their book's first public month, inside the window
+groups_new_rec = int(later.book_id.nunique())
+new_rec_events = int(len(later))
+STATE = dict(late_articles=LATE, flood=FLOOD, zero_cells=int((A0 == 0).sum()), minus1_listens=minus1_listens, sample_last_day=sample_last_day, break_ratio=break_ratio, groups_new_recording_in_window=groups_new_rec, new_recordings_in_window=new_rec_events,
+             pub_min=str(pub.min().date()), pub_max=str(pub.max().date()), recordings_without_date=int(lk.pub_mi.isna().sum()),
+             runtime_s=round(time.time() - T0), peak_rss_mb=round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e6), rows_file=ROWS_FILE.name, sample_share_of_views=sample_views / all_views, check=check, n_listen_rows=n_listen_rows, n_rec_all=n_rec_all, n_rec_minus1=n_rec_minus1, n_drop_elig=n_drop_elig,
              pre_pub_cells=pre_pub_cells, bad_vs_raw=bad, raw_sep_over_aug=tot_raw_sep / tot_raw_aug, raw_last=raw_last,
              n_sample=n_sample, excluded={ym_of(k): v for k, v in zip(M.mi[M.excluded], M.reason[M.excluded])})
-(OUT / 'test_e_build_info.json').write_text(json.dumps(STATE, indent=1, default=float))
+if not RAW_HIST:
+    (OUT / 'test_e_build_info.json').write_text(json.dumps(STATE, indent=1, default=float))
 log('done; seconds', round(time.time() - T0))

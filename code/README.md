@@ -13,6 +13,7 @@ The thesis code imports `config.py`, `features.py`, `seattle.py`, `positive_cont
 | `main_study/benchmark/` | The method benchmark: 52 pipelines, scoring, the second-stage routings, Chronos-2, learned categories, figures and tables (scripts indexed in its README) | Pipelines; results |
 | `main_study/study3/`, `main_study/study3b/` | Whether a rise in interest in a theme is followed by more borrowing: pooled tests, positive controls, power, duration, carry-over, small categories, sentiment direction | Lasting rises |
 | `main_study/study4/`, `main_study/study4b/` | The first forecasting tests that led to the benchmark: next month's level, the change, and rare surges | Lasting rises (forecasts before the benchmark) |
+| `main_study/wiki_led/` | Data for Test B (new books) of the Wikipedia-led tests fixed on 20 Oct 2026: population of new works, loans in the first six months, library-only features, first-author match to English Wikipedia and Wikidata, monthly author page views, one row per work, checks and a data report (`data/reports/wiki_led_test_b_data.md`). Data only, no model | Wikipedia-led tests |
 | `study2r/`, `study2r_fix/` | Single modern books: does a rise in attention to a book raise its own borrowing | Lasting rises (single books) |
 | `conversation/` | Talk-page edits and the TweetsKB archive as conversation signals (tested, too thin) | Lasting rises |
 | `brisbane/` | A replication check on Brisbane library data | Lasting rises |

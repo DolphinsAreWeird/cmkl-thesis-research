@@ -1,0 +1,24 @@
+{
+  "addendum": "Wikipedia-led tests, addendum e: corrected reruns after the code audit, and robustness checks",
+  "parent_record": "prereg/wiki_led_settings_2026-10-20.json and addenda a to d",
+  "fixed_on": "2026-10-20 20:34 +07",
+  "fixed_by": "Claude, for Khant Phyo Wai, who asked (20 Oct) to make the methodology solid before the advisor meeting of 23 Oct",
+  "corrections_and_reruns": {
+    "A1_missing_before_existence": "In every weekly Wikipedia series (book and author articles; Test A, placebo, Test C candidates, Test D features), weeks before the article's first week with at least one view are missing, not zero, as the settings record says. Everything else in the feature definitions is unchanged.",
+    "P1_placebo_donors": "Donors are chosen without heavy reuse: books are sorted by their matching value (as in addendum b); each book's donor is the nearest book in that order with a different author key, searching one step down then one step up and so on, ties in the matching value broken by a fixed random order (seed 20261020); a donor may serve at most 3 books.",
+    "C1_time_safe_candidates": "Test C's candidate book and author articles for test year Y come only from works whose first Seattle loan is before 1 January of Y.",
+    "reruns": "Test A (10_test_a.py), the placebo (11), Test C (20) and Test D (60 and 61) are rerun with these corrections and otherwise identical settings, seeds and rows. The original runs stay on file. Reported: corrected value, original value and difference for every headline number; the decisions of the record and addenda are re-read on the corrected values.",
+    "not_rerun": "The live October list (frozen and published) is never changed. Improvement rounds v1 and v2 keep their stored results; they are labelled as run on the uncorrected features. Test B is unaffected (monthly author views; matched_pre already time-safe)."
+  },
+  "robustness_checks": {
+    "R1_thresholds": "Alert hit rates of Test A (corrected) and Test D for 'rose' at 25%, 50% and 100% above M6, with the base rate at each.",
+    "R2_seeds": "Test A's W, H and HW (corrected) refitted with 5 seeds (20261020 to 20261024): spread of change rank and top-20 hit rate.",
+    "R3_years": "Test A and Test B headline measures by test year.",
+    "R4_bot_months": "Test A headline measures without the origin months 2025-04 to 2025-06 (Wikimedia's reported automated traffic counted as user views).",
+    "R5_stronger_library_baseline_new_books": "Test B with a library model that also knows catalogue information available at acquisition: the work's broad theme (the B-level node with the highest strength in data/db/taxonomy_v3/work_theme.parquet, or none), pub_year_min relative to the first year, and whether the creator came only from the title field. Reported for L and L+W, with the same author-cluster bootstrap; the question is whether Wikipedia still adds.",
+    "R6_incremental_early_warning": "Among book-months that rose next month and were not in the library model's top 50 of that month, the share caught by Wikipedia's top 50 (Test A, corrected), against the same share for a random list of 50.",
+    "R7_top_k": "Alert hit rates at top 10, 20, 50 and 100."
+  },
+  "rule": "All are descriptive checks of results already reported; nothing is tuned and no setting is chosen from them. Every number goes to a script-produced file.",
+  "seen_before_fixing": "All results of Tests A to E, the improvement rounds v1 and v2 (changes 1, 2, 4, and 5 as available), the code audit, and the live October list."
+}

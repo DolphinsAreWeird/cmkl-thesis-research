@@ -14,8 +14,8 @@ last day of the origin month.  mi = year*12 + month - 1.
 
 A page "has data" at an origin when its first week with views ended on or before the end of the origin month.  A page before that week is
 not counted at all (its zero weeks would otherwise enter the maxima).  The pre-creation weeks of a page are zero and its normal is floored at
-1e-12, as for book articles created late: r4 and rmax of a page in its first weeks are therefore large (about +8 to +12 on the log scale) by
-construction.  Views before a page move stay under the old title, so such a page starts at its move.
+1e-12, as for book articles created late: r4 and rmax of a page in its first weeks are therefore large by construction (median +10 on the log scale, 10th to 90th percentile
++8 to +13 for the 2,878 Test A book articles that had no views in early 2016; +17 for the very busy Dune 2021 page).  Views before a page move stay under the old title, so such a page starts at its move.
 
 Per work (works.parquet work_id; the book is its Wikidata item) and origin month, over the kept pages of that book that have data:
   ad_n          number of adaptation pages with data (0 when none)

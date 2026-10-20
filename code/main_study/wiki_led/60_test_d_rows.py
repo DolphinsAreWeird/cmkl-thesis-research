@@ -29,7 +29,7 @@
 #   python main_study/wiki_led/60_test_d_rows.py [--test] [--elig masked|raw]      (from code/, with ../.venv/bin/python)
 #   --test: 1% sample (first two hex digits 00 to 02, a subset of the 25% sample) plus the Test A works, written to
 #           data/interim/wiki_led_test_d_1pct/ so the real outputs are untouched.
-import sys, os, time, json, pathlib, hashlib, argparse, resource, warnings, datetime, gc, ctypes, struct
+import sys, os, time, json, math, pathlib, hashlib, argparse, resource, warnings, datetime, gc, ctypes, struct
 import numpy as np, pandas as pd
 import pyarrow as pa, pyarrow.parquet as pq
 import psutil
@@ -128,13 +128,12 @@ W = pd.read_parquet(TAXO / 'spl_works.parquet', columns=['work_id', 'creator_key
 TA = pd.read_parquet(DATA / 'db' / 'study2r' / 'works.parquet', columns=['work_id', 'article', 'author_article'])
 assert TA.work_id.is_unique and TA.work_id.isin(W.work_id).all() and TA.article.notna().all()
 ids = W.work_id.to_numpy(np.int64)
-hexd = [hashlib.md5(str(int(w)).encode()).hexdigest() for w in ids]
+first2 = np.fromiter((int(hashlib.md5(str(int(w)).encode()).hexdigest()[:2], 16) for w in ids), np.int64, len(ids))   # first two hex digits as a number
 if TEST:
-    in_sample = np.array([int(h[:2], 16) < 3 for h in hexd])
+    in_sample = first2 < 3                                          # 00, 01, 02: 1% of the works, a subset of the 25% sample
 else:
-    in_sample = np.array([h[0] in '0123' for h in hexd])
-    assert (in_sample == np.array([int(h[:2], 16) < 64 for h in hexd])).all()
-del hexd
+    in_sample = first2 < 64                                         # first hex digit 0, 1, 2 or 3
+    assert in_sample.sum() == sum(hashlib.md5(str(int(w)).encode()).hexdigest()[0] in '0123' for w in ids)
 S_ids = np.sort(np.union1d(ids[in_sample], TA.work_id.to_numpy(np.int64)))
 NS = len(S_ids)
 IN_TA = np.isin(S_ids, TA.work_id.to_numpy(np.int64)).astype(np.int8)
@@ -171,24 +170,27 @@ link_info = dict(
 log('author links:', link_info)
 
 # ---------------------------------------------------------------- Wikipedia features as dense arrays [article, origin month, feature]
-F = pd.read_parquet(WIKI / 'test_a_wiki_features.parquet', read_dictionary=['article', 'kind'])   # dictionary strings: far less memory
 bnames = sorted(TA.article.unique())
 anames = sorted(set(KEYMAP.values()))
 bpos, apos = {n: i for i, n in enumerate(bnames)}, {n: i for i, n in enumerate(anames)}
 FB = np.full((len(bnames) + 1, NORIG, len(FEATS)), np.nan, np.float32)   # last row: no article (all missing)
 FA = np.full((len(anames) + 1, NORIG, len(FEATS)), np.nan, np.float32)
-for kind, arr, pos in (('book', FB, bpos), ('author', FA, apos)):
-    g = F[(F.kind == kind) & F.article.isin(list(pos))]
+have_data = {}
+for kind, arr, pos in (('book', FB, bpos), ('author', FA, apos)):    # one kind at a time keeps the table small
+    g = pd.read_parquet(WIKI / 'test_a_wiki_features.parquet', filters=[('kind', '==', kind)], read_dictionary=['article'])
+    have_data[kind] = set(g.article.astype(str).unique())
+    g = g[g.article.isin(list(pos))]
     ai = g.article.astype(str).map(pos).to_numpy()
     assert ((g.mi.to_numpy() - ORIG0) >= 0).all() and ((g.mi.to_numpy() - ORIG0) < NORIG).all()
     arr[ai, g.mi.to_numpy() - ORIG0, :] = g[FEATS].to_numpy(np.float32)
-nb_missing = len(set(bnames) - set(F.article[F.kind == 'book'].astype(str)))
-author_no_data = sorted(set(anames) - set(F.article[F.kind == 'author'].astype(str)))
+    del g, ai
+nb_missing = len(set(bnames) - have_data['book'])
+author_no_data = sorted(set(anames) - have_data['author'])
 BOOK_IDX = np.where(HAS_BOOK == 1, BOOK_NAME.map(bpos).fillna(len(bnames)).to_numpy(), len(bnames)).astype(np.int64)
 AUTH_IDX = np.where(HAS_AUTH == 1, AUTH_NAME.map(apos).fillna(len(anames)).to_numpy(), len(anames)).astype(np.int64)
 log(f'wiki features: {len(bnames):,} book articles ({nb_missing} without data), {len(anames):,} author articles used '
     f'({len(author_no_data)} without weekly data)')
-del F
+gc.collect()
 
 # ---------------------------------------------------------------- record -> position in S_ids
 rw = pd.read_parquet(TAXO / 'spl_record_work.parquet')
@@ -244,8 +246,8 @@ TA_FMT_WORKS = {}
 for fi, (label, fname) in enumerate(FORMATS):
     t_fmt = time.time()
     pf = pq.ParquetFile(TAXO / f'spl_rows_{fname}.parquet')
-    ws, ms, cs = [], [], []
-    n_read = n_keep = 0
+    A = np.zeros((NS, NM), np.float32)                                # sampled works x months: loans of this format (whole numbers, exact in float32)
+    n_read = n_keep = checkouts_kept = 0
     first_data_col = NM
     for g in range(pf.num_row_groups):
         t = pf.read_row_group(g, columns=['record_id', 'year', 'month', 'checkouts'])
@@ -256,39 +258,29 @@ for fi, (label, fname) in enumerate(FORMATS):
         n_read += len(w)
         n_keep += int(k.sum())
         if k.any():
-            ws.append(w[k])
-            ms.append(mc_all[k])
-            cs.append(t.column('checkouts').to_numpy()[k])
-        del t, mc_all
-    w, mc, c = np.concatenate(ws), np.concatenate(ms), np.concatenate(cs)
-    del ws, ms, cs
-    pa.default_memory_pool().release_unused()
-    assert mc.min() >= 0 and mc.max() < NM
-    key = w.astype(np.int64) * NM + mc
-    uk, inv = np.unique(key, return_inverse=True)
-    loans = np.bincount(inv, weights=c, minlength=len(uk))
-    n_dup = len(key) - len(uk)
-    checkouts_kept = int(c.sum())
-    del key, inv, w, mc, c
-    uw, um = uk // NM, uk % NM
-    works_f, pos = np.unique(uw, return_inverse=True)
-    A = np.zeros((len(works_f), NM), np.float32)                      # series x months, loans
-    A[pos, um] = loans
-    del uk, uw, um, loans, pos
-    first = (A > 0).argmax(axis=1)                                    # every series has a positive month
+            c = t.column('checkouts').to_numpy()[k]
+            assert mc_all[k].min() >= 0 and mc_all[k].max() < NM
+            np.add.at(A, (w[k], mc_all[k]), c)                        # records of one work add up inside a (work, month) cell
+            checkouts_kept += int(c.sum())
+        del t, mc_all, w, k
+    pos = A > 0
+    has = pos.any(axis=1)                                             # sampled works with at least one loan in this format
+    first = pos.argmax(axis=1)                                        # first month with a loan (0 for works without loans)
+    n_dup = n_keep - int(pos.sum())                                   # record-month rows merged into an earlier (work, month) cell
+    del pos
     A[np.arange(NM)[None, :] < first[:, None]] = np.nan               # months before the first loan are not in the collection
     first_mi = (first + MI0).astype(np.int64)
-    n_ser = len(works_f)
-    wid_f, inta_f = S_ids[works_f], IN_TA[works_f]
-    hb_f, ha_f, bidx_f, aidx_f = HAS_BOOK[works_f], HAS_AUTH[works_f], BOOK_IDX[works_f], AUTH_IDX[works_f]
-    sel = np.flatnonzero(inta_f)
-    TA_LOANS[label] = (wid_f[sel], np.nan_to_num(A[sel]))
-    TA_FMT_WORKS[label] = set(wid_f[sel].tolist())
+    pa.default_memory_pool().release_unused()
+    n_ser = int(has.sum())
+    wid_f, inta_f, hb_f, ha_f, bidx_f, aidx_f = S_ids, IN_TA, HAS_BOOK, HAS_AUTH, BOOK_IDX, AUTH_IDX   # rows of A follow S_ids
+    sel = np.flatnonzero(IN_TA)                                       # Test A works (S_ids is sorted, so their ids ascend)
+    TA_LOANS[label] = (S_ids[sel], np.nan_to_num(A[sel]))
+    TA_FMT_WORKS[label] = set(S_ids[sel][has[sel]].tolist())
     log(f'{label}: {n_read:,} record-month rows read, {n_keep:,} in sampled works ({n_dup:,} merged into earlier (work, month) cells); '
         f'{n_ser:,} series with loans; matrix {A.nbytes / 2 ** 20:.0f} MB')
 
     st = dict(rows_read=n_read, rows_sampled=n_keep, checkouts_sampled=checkouts_kept, merged_cells=n_dup, series_with_loans=n_ser,
-              first_data_month=ym_of(first_data_col + MI0), series_first_at_start=int((first == first_data_col).sum()),
+              first_data_month=ym_of(first_data_col + MI0), series_first_at_start=int(((first == first_data_col) & has).sum()),
               elig_masked=0, elig_raw=0, elig_raw_only=0, dropped_no_m6=0, rows=0)
     buf, buf_n = [], 0
     for m in ORIGINS:
@@ -343,7 +335,7 @@ for fi, (label, fname) in enumerate(FORMATS):
     STAT[label] = st
     log(f'{label}: {st["rows"]:,} rows; eligible series-origin pairs under the masked sum {st["elig_masked"]:,}, raw sum {st["elig_raw"]:,}; '
         f'dropped for no M6: {st["dropped_no_m6"]}; {st["seconds"]}s')
-    del A, win, first, first_mi
+    del A, win, first, first_mi, has
     gc.collect()
     pa.default_memory_pool().release_unused()
 writer.close()
@@ -394,6 +386,120 @@ for label in LABELS:               # (2) for Test A works with loans in one form
 del TAr, TD
 gc.collect()
 
+# ---------------------------------------------------------------- rules inside the written file (all rows, batch by batch)
+FMTC = {f: i for i, f in enumerate(LABELS)}
+FAILS = {}
+
+
+def add(name, ok):
+    FAILS[name] = FAILS.get(name, 0) + int((~np.asarray(ok)).sum())
+
+
+n_checked, prev = 0, None
+for b in pq.ParquetFile(ROWS_PATH).iter_batches(batch_size=500_000):
+    x = b.to_pandas()
+    n_checked += len(x)
+    Lt_, Ln_, M6_ = x.L_t.to_numpy(), x.L_next.to_numpy(), x.M6.to_numpy()
+    Dv_ = np.log1p(Ln_) - np.log1p(M6_)
+    bn, an = x[BC].isna().sum(axis=1), x[AC].isna().sum(axis=1)
+    fc = x['format'].astype(str).map(FMTC).to_numpy()
+    key = x.mi.to_numpy(np.int64) * (1 << 32) + x.work_id.to_numpy(np.int64)
+    if prev is not None:                                              # join the batches: put the last row of the previous one in front
+        fc, key = np.concatenate([[prev[0]], fc]), np.concatenate([[prev[1]], key])
+    prev = (fc[-1], key[-1])
+    add('rows ordered by format, then origin month, then work_id', (fc[1:] > fc[:-1]) | ((fc[1:] == fc[:-1]) & (key[1:] > key[:-1])))
+    add('eligible: loans12 is at least 24', x.loans12 >= MIN_LOANS)
+    add('origin month is one of the allowed origins', x.mi.isin(ORIGINS))
+    add('year is the year of the target month', x.year == (x.mi + 1) // 12)
+    add('h_lt, h_m6, Y and D equal their formulas', (x.h_lt.to_numpy() == np.log1p(Lt_)) & (x.h_m6.to_numpy() == np.log1p(M6_))
+        & (x.Y.to_numpy() == np.log1p(Ln_)) & (x.D.to_numpy() == Dv_))
+    add('Sg equals its rule', x.Sg.to_numpy() == ((Dv_ >= LN2) & ((Ln_ - M6_) >= 5)).astype(np.int8))
+    add('no missing value in the measures', x[['L_t', 'L_next', 'M6', 'h_lt', 'h_lt1', 'h_m6', 'h_m12', 'h_lyago', 'h_age', 'D', 'Y', 'loans12']].notna().all(axis=1))
+    add('loans are whole numbers, M6 is a multiple of 0.5', (Lt_ >= 0) & (Ln_ >= 0) & (Lt_ == np.floor(Lt_)) & (Ln_ == np.floor(Ln_)) & ((M6_ * 2) == np.floor(M6_ * 2)))
+    add('h_age is a whole number from 0 to the length of the month grid', (x.h_age >= 0) & (x.h_age < NM) & (x.h_age == np.floor(x.h_age)))
+    add('flags are 0 or 1 and the book page flag equals in_test_a', x[['in_test_a', 'has_book_page', 'has_author_page', 'Sg']].isin([0, 1]).all(axis=1) & (x.has_book_page == x.in_test_a))
+    add('b_ features are all present (book page) or all missing', bn.isin([0, len(FEATS)]) & ((bn == 0) == (x.has_book_page == 1)))
+    add('a_ features are all present or all missing, and present only with an author page', an.isin([0, len(FEATS)]) & ((an > 0) | (x.has_author_page == 1)))
+log('rules inside the file:', {k: v for k, v in FAILS.items() if v})
+del x, b
+gc.collect()
+
+
+# ---------------------------------------------------------------- plain-Python recomputation of random series from the raw row files
+def plain_series_rows(d):
+    """Eligible rows of one series by plain loops over the request text. d: {month index: loans} for the months with a loan."""
+    first = min(d)
+    raw = lambda m: d.get(m, 0)                                       # only used for months from the first loan on
+    avail = lambda m: m >= first and m not in EXCL
+    out = []
+    for t in ORIGINS:
+        win = [m for m in range(t - 11, t + 1) if avail(m)]
+        tot = sum(raw(m) for m in win) if ELIG == 'masked' else sum(raw(m) for m in range(max(t - 11, first), t + 1))
+        if tot < MIN_LOANS:
+            continue
+        w6 = sorted(raw(m) for m in range(t - 5, t + 1) if avail(m))
+        if not w6:
+            continue
+        k = len(w6)
+        m6 = w6[k // 2] if k % 2 else (w6[k // 2 - 1] + w6[k // 2]) / 2
+        lt, ln = raw(t), raw(t + 1)
+        out.append(dict(mi=t, L_t=lt, L_next=ln, M6=m6, h_lt=math.log1p(lt), h_lt1=math.log1p(raw(t - 1) if t - 1 >= first else 0),
+                        h_m6=math.log1p(m6), h_m12=math.log1p(sum(raw(m) for m in win) / len(win)),
+                        h_lyago=math.log1p(raw(t - 11) if t - 11 >= first else 0), h_age=t - first,
+                        D=math.log1p(ln) - math.log1p(m6), Y=math.log1p(ln), loans12=tot))
+    return out
+
+
+rng = np.random.default_rng(7)
+ser = pd.read_parquet(ROWS_PATH, columns=['work_id', 'format', 'in_test_a']).drop_duplicates(['work_id', 'format'])
+ser['format'] = ser['format'].astype(str)
+pick = []
+for f in LABELS:                   # 150 series of works outside Test A and 40 of Test A works per format
+    for flag, n in ((0, 150), (1, 40)):
+        pool = ser[(ser['format'] == f) & (ser.in_test_a == flag)].work_id.to_numpy()
+        pick += [(int(w), f, flag) for w in rng.choice(pool, min(n, len(pool)), replace=False)]
+del ser
+works_pick = sorted({w for w, _, _ in pick})
+rwp = pd.read_parquet(TAXO / 'spl_record_work.parquet')
+rwp = rwp[rwp.work_id.isin(works_pick)]
+rec2work = dict(zip(rwp.record_id.astype(int), rwp.work_id.astype(int)))
+loans_by = {}
+for label, fname in FORMATS:
+    t = pq.read_table(TAXO / f'spl_rows_{fname}.parquet', columns=['record_id', 'year', 'month', 'checkouts'],
+                      filters=[('record_id', 'in', list(rec2work))]).to_pandas()
+    t['work'] = t.record_id.map(rec2work)
+    t['m'] = t.year.astype(int) * 12 + t.month.astype(int) - 1
+    for (w, m), v in t.groupby(['work', 'm']).checkouts.sum().items():
+        loans_by.setdefault((int(w), label), {})[int(m)] = int(v)
+CMP = ['L_t', 'L_next', 'M6', 'h_lt', 'h_lt1', 'h_m6', 'h_m12', 'h_lyago', 'h_age', 'D', 'Y', 'loans12']
+Rk = pd.read_parquet(ROWS_PATH, filters=[('work_id', 'in', works_pick)], columns=['work_id', 'format', 'mi', 'Sg'] + CMP)
+Rk['format'] = Rk['format'].astype(str)
+groups = {k: g.sort_values('mi') for k, g in Rk.groupby(['work_id', 'format'])}
+IND = dict(series=len(pick), series_outside_test_a=sum(1 for _, _, fl in pick if fl == 0), rows=0, row_set_differs=0, boundary_rows=0,
+           sg_differs=0, differing={c: 0 for c in CMP}, other_series=0, other_eligible=0)
+for w, f, _ in pick:
+    mine, g = plain_series_rows(loans_by[(w, f)]), groups.get((w, f))
+    if g is None or [r['mi'] for r in mine] != g.mi.tolist():
+        IND['row_set_differs'] += 1
+        continue
+    for r, (_, row) in zip(mine, g.iterrows()):
+        IND['rows'] += 1
+        for c in CMP:
+            if not math.isclose(r[c], float(row[c]), rel_tol=2e-6, abs_tol=2e-6):
+                IND['differing'][c] += 1
+        if abs(r['D'] - math.log(2)) < 2e-6:
+            IND['boundary_rows'] += 1                                 # exact doubling: the label follows float32 rounding, not compared
+        elif (1 if (r['D'] >= math.log(2) and r['L_next'] - r['M6'] >= 5) else 0) != int(row['Sg']):
+            IND['sg_differs'] += 1
+have = {(int(w), f) for (w, f) in groups}
+for (w, f), d in loans_by.items():                                    # series of the same works that are not in the file
+    if (w, f) not in have:
+        IND['other_series'] += 1
+        IND['other_eligible'] += int(len(plain_series_rows(d)) > 0)
+log('plain-Python recomputation:', IND)
+del Rk, groups, loans_by, rwp, rec2work
+gc.collect()
+
 # ---------------------------------------------------------------- report numbers from the written file
 cols = ['work_id', 'format', 'mi', 'year', 'in_test_a', 'has_book_page', 'has_author_page', 'Sg', 'D', 'b_lvl4', 'a_lvl4']
 R = pd.read_parquet(ROWS_PATH, columns=cols)
@@ -404,8 +510,6 @@ R['rise15'] = (R.D >= LN15)
 R['scored'] = R.mi >= mi_of('2019-01')
 R = R.drop(columns=['D', 'b_lvl4', 'a_lvl4', 'format'])
 gc.collect()
-unique_keys = int((np.diff(R.mi.to_numpy(np.int64) * (1 << 32) + R.work_id.to_numpy(np.int64))[
-    np.flatnonzero(np.diff(R['fmt'].cat.codes.to_numpy()) == 0)] > 0).sum())      # strictly increasing inside a format block
 
 
 def pct(x, d=1):
@@ -433,6 +537,9 @@ by_f['all'] = per_format(R)
 by_f['all']['series'] = len(R.drop_duplicates(['work_id', 'fmt']))
 n_works_any = R.work_id.nunique()
 n_works_ta = R.loc[R.in_test_a == 1, 'work_id'].nunique()
+n_flag_nodata = int(((R.has_author_page == 1) & ~R.afeat).sum())
+n_flag = int((R.has_author_page == 1).sum())
+top_nodata = TA.author_article[TA.author_article.isin(author_no_data)].value_counts().head(3).index.tolist()
 by_fy = {}
 for (f, y), g in R.groupby(['fmt', 'year'], observed=True):
     by_fy[(f, int(y))] = per_format(g)
@@ -549,18 +656,19 @@ for f in LABELS + ['all']:
     rows.append([f if f != 'all' else 'all formats', pct(b['hb']), pct(b['bf']), pct(b['ha']), pct(b['af'])])
 L.append(table(['format', 'rows with a book page', 'rows with b_ features', 'rows with an author page', 'rows with a_ features'], rows))
 L.append('')
-L.append(f'- Author links: {link_info["keys_with_article"]:,} creator keys map to an author article ({link_info["sampled_with_author"]:,} of the {NS:,} sampled works have one; '
-         f'{link_info["ta_with_author"]:,} Test A works have one and {link_info["ta_without_author"]:,} do not). {link_info["empty_creator_key"]:,} sampled works have an empty creator key and never get author features.')
-L.append(f'- {link_info["conflict_keys"]} creator keys have more than one author article among the Test A works; the article used by most of those works is taken '
-         f'(ties between two articles, {len(link_info["tie_keys"])}: {", ".join(link_info["tie_keys"]) if link_info["tie_keys"] else "none"}; the alphabetically first article is taken). '
+L.append(f'- Author links: {link_info["keys_with_article"]:,} `creator_key` values map to an author article ({link_info["sampled_with_author"]:,} of the {NS:,} sampled works have one; '
+         f'{link_info["ta_with_author"]:,} Test A works have one and {link_info["ta_without_author"]:,} do not). {link_info["empty_creator_key"]:,} sampled works have an empty `creator_key` and never get author features.')
+L.append(f'- {link_info["conflict_keys"]} `creator_key` values have more than one author article among the Test A works; the article used by most of those works is taken '
+         f'({len(link_info["tie_keys"])} tie{"" if len(link_info["tie_keys"]) == 1 else "s"} between two articles' + (f', for `{", ".join(link_info["tie_keys"])}`' if link_info["tie_keys"] else '') + '; the alphabetically first article is taken). '
          f'{link_info["ta_own_differs"]} Test A works therefore get a different author article than Test A gave them, and {link_info["ta_gain"]} Test A works that had none now get one.')
-L.append(f'- {len(author_no_data)} of the {len(anames):,} author articles in use have no weekly view data, so their works carry the author page flag with `a_*` missing; every book article has data ({nb_missing} without).')
+L.append(f'- {len(author_no_data)} of the {len(anames):,} author articles in use have no weekly view data (this is a gap in `weekly_author.parquet`, as in Test A; the most frequent among the Test A works are {", ".join(top_nodata)}), '
+         f'so their works carry the author page flag with `a_*` missing: {n_(n_flag_nodata)} of the {n_(n_flag)} rows with the flag ({pct(n_flag_nodata / max(1, n_flag), 1)}). Every book article has data ({nb_missing} without).')
 L.append('')
 L.append('## Distributions of single columns (all rows)')
 L.append('')
 L.append(table(['format', 'column', '5%', '25%', '50%', '75%', '95%', '99%', 'mean'], qrows, left=2))
 L.append('')
-L.append('## Checks against Test A (no model involved)')
+L.append('## Checks (no model involved)')
 L.append('')
 L.append('1. **Loans.** For the Test A works, the monthly loans per format built here equal `study2r/counts_work.parquet` cell by cell: '
          + '; '.join(f'{f}: {n_(CHK[f"loans_{f}"]["cells_different"])} differing cells (loans {n_(CHK[f"loans_{f}"]["total_mine"])} here, {n_(CHK[f"loans_{f}"]["total_counts_work"])} there)' for f in LABELS) + '.')
@@ -574,9 +682,16 @@ for f in LABELS:
 L.append('')
 L.append(table(['format', 'Test A works in one format', 'Test D rows', 'Test A rows', 'rows in both', 'only in Test D', 'differing values in L, M6, h_*, D, Sg, Y', 'rows with a differing b_ value', 'rows with a differing a_ value'], rows))
 L.append('')
-L.append(f'3. **Order and keys.** Inside each format the rows are strictly increasing in (origin month, work_id): {unique_keys:,} adjacent pairs checked, all increasing = {unique_keys == n_rows_total - len(LABELS)}. '
-         f'Rows dropped because M6 had no available month: {sum(s["dropped_no_m6"] for s in STAT.values())}.')
-L.append(f'4. **Excluded months** equal the list in the request ({len(EXCL)} months); the panel has a total for every month of every format from 2015-01.')
+L.append(f'3. **Rules inside the file.** Every one of the {n_checked:,} rows was tested against the rules below (rows that fail each rule are counted); '
+         f'rows dropped during the build because M6 had no available month: {sum(s["dropped_no_m6"] for s in STAT.values())}.')
+L.append('')
+L.append(table(['rule', 'rows failing'], [[k, n_(v)] for k, v in FAILS.items()]))
+L.append('')
+L.append(f'4. **Plain-Python recomputation.** {IND["series"]} random series ({IND["series_outside_test_a"]} of works outside Test A, the rest of Test A works; up to 150 and 40 per format) were rebuilt from the raw row files '
+         f'with simple loops written from the request text, and the {n_(IND["rows"])} rows compared with the file. Series whose set of origin months differs: {IND["row_set_differs"]}. '
+         f'Rows with a differing value: ' + ', '.join(f'{c} {IND["differing"][c]}' for c in CMP) + f', Sg {IND["sg_differs"]} (the {IND["boundary_rows"]} rows on the D = ln 2 boundary are left out of the Sg comparison, see choice 3). '
+         f'{IND["other_series"]} further series of the same works are not in the file; {IND["other_eligible"]} of them have an eligible origin by the recomputation.')
+L.append(f'5. **Excluded months** equal the list in the request ({len(EXCL)} months); the panel has a total for every month of every format from 2015-01.')
 L.append('')
 L.append('## Choices where the request left room')
 L.append('')
@@ -595,14 +710,14 @@ L.append('3. **Rounding.** D and Sg are computed in float32 as in Test A. Exact 
          f'The pooled surge rate is {pct(BND["sg_all"], 2)} and would be {pct(BND["sg_if_all"], 2)} if every one of them counted as a surge.')
 L.append('4. **First loan.** The first loan month of a series is its first month with a recorded loan in that format. Series already in the collection when the data begin (2005-04 for print, 2005-09 for ebook and audiobook) have a first loan month equal to the first data month, so `h_age` is cut off at the start of the data (sampled series whose first loan is the first data month: '
          + ', '.join(f'{f} {n_(STAT[f]["series_first_at_start"])}' for f in LABELS) + ').')
-L.append('5. **Flags.** `has_book_page` is 1 for the Test A works; `has_author_page` is 1 when the work\'s creator key maps to an author article, whether or not that article has weekly data. The share of rows with the features present is in the Wikipedia table above.')
+L.append('5. **Flags.** `has_book_page` is 1 for the Test A works; `has_author_page` is 1 when the work\'s `creator_key` maps to an author article, whether or not that article has weekly data. The share of rows with the features present is in the Wikipedia table above.')
 L.append('6. **Extra column.** `loans12` is not in the request; it holds the loan sum used for the eligibility rule so stricter cut-offs can be applied without a rebuild.')
 L.append('7. **Format labels.** `print`, `ebook`, `audiobook` (the labels of `counts_work.parquet` and the demand panel); the print row files are named `spl_rows_book`.')
 L.append('8. **Same name, different person.** `creator_key` is a normalised name, so two authors with the same name share author features.')
 L.append('')
 L.append('## Memory and runtime')
 L.append('')
-L.append(f'- Peak memory of the build process: {peak_fp:,.0f} MB physical footprint (what `time -l` reports as peak memory footprint) and {peak_rss:,.0f} MB resident (limit set for the job: 3,000 MB). One format at a time; the biggest object is the series by month loan matrix (float32, {max(s["series_with_loans"] for s in STAT.values()) * NM * 4 / 2 ** 20:,.0f} MB for the largest format).')
+L.append(f'- Peak memory of the build process: {peak_fp:,.0f} MB physical footprint (what `time -l` reports as peak memory footprint) and {peak_rss:,.0f} MB resident (limit set for the job: 3,000 MB). One format at a time; the biggest object is the matrix of sampled works by month with the loans of the format (float32, {NS * NM * 4 / 2 ** 20:,.0f} MB, rebuilt for each format).')
 L.append(f'- Runtime {time.time() - T0:,.0f} s in all: ' + ', '.join(f'{f} {STAT[f]["seconds"]} s' for f in LABELS) + f'; the rest is set-up, the checks and this report. The job ran with `nice` 5 beside the Wikipedia views download.')
 L.append('')
 REPORT_PATH.with_name(REPORT_PATH.name + '.part').write_text('\n'.join(L))
