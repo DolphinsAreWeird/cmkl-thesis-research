@@ -1,0 +1,11 @@
+{
+  "addendum": "Wikipedia-led tests, addendum b: placebo check of Test A (each book given another book's Wikipedia pages)",
+  "parent_record": "prereg/wiki_led_settings_2026-10-20.json",
+  "fixed_on": "2026-10-20 15:42 +07",
+  "fixed_by": "Claude, for Khant Phyo Wai",
+  "why": "Suggested by the literature note (Moat et al. 2013 used unrelated pages as a placebo; Priedhorsky et al. 2017 unrelated topics). If Wikipedia's predictive value in Test A is about the book itself, giving each book the pages of a different book with similar traffic should remove most of it. What remains measures how much comes only from general attention level.",
+  "seen_before_fixing": "All Test A results (W_lgbm change rank 0.135, H 0.350, HW 0.360; surge AP ratios; accuracy panel) and Test C results (Wsel_ridge 0.072, in-sample 0.348).",
+  "placebo": "For each book b, a donor book d is chosen once: among books by a different author_article (or with no author article when b has one, and vice versa never), the book whose median b_lvl4 over origins 2016-03 to 2018-12 is nearest to b's (ties: smaller work_id); books with no b_lvl4 in that window are matched on their first 12 available origins. Every Wikipedia feature of b (book and author) at every origin is replaced by d's at the same origin. Then W_lgbm and HW_lgbm are rerun exactly as in Test A (same rows, same walk-forward years, same settings, same seed).",
+  "metrics": "Change rank (with month-block interval, 2,000 draws), surge AP ratio, and the accuracy panel of the level task, beside the real Test A values.",
+  "reading": "Placebo W_lgbm change rank far below the real 0.135 (interval of the difference real minus placebo above 0) means the signal is specific to the book's own pages. A placebo close to the real value means it is general attention level, not the book."
+}

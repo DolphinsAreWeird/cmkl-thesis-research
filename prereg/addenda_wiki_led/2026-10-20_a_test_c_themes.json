@@ -1,0 +1,22 @@
+{
+  "addendum": "Wikipedia-led tests, addendum a: Test C (themes), Wikipedia-only forecasts of the change in a theme's borrowing with library-guided choice of Wikipedia articles",
+  "parent_record": "prereg/wiki_led_settings_2026-10-20.json (its test_C_themes entry said the settings would be fixed in an addendum before any result)",
+  "fixed_on": "2026-10-20 15:13 +07",
+  "fixed_by": "Claude, for Khant Phyo Wai",
+  "idea": "The flu studies that read Wikipedia (Generous et al. 2014; McIver & Brownstein 2014) let the outcome choose which articles to use, but chose them on the whole period, a look-ahead. Here the library's borrowing chooses the articles walk-forward, only from months before the test year, and the model uses Wikipedia alone.",
+  "rows": "The benchmark's main comparison rows: Seattle printed books and ebooks, middle and narrow themes, horizon 1, origins whose rows carry all 52 pipelines (the 36,081 forecasts of thesis Table A2; data/db/benchmark/wide2.parquet). Target: change c = y_true - y_t (log share).",
+  "candidates": "For theme k: (i) the weekly concept-term series of data/db/interest/wiki/weekly_value.parquet whose node_id is k or a narrow theme under k; (ii) the book articles (data/db/study2r/works.parquet, weekly_book.parquet) of works whose strength on k in data/db/taxonomy_v3/work_theme.parquet is at least 0.25; (iii) the author articles of those works. Monthly value of a candidate: ln of the mean weekly share over weeks ending in the month (floor 1e-12); feature x(t) = value(t) - value(t-1), the month-on-month log change of the origin month.",
+  "selection_by_library": "Per theme and test year Y (2019 to 2026), on training origins only (target month before 1 January of Y) with at least 24 origins where both are present: Spearman correlation between x_a(t) and the theme's c(t); keep the 10 candidates with the largest positive correlation (ties: more months). Fewer than 1 positive: no Wikipedia forecast for that theme and year (scored as 0 change).",
+  "models": {
+    "Wsel_ridge": "Per theme and test year: ridge regression (alpha 1.0, standardized; missing x = 0) of c on the selected candidates' x over the training origins; forecast of c for the test-year origins. Wikipedia only.",
+    "Wsel_index": "No fitting beyond selection: mean of the selected candidates' standardized x weighted by their training correlation.",
+    "Wsel_insample": "Shown only to measure the look-ahead of whole-period selection: selection and ridge fit on all origins, scored on the same origins. Never a candidate for 'best'.",
+    "references_on_the_same_rows": "N0 (no change, rank correlation 0), mean of the last 6 months, seasonal repeat, Chronos-2 alone, Chronos-2 + concept pages (from wide2.parquet, as in the benchmark)."
+  },
+  "metrics": "Rank correlation of forecast change with actual change within each origin, format and level group of at least 10 series, averaged over groups (the benchmark's rise task); 95% intervals from 2,000 draws of blocks of 3 consecutive origin months (seed 20261020). Beside it: Wsel_ridge change added to y_t, error ratio against repeating last month (AvgRelMAE), descriptive only, because it then uses the library's last value.",
+  "decisions": {
+    "C1_primary": "Wikipedia alone, chosen by the library walk-forward, ranks the coming changes of themes: Wsel_ridge rank correlation with a 95% interval above 0.",
+    "C2": "Look-ahead of whole-period selection: Wsel_insample minus Wsel_ridge rank correlation (descriptive)."
+  },
+  "seen_before_fixing": "All benchmark results; the record of 20 Oct 15:08; Test A counts only (750,501 rows, 556,735 scored, surge rate 2.8%), no Test A score."
+}

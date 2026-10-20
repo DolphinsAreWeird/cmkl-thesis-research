@@ -1,0 +1,67 @@
+{
+  "record": "Wikipedia-led prediction of demand for books: settings fixed before any Wikipedia-only prediction of single books was computed",
+  "fixed_on": "2026-10-20 15:08 +07",
+  "fixed_by": "Claude, for Khant Phyo Wai, after the advisor meeting of 20 Oct 2026",
+  "why": "The advisor asked that Wikipedia be THE input and that the library guide it (library loans as the answers the model learns from), not a library time-series forecast with Wikipedia added on top. Khant chose single books first, themes second (AskUserQuestion, 20 Oct). Deadline for a first answer: Friday 23 Oct 2026.",
+  "principles": [
+    "Wikipedia-only models (W) receive no library input at all; library loans are only the targets they are trained and scored on.",
+    "Every W result is reported beside: a no-information baseline (N0), a library-only model (L or H) and library plus Wikipedia (L+W or H+W), so that both 'does Wikipedia predict anything' and 'does it add to what the library already knows' are answered.",
+    "Walk-forward by calendar year: a model that predicts year Y is trained only on rows whose outcome was fully observed before 1 January of Y.",
+    "Inputs only from before the prediction point: a weekly Wikipedia value is used only if its week ended on or before the last day of the origin month (Test A) or of the month before the first library month (Test B)."
+  ],
+  "test_A_existing_books": {
+    "units": "The 7,747 Seattle works matched to their own English Wikipedia article (data/db/study2r/works.parquet), with their first author's article where matched. Disclosure: the set was chosen by at least 500 loans in 2016-2026 and by having an article at the end of the period, a look-ahead in the choice of books (not in their views or loans).",
+    "loans": "L(b,m) = loans of work b in month m, all formats summed (data/db/study2r/counts_work.parquet; a month without a row is 0 loans).",
+    "excluded_months": "A month is excluded as origin or target when, for any format, the library-wide total of that format (data/db/taxonomy_v3/spl_rows_*.parquet) is below half of its median over the previous 12 months (the benchmark rule).",
+    "origins": "Every month t from 2016-03 to 2026-07 whose month t and t+1 are not excluded; a book enters at origin t if it had at least one loan in months t-11 to t. Scored origins: 2019-01 to 2026-07 (test years 2019 to 2026); earlier origins are training only.",
+    "targets": {
+      "change": "D(b,t) = ln(1 + L(b,t+1)) - ln(1 + M6(b,t)), where M6 is the median of L over months t-5 to t (rise above the book's recent normal).",
+      "surge": "S(b,t) = 1 when D(b,t) >= ln 2 and L(b,t+1) - M6(b,t) >= 5 (at least double and at least 5 more loans than normal).",
+      "level": "Y(b,t) = ln(1 + L(b,t+1))."
+    },
+    "wikipedia_features": "For the book article (b_) and the author article (a_), from weekly shares of all English Wikipedia views (data/db/study2r/weekly_book.parquet, weekly_author.parquet) over the weeks ending on or before the last day of month t: lvl4 = ln of the mean share of the last 4 weeks (floor 1e-12); normal = median share of the 26 weeks before those 4 weeks; r4 = ln(mean of last 4 weeks / normal); r1 = ln(last week / normal); rmax = max over the last 4 weeks of ln(week / normal); nrise8 = weeks of the last 8 at 1.5 times normal or more; run = current consecutive weeks at 1.5 times normal or more ending at the last week; dw = duration-weighted interest, sum over the last 8 weeks of ln(ratio) x min(run at that week, 4)/4 for weeks at 1.5 times normal or more; chg = ln(mean of last 4 weeks / mean of the 4 weeks before); valid4 = share of the last 4 weeks flagged valid. Weeks before an article existed are missing (LightGBM missing values; ridge fills 0 and adds a missing indicator).",
+    "library_history_features_for_H_only": "ln(1+L) at t and t-1, ln(1+M6), ln(1 + mean of L over t-11 to t), ln(1 + L(t-11)) (same month a year before the target), months since the book's first loan.",
+    "models": {
+      "N0": "No information: change and level predicted by the training mean; cannot rank (rank correlation 0 by definition).",
+      "W_rule": "No fitting: predicted change = b_dw + a_dw (Wikipedia rises only).",
+      "W_ridge": "Ridge regression (alpha 1.0, standardized features) on the Wikipedia features.",
+      "W_lgbm": "LightGBM on the Wikipedia features (n_estimators 300, learning_rate 0.05, num_leaves 31, min_child_samples 50, subsample 0.8, subsample_freq 1, colsample_bytree 0.8, seed 20261020).",
+      "H_naive": "Repeat last month for the level (Y = ln(1+L(t))); for the change task the naive change ln(1+L(t)) - ln(1+M6) is used as the ranking.",
+      "H_lgbm": "LightGBM (same settings) on the library history features only.",
+      "HW_lgbm": "LightGBM (same settings) on history plus Wikipedia features."
+    },
+    "metrics": {
+      "change_rank": "Spearman correlation across books between predicted and actual D within each origin month, averaged over scored months.",
+      "surge_ap": "Average precision of the predicted change for S, pooled over scored rows; base rate reported.",
+      "level": "Spearman across books within month (averaged) and mean absolute error of Y.",
+      "intervals": "95% intervals from 2,000 bootstrap draws of blocks of 3 consecutive scored months (seed 20261020); a second interval resampling books is reported beside it."
+    },
+    "decisions": {
+      "A1_primary": "Wikipedia alone predicts which books' borrowing rises: W_lgbm change_rank has a 95% month-block interval above 0.",
+      "A2": "Wikipedia adds to library history: HW_lgbm minus H_lgbm change_rank, paired by month, interval above 0.",
+      "A3": "Wikipedia alone flags surges: W_lgbm surge_ap above the base rate with the interval of the ratio above 1."
+    }
+  },
+  "test_B_new_books": {
+    "population": "Works in data/db/taxonomy_v3/spl_works.parquet whose first Seattle month in any format (first_ym) is 2017-01 to 2026-02, with pub_year_min at least the year of first_ym minus 1 (new releases), and a creator string from which a first author is parsed by parse_author of code/study1_seattle/00_coverage_check.py.",
+    "outcome": "Y6 = ln(1 + loans of the work in months first_ym to first_ym+5, all formats); top10 = Y6 in the top 10% of works with first_ym in the same calendar year.",
+    "author_matching": "First author display name 'First Last'. English Wikipedia titles tried in order: the name; then 'Name (writer)', 'Name (author)', 'Name (novelist)' if the earlier title is missing, a disambiguation page or not a human. Redirects are followed. Accepted when the page's Wikidata item is a human (P31 = Q5). writer_type = the item's occupations (P106) include writer, novelist, poet, author, journalist, screenwriter, essayist, children's writer, non-fiction writer, playwright, historian, biographer, memoirist or comics artist. Not checked by hand; wrong-person matches add noise and are expected to bias W toward no effect.",
+    "wikipedia_features": "Monthly English Wikipedia user views of the matched author article (Wikimedia REST per-article monthly, all-access, from 2015-07): matched (0/1); v6 = ln(1 + mean views over months first_ym-6 to first_ym-1); v12 = ln(1 + mean over first_ym-12 to first_ym-7); trend = v6 - v12; vmax = ln(1 + max monthly views over first_ym-12 to first_ym-1); writer_type (0/1). Unmatched authors get 0 and matched = 0.",
+    "library_features_for_L_only": "Format flags of the first month (print, ebook, audiobook); number of the author's earlier Seattle works (same creator_key, first_ym before this work's first_ym); ln(1 + their loans before this work's first_ym); calendar month of first_ym.",
+    "models": "N0 (training mean of Y6); W_ridge and W_lgbm (Wikipedia features only); L_lgbm (library features only); LW_lgbm (both); same LightGBM settings as Test A.",
+    "walk_forward": "Test years 2019 to 2026 (works by year of first_ym); training rows are works whose first_ym+5 is before 1 January of the test year.",
+    "metrics": "Spearman between predicted and actual Y6 within each test year, averaged over years and pooled; MAE of Y6; precision of the predicted top 10% within year. 95% intervals from 2,000 bootstrap draws of authors (creator_key clusters), seed 20261020.",
+    "decisions": {
+      "B1_primary": "Wikipedia alone predicts the early demand of new books: W_lgbm Spearman interval above 0.",
+      "B2": "Wikipedia adds to what the library knows: LW_lgbm minus L_lgbm Spearman, paired, interval above 0.",
+      "B3": "B1 and B2 on works whose author is matched, and on writer_type matches only (sensitivity to wrong-person matches)."
+    }
+  },
+  "test_C_themes": "Second priority. Wikipedia-only forecasts of theme borrowing with library-guided choice of articles; its settings are fixed in an addendum before any of its results are computed.",
+  "seen_before_fixing": [
+    "All benchmark results (Wikipedia adds at most 0.6% on top of library history for themes) and the single-book rise analysis of thesis Section 6.3 (rises in a book article's views associated with later borrowing).",
+    "Study 1 coverage check (no outcomes).",
+    "Counts only, 20 Oct: 194,741 new works and 91,885 distinct creators in the Test B population; quantiles of the total loans of those works (median 53); the year of first loan of the 7,747 Test A works and the first-6-month loan quantiles of the 2,288 of them that are new since 2017 (median 274). No feature was related to any outcome."
+  ],
+  "changes": "Any change after this record goes to prereg/DEVIATIONS.md under 'Wikipedia-led tests' with its date, reason and what had been seen."
+}
