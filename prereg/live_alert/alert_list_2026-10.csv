@@ -1,0 +1,51 @@
+rank,work_id,title,creator,article,author_article,score,book_views_vs_normal,book_weeks_rising,author_views_vs_normal,author_weeks_rising,b_views_last_week,a_views_last_week
+1,1819,Pilgrim at Tinker Creek,Annie Dillard,Pilgrim at Tinker Creek,Annie Dillard,0.8881,11.6900,2.0000,22.6500,2.0000,5628.0000,20296.0000
+2,75609,Incidents Around the House,Josh Malerman,Incidents Around the House,Josh Malerman,0.7437,1312.5200,13.0000,4.4300,11.0000,27355.0000,2920.0000
+3,12927,East of Eden,"Steinbeck, John, 1902-1968",East of Eden (novel),John Steinbeck,0.7256,4.5500,4.0000,1.6700,1.0000,81228.0000,28665.0000
+4,64437,The Shards,Bret Easton Ellis,The Shards,Bret Easton Ellis,0.6097,10.3200,12.0000,4.1800,12.0000,14564.0000,24114.0000
+5,13271,An American Childhood,Annie Dillard,An American Childhood,Annie Dillard,0.6000,12.0400,4.0000,22.6500,2.0000,403.0000,20296.0000
+6,47961,The unsettling of America : culture & agriculture,"Berry, Wendell, 1934-",The Unsettling of America,Wendell Berry,0.5505,18.4000,4.0000,18.4000,4.0000,714.0000,11061.0000
+7,14438,The living,"Dillard, Annie",The Living (novel),Annie Dillard,0.5499,7.3000,2.0000,22.6500,2.0000,396.0000,20296.0000
+8,3249,Gone Tomorrow,Lee Child,Gone Tomorrow,Lee Child,0.5420,10.3400,11.0000,3.4000,8.0000,14916.0000,24490.0000
+9,35721,Bad Blood: Secrets and Lies in a Silicon Valley Startup,John Carreyrou,Bad Blood: Secrets and Lies in a Silicon Valley Startup,John Carreyrou,0.5338,10.4200,3.0000,8.3000,3.0000,9145.0000,9508.0000
+10,66449,Whalefall,"Kraus, Daniel, 1975-",Whalefall (novel),Daniel Kraus (author),0.5260,4.3900,24.0000,1.5600,2.0000,27318.0000,5086.0000
+11,4985,Make Me,Lee Child,Make Me (novel),Lee Child,0.5246,57.4300,10.0000,3.4000,8.0000,30558.0000,24490.0000
+12,191731,Julián is a mermaid,"Love, Jessica",Julián Is a Mermaid,Jessica Love,0.4967,5.8100,4.0000,2.1900,3.0000,3300.0000,442.0000
+13,54093,The Love Hypothesis,Ali Hazelwood,The Love Hypothesis,Ali Hazelwood,0.4849,22.5500,5.0000,5.5600,5.0000,242382.0000,44168.0000
+14,53958,Carrie,"King, Stephen, 1947-",Carrie (novel),Stephen King,0.4780,3.4600,3.0000,1.2600,0.0000,11863.0000,52930.0000
+15,138764,"It's perfectly normal : changing bodies, growing up, sex, gender, and sexual health","Harris, Robie H.",It's Perfectly Normal,Robie Harris,0.4733,3.5400,3.0000,4.4200,5.0000,589.0000,193.0000
+16,3751,Sense and Sensibility,Jane Austen,Sense and Sensibility,Jane Austen,0.4426,2.6400,3.0000,1.7500,5.0000,43962.0000,46209.0000
+17,207646,Verity,Colleen Hoover,Verity (novel),Colleen Hoover,0.4393,9.3300,7.0000,1.7400,2.0000,158408.0000,23029.0000
+18,17126,"Little, big","Crowley, John, 1942-","Little, Big",John Crowley (author),0.4349,1.5300,2.0000,1.8000,8.0000,830.0000,831.0000
+19,31502,Hunger : a memoir of (my) body,"Gay, Roxane",Hunger: A Memoir of (My) Body,Roxane Gay,0.4285,6.9300,7.0000,7.0200,7.0000,1005.0000,11474.0000
+20,57492,"Moon witch, spider king","James, Marlon, 1970-","Moon Witch, Spider King",Marlon James (novelist),0.4204,4.2900,5.0000,14.8900,9.0000,901.0000,13143.0000
+21,63170,Trespasses,Louise Kennedy,Trespasses (novel),Louise Kennedy (writer),0.4135,2.9700,2.0000,4.9500,3.0000,2751.0000,4179.0000
+22,236601,A month in the country,"Carr, J. L. (Joseph Lloyd), 1912-1994",A Month in the Country (novel),J. L. Carr,0.4128,2.5600,10.0000,3.1000,7.0000,2192.0000,1279.0000
+23,31231,Magpie murders,"Horowitz, Anthony, 1955-",Magpie Murders,Anthony Horowitz,0.4128,3.2200,6.0000,1.5900,1.0000,12124.0000,15210.0000
+24,1183,The Girls,Emma Cline,The Girls (Cline novel),Emma Cline,0.4082,2.4600,9.0000,6.7600,9.0000,1025.0000,3208.0000
+25,32813,Practical Magic,Alice Hoffman,Practical Magic (novel),Alice Hoffman,0.4031,12.5500,9.0000,8.1900,9.0000,7553.0000,6175.0000
+26,14597,The Book of Night Women,Marlon James,The Book of Night Women,Marlon James (novelist),0.3888,5.0200,7.0000,14.8900,9.0000,720.0000,13143.0000
+27,11730,Becoming Naomi León,"Ryan, Pam Muñoz",Becoming Naomi León,Pam Muñoz Ryan,0.3878,7.7000,4.0000,2.2600,4.0000,342.0000,444.0000
+28,47310,Moonflower Murders,Anthony Horowitz,Moonflower Murders,Anthony Horowitz,0.3853,4.5500,6.0000,1.5900,1.0000,5148.0000,15210.0000
+29,3333,A Brief History of Seven Killings,Marlon James,A Brief History of Seven Killings,Marlon James (novelist),0.3729,5.2300,6.0000,14.8900,9.0000,4268.0000,13143.0000
+30,22754,Slow Horses,Mick Herron,Slow Horses (novel),Mick Herron,0.3693,3.7600,7.0000,2.1200,2.0000,9807.0000,12182.0000
+31,33750,Track of the Cat,Nevada Barr,Track of the Cat (novel),Nevada Barr,0.3689,5.3900,11.0000,3.9900,11.0000,254.0000,1938.0000
+32,43351,The Glass Hotel,Emily St. John Mandel,The Glass Hotel,Emily St. John Mandel,0.3652,3.7800,4.0000,4.5400,6.0000,3857.0000,13555.0000
+33,70248,The guest,"Cline, Emma",The Guest (novel),Emma Cline,0.3613,2.1000,10.0000,6.7600,9.0000,937.0000,3208.0000
+34,1300,A Tale of Two Cities,Charles Dickens,A Tale of Two Cities,Charles Dickens,0.3607,2.0900,4.0000,1.4800,0.0000,17029.0000,28832.0000
+35,217543,Speak up!,"Burgess, Rebecca",Speak Up! (graphic novel),Rebecca Burgess (illustrator),0.3600,225128.1900,10.0000,589017.3900,5.0000,35.0000,126.0000
+36,2170,Die Trying,Lee Child,Die Trying (novel),Lee Child,0.3596,7.4100,7.0000,3.4000,8.0000,6675.0000,24490.0000
+37,7669,The psychopath test : a journey through the madness industry,"Ronson, Jon, 1967-",The Psychopath Test,Jon Ronson,0.3522,2.4800,6.0000,6.2000,6.0000,1155.0000,7680.0000
+38,4953,Killing Floor,Lee Child,Killing Floor (novel),Lee Child,0.3334,4.1000,9.0000,3.4000,8.0000,8618.0000,24490.0000
+39,103621,"It's so amazing! : a book about eggs, sperm, birth, babies, and families","Harris, Robie H.",It's So Amazing!,Robie Harris,0.3325,2.0600,3.0000,4.4200,5.0000,85.0000,193.0000
+40,2790,Bad luck and trouble,"Child, Lee",Bad Luck and Trouble,Lee Child,0.3323,4.3900,10.0000,3.4000,8.0000,3572.0000,24490.0000
+41,100225,The cat in the hat,"Seuss, Dr.",The Cat in the Hat,Dr. Seuss,0.3291,2.2700,6.0000,1.1100,0.0000,9241.0000,21567.0000
+42,77620,We solve murders,"Osman, Richard, 1970-",We Solve Murders,Richard Osman,0.3267,3.2100,5.0000,1.4600,0.0000,2545.0000,12777.0000
+43,38153,"Black Leopard, Red Wolf",Marlon James,"Black Leopard, Red Wolf",Marlon James (novelist),0.3198,3.3600,5.0000,14.8900,9.0000,1484.0000,13143.0000
+44,538,The Halloween Tree,Ray Bradbury,The Halloween Tree,Ray Bradbury,0.3174,3.3000,9.0000,1.3100,0.0000,1405.0000,12335.0000
+45,40842,Learning from the Germans: Race and the Memory of Evil,Susan Neiman,Learning from the Germans,Susan Neiman,0.3130,1.9700,3.0000,6.1800,6.0000,75.0000,1702.0000
+46,18863,Night School,Lee Child,Night School (novel),Lee Child,0.3103,4.6000,7.0000,3.4000,8.0000,1370.0000,24490.0000
+47,125815,So you've been publicly shamed,"Ronson, Jon, 1967-",So You've Been Publicly Shamed,Jon Ronson,0.3065,2.6100,7.0000,6.2000,6.0000,758.0000,7680.0000
+48,23996,Tripwire,Lee Child,Tripwire (novel),Lee Child,0.3058,3.7400,7.0000,3.4000,8.0000,1846.0000,24490.0000
+49,8834,The magician's nephew,"Lewis, C. S. (Clive Staples), 1898-1963",The Magician's Nephew,C. S. Lewis,0.3049,4.4200,2.0000,1.2000,0.0000,20314.0000,30794.0000
+50,54924,The baron in the trees,"Calvino, Italo",The Baron in the Trees,Italo Calvino,0.3006,4.8500,11.0000,3.2200,3.0000,1613.0000,7870.0000
