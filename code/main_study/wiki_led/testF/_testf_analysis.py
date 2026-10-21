@@ -282,6 +282,15 @@ def read_assign(P, kind):
     return pd.read_parquet(f)
 
 
+S2C_KIND = 'concept'                                             # addendum h: S2C uses the pages the AI labelled as concepts
+
+
+def s2c_titles(A):
+    """Pages of S2C (addendum h, 2026-10-21_h_concept_pages.json): universe pages whose AI page kind is 'concept' and that have at least one
+    theme of confidence 2 or 3; no cap."""
+    return set(A[(A.set == 'universe') & (A.kind == S2C_KIND) & (A.conf >= S2_MIN_CONF)].title)
+
+
 def s2_selection(A, topdays):
     """Pages of S2 (addendum): universe pages with at least one assignment of confidence 2 or 3; if more than 40,000, the 40,000 with
     the most top-500 days. NOT IN ADDENDUM: ties at the cut are broken by total views in the top-500 lists (more first), then by title.

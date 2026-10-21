@@ -43,6 +43,7 @@ WIDE2 = T.D / 'db' / 'benchmark' / 'wide2.parquet'
 A2 = T.D / 'db' / 'benchmark' / 'stage2_results' / 'A2_table.csv'
 MCOV = T.D / 'db' / 'benchmark' / 'stage2' / 'monthly_cov.parquet'
 NEW = {'chronos2_ais2': 'ais2_wlog', 'chronos2_ais1': 'ais1_wlog'}
+NEW_H = {'chronos2_aic2': 'aic2_wlog'}                          # addendum h (concept pages); scored by 29_H_concept.py, not by phase evaluate
 SEED_C = 20261020                                               # the Test C measure's seed (20c_test_c.py)
 NB = 2000
 
@@ -69,7 +70,7 @@ def main_rows():
 def covariates(P, s2_ok):
     M = pd.read_parquet(P / 'series_monthly.parquet')
     covs = {}
-    for v, c in NEW.items():
+    for v, c in {**NEW, **NEW_H}.items():
         if c in M:
             covs[c] = {n: g.set_index('mi')[c] for n, g in M[['node_id', 'mi', c]].dropna(subset=[c]).groupby('node_id')}
     return covs
@@ -92,7 +93,7 @@ def phase_chronos(P, a):
     out = P / 'chronos2_out'
     out.mkdir(exist_ok=True)
     C.OUT = out                                                   # parts and forecasts of the new variants go to the Test F folder
-    for v, c in NEW.items():
+    for v, c in {**NEW, **NEW_H}.items():
         CH.VARIANTS[v] = [c]
     torch.set_num_threads(3)
     torch.manual_seed(C.SEED)
@@ -102,8 +103,9 @@ def phase_chronos(P, a):
     timing = json.loads((P / 'g3_chronos_timing.json').read_text()) if (P / 'g3_chronos_timing.json').exists() else {}
     for v in a.variants.split(','):
         v = v if v.startswith('chronos2_') else f'chronos2_{v}'
-        if NEW[v] not in covs:
-            raise SystemExit(f'{v}: the covariate {NEW[v]} is not in series_monthly.parquet (run 21_series.py)')
+        cov = {**NEW, **NEW_H}[v]
+        if cov not in covs:
+            raise SystemExit(f'{v}: the covariate {cov} is not in series_monthly.parquet (run 21_series.py)')
         if a.limit:
             shutil.rmtree(out / 'chronos2_parts_test' / v, ignore_errors=True)
         t0 = time.time()

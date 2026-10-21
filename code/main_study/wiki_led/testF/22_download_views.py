@@ -78,6 +78,9 @@ def refuse_if_busy(job_name):
 def full_period(P, a, H):
     A = T.read_assign(P, 'pages')
     sel = T.s2_selection(A, T.top_days_count())
+    if a.series == 'S2C':                                         # addendum h: every concept page with a theme of confidence 2 or 3, no cap
+        c = T.s2c_titles(A)
+        sel = pd.DataFrame({'title': sorted(c)}).assign(selected=True)
     want = sel[sel.selected]
     have = set(T.store_index(P).title)
     todo = [t for t in want.title if t not in have]
@@ -120,7 +123,7 @@ def full_period(P, a, H):
     st = idx[idx.title.isin(set(want.title))].status.value_counts().to_dict()
     T.write_json(dict(selected=len(want), stored=int(idx.title.isin(set(want.title)).sum()), status=st, http_codes={str(k): v for k, v in H.codes.items()},
                       backoffs=H.n_backoff, network=H.n_net, cache=H.n_cache, gap_s=GAP, threads=THREADS, finished=time.strftime('%Y-%m-%d %H:%M:%S'),
-                      limit=a.limit), P / 's2_download_summary.json')
+                      limit=a.limit), P / ('s2c_download_summary.json' if a.series == 'S2C' else 's2_download_summary.json'))
     T.log(f'store now holds {int(idx.title.isin(set(want.title)).sum()):,} of {len(want):,} selected pages; statuses {st}')
 
 
@@ -159,7 +162,8 @@ def main():
     ap = T.add_root_arg(argparse.ArgumentParser(description=__doc__.split('\n')[0]))
     ap.add_argument('--limit', type=int, default=None)
     ap.add_argument('--job-name', default=None)
-    ap.add_argument('--desktop', choices=['S1', 'S2'], default=None)
+    ap.add_argument('--desktop', choices=['S1', 'S2', 'S2C'], default=None)
+    ap.add_argument('--series', choices=['S2', 'S2C'], default='S2', help='S2C: the concept pages of addendum h')
     a = ap.parse_args()
     P = T.Paths(a.root)
     refuse_if_busy(a.job_name)
