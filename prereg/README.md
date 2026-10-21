@@ -54,3 +54,4 @@
 - `addenda_wiki_led/2026-10-21_g_prompt_books.md` SHA-256: 6b44099e732b21563647f69e097034dcf3fb5474c3c8b3bfc1139cafa4969cb9 (fixed 2026-10-21 01:55, before any AI sorting of pages or books: Test F, AI matchmaking)
 - `addenda_wiki_led/2026-10-21_g_prompt_judge.md` SHA-256: bac7e838ad13df93269101a62a476d82c93190a125b51da08aa5e02bba3bbd57 (fixed 2026-10-21 01:55, before any AI sorting of pages or books: Test F, AI matchmaking)
 - `addenda_wiki_led/2026-10-21_g_theme_guide.tsv` SHA-256: d663a20137edc65dfee0f3fff3236904841a57ad3109ec03f360c2746988df50 (fixed 2026-10-21 02:44, before any AI sorting: the 242 themes the sorters choose from)
+- `addenda_wiki_led/2026-10-21_h_concept_pages.json` SHA-256: 0b3ad4aaf7f145a4e0507147e3222d0a45056bf04fbe8108dc5942ce74fa7e8c (fixed 2026-10-21 21:07, before any series, rise or result of the concept-pages-only test: Test F on the AI's concept pages)
