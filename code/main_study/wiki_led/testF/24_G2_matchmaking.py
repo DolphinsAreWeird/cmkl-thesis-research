@@ -83,8 +83,8 @@ def detect(w):
 
 def page_daily(P, series, A):
     """Pages, their theme weights and their daily views (rows = pages, columns = days of T.DAYS), as used by the series."""
-    if series == 'S2':
-        sel = pd.read_parquet(P / 's2_pages.parquet')
+    if series in ('S2', 'S2C'):
+        sel = pd.read_parquet(P / ('s2_pages.parquet' if series == 'S2' else 's2c_pages.parquet'))
         use = set(sel[sel.selected & sel.stored].title)
         pairs = A[(A.set == 'universe') & (A.conf >= T.S2_MIN_CONF) & A.title.isin(use)][['title', 'code', 'weight']]
         titles = sorted(pairs.title.unique())
@@ -402,7 +402,7 @@ def write_report(P, a, PT, summ, sfx):
 
 def main():
     ap = T.add_root_arg(argparse.ArgumentParser(description=__doc__.split('\n')[0]))
-    ap.add_argument('--series', choices=['S1', 'S2'], required=True)
+    ap.add_argument('--series', choices=['S1', 'S2', 'S2C'], required=True)
     ap.add_argument('--stage', choices=['shifts', 'effects', 'all'], default='all')
     ap.add_argument('--panels', default='a,b,c')
     ap.add_argument('--workers', type=int, default=3)

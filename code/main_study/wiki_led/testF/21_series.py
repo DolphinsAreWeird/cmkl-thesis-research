@@ -128,6 +128,43 @@ def build_s2(P, A, TW, allow_incomplete):
     return w, info
 
 
+def build_s2c(P, A, TW, allow_incomplete):
+    """S2C of addendum h: as S2, but the pages are the universe pages the AI labelled as concepts that have a theme of confidence 2 or 3
+    (T.s2c_titles), with no cap. Writes s2c_pages.parquet (title, selected, stored, status)."""
+    idx = T.store_index(P)
+    st = idx.set_index('title').status
+    sel = pd.DataFrame({'title': sorted(T.s2c_titles(A))})
+    sel['selected'] = True
+    sel['stored'] = sel.title.isin(st.index)
+    sel['status'] = sel.title.map(st)
+    T.write_parquet(sel, P / 's2c_pages.parquet')
+    missing = int((~sel.stored).sum())
+    info = dict(pages=len(sel), stored=int(sel.stored.sum()), not_stored=missing,
+                status=sel.status.value_counts(dropna=False).rename(lambda x: str(x)).to_dict())
+    if missing and not allow_incomplete:
+        T.log(f'S2C not built: {missing:,} of {len(sel):,} concept pages are not in the store yet (run 22_download_views.py --series S2C)')
+        info['built'] = False
+        return None, info
+    use = set(sel[sel.stored].title)
+    pairs = A[(A.set == 'universe') & (A.conf >= T.S2_MIN_CONF) & A.title.isin(use)][['title', 'code', 'weight']]
+    allp, npages = node_tables(pairs)
+    nodes = sorted(allp.node_id.unique())
+    npos = {n: j for j, n in enumerate(nodes)}
+    acc = np.zeros((len(nodes), len(T.DAYS)))
+    ix = idx[idx.title.isin(use)]
+    for f, g in ix.groupby('file'):
+        with np.load(P.views / f, allow_pickle=False) as z:
+            Vb = z['views'][g.row.to_numpy()].astype(np.float64)
+        tpos = {t: i for i, t in enumerate(g.title)}
+        pb = allp[allp.title.isin(tpos)]
+        Wb = sparse.csr_matrix((pb.weight.to_numpy(), (pb.title.map(tpos).to_numpy(), pb.node_id.map(npos).to_numpy())), shape=(len(g), len(nodes)))
+        acc += (Wb.T @ Vb)
+    daily = pd.DataFrame(acc.T, index=T.DAYS, columns=nodes)
+    w = weekly_from_daily(daily, TW, npages, 'S2C')
+    info.update(built=True, pairs=len(pairs), pages_used=len(use), complete=missing == 0)
+    return w, info
+
+
 def monthly(w, name):
     Msh, _ = BM07.week_matrices(w[['node_id', 'week', 'views', 'share', 'partial_week']])
     M = BM07.monthly_log(Msh)
@@ -183,6 +220,20 @@ def main():
             T.log(f'S2 built: {w2.node_id.nunique()} themes, {len(w2):,} theme-weeks')
         else:
             lines += ['- not built (pages missing from the store)', '']
+    if 'S2C' in want:                                            # addendum h
+        w3, i3 = build_s2c(P, A, TW, a.allow_incomplete_s2)
+        info['S2C'] = i3
+        lines += ['## S2C (addendum h: full daily views of the pages the AI labelled as concepts, confidence 2 or 3)',
+                  f'- concept pages with a theme of confidence 2 or 3: {i3["pages"]:,}; in the store {i3["stored"]:,}, not yet {i3["not_stored"]:,}; '
+                  f'download statuses {i3["status"]}']
+        if w3 is not None:
+            T.write_parquet(w3, P / 'series_weekly_S2C.parquet')
+            months.append(monthly(w3, 'aic2_wlog'))
+            lines += [f'- built from {i3["pages_used"]:,} pages, {i3["pairs"]:,} page-theme pairs '
+                      f'({"complete" if i3["complete"] else "INCOMPLETE: the coverage above applies"})'] + summary_lines(w3) + ['']
+            T.log(f'S2C built: {w3.node_id.nunique()} themes, {len(w3):,} theme-weeks')
+        else:
+            lines += ['- not built (pages missing from the store)', '']
     if months:
         M = pd.concat(months, axis=1).reset_index()
         old = P / 'series_monthly.parquet'
@@ -199,7 +250,7 @@ def main():
         old.update(info)
         info = old
     T.write_json(info, prev)
-    T.write_text('\n'.join(lines) + '\n', P.report('testF_21_series.md'))
+    T.write_text('\n'.join(lines) + '\n', P.report('testF_21_series_S2C.md' if want == ['S2C'] else 'testF_21_series.md'))   # addendum h runs alone
     T.log(f'done; peak memory {T.peak_gb():.2f} GB')
 
 
