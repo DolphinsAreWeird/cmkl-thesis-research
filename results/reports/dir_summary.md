@@ -36,3 +36,24 @@ Written 22 Oct 2026, 05:30 +07, for Khant Phyo Wai (student ID 01323050). Record
 ## Reports
 
 `dir_d1_horizons_books.md`, `dir_d1_horizons_themes.md`, `dir_d2_events.md`, `dir_d3_nyt.md` (all in `data/reports/`); code in `code/main_study/wiki_led/dirs/`; the collector in `collectors/` (deployed to `~/thesis-collectors`).
+
+## Addendum j: the combined alert list (added 22 Oct, about 11:45)
+
+Record `prereg/addenda_wiki_led/2026-10-22_j_combined_alerts.json`, fixed at 07:30 and public before any result (PR #18). Reports: `dir_j1_links.md` (book-linked Wikipedia pages) and `dir_j2_alerts.md` (models). Measure: each month's top 20 of books not yet rising, the share that surge next month (2 times the six-month median and 5 loans more); a random pick surges 1.7% of the time.
+
+| Alert list built from | Top 20 that surge | Step |
+| --- | --- | --- |
+| Library history (H) | 35.2% | |
+| + the book's and author's Wikipedia pages (W) | 38.3% | +3.1 (+0.7 to +5.5) |
+| + event calendar (E: adaptation releases, deaths, round anniversaries) | 38.6% | +0.3 (-0.6 to +1.2) |
+| + NYT lists (N) | 39.8% | +1.2 (+0.4 to +2.2) |
+| + bursts of book-linked pages of every kind (L: 10,283 pages of subjects, events and periods, places, people, characters, adaptations, series, linked through Wikidata to 4,530 books) | 39.4% | -0.4 (-1.5 to +0.6) |
+| Placebo: the full model with E and L dates moved 12 months earlier | 38.6% | |
+
+- Primary decision passed: the full list beats the library alone by +4.2 points (+1.8 to +6.5).
+- The placebo rule did not pass: the full model minus the placebo is +0.8 (-0.3 to +1.7). So the dated events and linked-page bursts do not add information beyond what the kinds of books themselves carry; the gain comes from the book's own Wikipedia pages and the NYT lists. The interim report of 09:32 (an event-only placebo) had said the dates passed; with the record's full placebo they do not.
+- Each kind of linked page added alone: -0.6 to -0.1 points, all within noise. Two weaknesses of the linked-page data: Wikidata's "event" class also holds concepts (marriage, crime), and the top-500 burst rule fires every month for very popular pages (World War II, China).
+- Secondary: within three months the full model gains +3.0 (+0.7 to +5.3) over H and here the real dates beat the placebo (+2.2, +0.6 to +3.8).
+- Examples the full list caught and the library did not: Tokyo Vice before its TV series (rank 4 against 535), Chapterhouse Dune when the Dune film came out (7 against 1,231), The Winds of War in the month its author died (8 against 173).
+
+**Overall reading of addenda i and j:** the strongest additions to the library's own history are the book's and author's own Wikipedia pages and the sales lists; events matter strongly for the few books they touch, and over a three-month window, but in a monthly top 20 their dates add no more than a placebo can explain.
