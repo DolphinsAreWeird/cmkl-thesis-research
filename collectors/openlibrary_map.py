@@ -225,6 +225,40 @@ def ta_search(B, cli):
     return cache
 
 
+def retry_search(B, ids, ta, cli):
+    """Second search for books with no passing candidate: the title forms without catalogue extras (title_variants,
+    up to 2), or, when there is none, one free-text query of main title and author surname if not tried yet."""
+    f = WORK / 'ta_retry.jsonl'
+    cache = {r['work_id']: r for r in jl_load(f)}
+    todo = B[B.work_id.isin(ids) & ~B.work_id.isin(cache)]
+    log(f'second search for {len(todo):,} books without a match')
+    for w, t, c in zip(todo.work_id, todo.title, todo.creator):
+        full, last = C.author_parts(c)
+        main = C.title_main(t) or str(t)
+        vs = [v for v in C.title_variants(t) if v != main][:2]
+        docs, qs, failed = [], [], False
+        for v in vs:
+            p = dict(title=v, fields=FIELDS, limit=10)
+            if full:
+                p['author'] = full
+            j = cli.get(f'{C.OL}/search.json', params=p)
+            failed |= j is None
+            docs += [slim(d) for d in (j or {}).get('docs', [])]
+            qs.append(f'title: {v}')
+        if not vs and last and (ta.get(int(w)) or {}).get('how') != 'free_text':
+            j = cli.get(f'{C.OL}/search.json', params=dict(q=f'{main} {last}', fields=FIELDS, limit=10))
+            failed |= j is None
+            docs += [slim(d) for d in (j or {}).get('docs', [])]
+            qs.append('free text')
+        if failed and cli.fail_run >= 10:
+            raise SystemExit('Open Library failing for 10 requests in a row; rerun to resume')
+        if failed:
+            continue
+        rec = dict(work_id=int(w), queries=qs, docs=docs)
+        cache[int(w)] = rec; jl_add(f, rec)
+    return cache
+
+
 def alt_names(need, hits, ta, cli):
     """Open Library's alternative names of the authors (pen names, other spellings: M. C. Beaton is filed under Marion
     Chesney, Dostoevsky under Dostoyevsky) for candidates whose title agrees but whose author does not; 100 works a request."""
@@ -349,9 +383,20 @@ def main():
     log(f'isbn search: {len(hits):,} of {(need.isbns.map(len) > 0).sum():,} books with ISBNs got a result')
     ta = ta_search(need, cli)
     alt = alt_names(need, hits, ta, cli)
+    none_ids = [b.work_id for b in need.itertuples() if decide(b, [], res, hits.get(b.work_id, []), ta.get(b.work_id), alt)['ol_work'] is None]
+    rt = retry_search(need, none_ids, ta, cli)
+    retry_keys = {}
+    for w, r in rt.items():                             # second-search candidates join the title/author ones
+        old_keys = {d['key'] for d in (ta.get(w) or {}).get('docs', [])}
+        retry_keys[w] = {d['key'] for d in r['docs']} - old_keys
+        base_ta = ta.get(w) or dict(work_id=w, how='title_author', docs=[])
+        ta[w] = dict(base_ta, docs=base_ta['docs'] + [d for d in r['docs'] if d['key'] not in old_keys])
+    alt = alt_names(need, hits, ta, cli)
     rows = []
     for b, r0 in zip(B.itertuples(), first):
         r = r0 if r0['ol_work'] else decide(b, [], res, hits.get(b.work_id, []), ta.get(b.work_id), alt)
+        if r['ol_work'] and r['ol_work'] in retry_keys.get(b.work_id, ()):
+            r['source_detail'] = 'second_search'
         rows.append(dict(work_id=b.work_id, testf_id=b.testf_id if isinstance(b.testf_id, str) else '', in_test_a=b.in_test_a, in_test_f=b.in_test_f,
                          wikidata_item=b.wikidata_item if isinstance(b.wikidata_item, str) else '', title=b.title, author=b.creator,
                          n_isbn=len(b.isbns), **r))

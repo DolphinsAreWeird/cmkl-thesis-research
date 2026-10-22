@@ -1,0 +1,23 @@
+{
+  "addendum": "Wikipedia-led tests, addendum k: reading intent from the Open Library reading-log dump, a check that event dates were known in time, and a human check of the AI sorting",
+  "parent_record": "prereg/wiki_led_settings_2026-10-20.json, addenda a to j; their settings apply unless changed here",
+  "fixed_on": "2026-10-22 11:45 +07",
+  "fixed_by": "Claude, for Khant Phyo Wai, who asked on 22 Oct (shortly before this time) for all three: 'all 3 i suppose'",
+  "K1_intent": {
+    "data": "Open Library reading-log dump of 2026-09-30 (archive.org item ol_dump_2026-09-30, file ol_dump_reading-log_2026-09-30.txt.gz, 122.6 MB, CC0): one line per current shelf entry: work, edition, shelf (Want to Read, Currently Reading, Already Read), date. Works mapped to the Test A works by the D4 collector mapping (data/collectors/openlibrary/mapping.parquet, all match-quality flags except low).",
+    "features_I": "Per work and month t (from 2017-01): entries dated in month t by shelf and in total; want-to-read entries in month t relative to the median of the 6 months before (with 1 added to both); entries in months t-2 to t. Known limit: the dump holds only entries that still exist on 2026-09-30, with the date of the entry's current shelf, so removed or moved entries are missing or re-dated; this is a mild look-ahead, reported.",
+    "models": "Addendum j's setup (Test A's rows and settings, walk-forward refits, no tuning) with the ladder H+W+N (the combination that held in addendum j) and H+W+N+I; placebo H+W+N+I' with all intent dates moved 12 months earlier.",
+    "measures_and_decision": "Addendum j's measure: precision at 20 for next-month surges among works not yet risen, 3-month block bootstrap. Primary: H+W+N+I minus H+W+N, interval above 0, and H+W+N+I minus the placebo, interval above 0 (both needed). Secondary: all works, the 3-month target, and D3's NYT next-month list appearance (AUC) with I added to H and HW."
+  },
+  "K2_dates_known_in_time": {
+    "data": "For every film or television adaptation release used by D2 and addendum j (release month 2016-01 to 2026-09), the Wikidata revision history of the adaptation item (Wikidata API, maxlag 5, at most 2 requests a second, project user agent, cached): the time of the first revision whose statements carry the release date used (P577 or P580 at month precision or finer, same month).",
+    "measures": "Share of releases whose date was in Wikidata before the release month, 1 month before, and 3 months before; D2's release-alert shares (rose, surged in t+1..t+3) re-scored on alerts whose date was already in Wikidata at the alert's origin month, beside all alerts. Descriptive."
+  },
+  "K3_human_check": {
+    "sample": "100 pages of Test F's sorted universe, seed 20261022: 80 at random among pages with at least one theme and 20 at random among pages sorted to none; left out: the judge's 400 pages, the 250 pilot pages and the three instruction examples.",
+    "task": "Khant sees each page's title, short description and first sentence and the AI's themes (names, with their broader group) and marks each theme fits, partly or does not fit, and whether a clearly better theme is missing; for none pages, whether he agrees that no theme fits.",
+    "measures": "Human precision of the AI's themes, strict (fits) and lenient (fits or partly), overall and for confidence 3, 2 and 1; share of pages with a clearly better theme missing; agreement on none; beside the AI judge's precision on its random part (0.873 at the narrow level). Known limit: the rater sees the AI's answer (not blind), chosen so the check takes about an hour."
+  },
+  "time_rule": "K1 and K2 reported on 22 Oct 2026 by 20:00 +07 if possible; K3 when Khant returns the sheet.",
+  "seen_before_fixing": "All results of Tests A to F and addenda h to j; the first lines of the dump (columns and that dates exist); the D4 mapping coverage. No intent feature, date-history or human rating exists."
+}
