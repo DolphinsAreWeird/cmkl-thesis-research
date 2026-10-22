@@ -147,14 +147,36 @@ def title_main(t):
     return re.sub(r'\s+', ' ', t).strip(' .,;:/')
 
 
+def title_variants(t):
+    """Main title of a library title plus forms without catalogue extras: 'The hobbit, or, There and back again',
+    'Madeline's rescue; story and pictures by ...', 'The cat in the hat comes back! by Dr. Seuss',
+    'Father Bear comes home. Pictures by ...', series forms 'Bone. , Eyes of the storm', 'Thea Stilton. 4, Catching ...'."""
+    s = re.sub(r'\[.*?\]', ' ', str(t or ''))
+    v = [title_main(s)]
+    for pat in (r',\s*or,?\s', r';', r'[.!?]\s+(?:story and pictures|pictures|illustrated|illustrations|story|text|written|by)\b'):
+        parts = re.split(pat, s, maxsplit=1, flags=re.I)
+        if len(parts) > 1:
+            v.append(title_main(parts[0]))
+    m = re.match(r'^(.+?)\.\s*(?:\d+\s*)?,\s*(.+)$', s)
+    if m:
+        v.append(title_main(m.group(2)))
+    return [x for x in dict.fromkeys(v) if x]
+
+
 def title_sim(study_title, cand_title, cand_sub=''):
     """0..1 agreement of the study book's main title with a candidate's title. Also tries the candidate title after a
     series prefix ('Artemis Fowl. The Lost Colony', 'Theodore Boone, The Fugitive', 'Star Wars - Lost Stars') and gives
     0.9 when a study title of two or more words ends the candidate title ('Artemis Fowl and the Eternity Code')."""
-    a = norm(title_main(study_title))
+    ct = str(cand_title or '')
+    best = 0.0
+    for v in title_variants(study_title):
+        best = max(best, _sim1(norm(v), ct, cand_sub))
+    return best
+
+
+def _sim1(a, ct, cand_sub):
     if not a:
         return 0.0
-    ct = str(cand_title or '')
     cands = {norm(ct), norm(title_main(ct)), norm(f'{ct} {cand_sub or ""}')}
     for sep in ('. ', ', ', ' - ', ': ', ' : '):
         if sep in ct:

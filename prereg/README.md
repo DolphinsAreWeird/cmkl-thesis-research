@@ -57,3 +57,4 @@
 - `addenda_wiki_led/2026-10-21_h_concept_pages.json` SHA-256: 0b3ad4aaf7f145a4e0507147e3222d0a45056bf04fbe8108dc5942ce74fa7e8c (fixed 2026-10-21 21:07, before any series, rise or result of the concept-pages-only test: Test F on the AI's concept pages)
 - `addenda_wiki_led/2026-10-22_i_directions.json` SHA-256: 5659fbc6e63f5c477603564971dd9e4cb82bfcda57d1e9f1ae03915460ddb58e (fixed 2026-10-22 03:13, before any result of the four directions: horizons, event calendar, NYT sales target, intent collection)
 - `addenda_wiki_led/2026-10-22_j_combined_alerts.json` SHA-256: 9a7384ab706ac318ecebc518c801e98c67ee6c7b4e3b8f981ee59fb5c46725b3 (fixed 2026-10-22 07:30, before any result of the combined alert-list test)
+- `addenda_wiki_led/2026-10-22_k_intent_dates_human.json` SHA-256: 8290202d260dfd845f502c93f779e8a56d54851996cc930da9bbc09e4e99bb90 (fixed 2026-10-22 11:45, before any result of K1 intent, K2 date history or K3 human check)
