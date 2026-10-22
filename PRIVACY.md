@@ -16,7 +16,7 @@ Data is turned into aggregate measures, such as the number of videos and comment
 
 ## Storage and deletion
 
-Data is stored privately and is not shared, sold or redistributed. Raw YouTube data is deleted within three months after the thesis is completed. Data removed from YouTube is also removed from this project's data on request or at the next refresh.
+Data is stored privately on one encrypted computer and is not shared, sold or redistributed. Stored YouTube data is refreshed every 30 days until it is fixed for the final analysis, and anything no longer available on YouTube is deleted at that refresh. Raw YouTube data is deleted within 90 days of collection, once weekly aggregate measures have been computed; only those aggregate measures are kept. Data removed from YouTube is also removed from this project's data on request.
 
 ## YouTube Terms
 
