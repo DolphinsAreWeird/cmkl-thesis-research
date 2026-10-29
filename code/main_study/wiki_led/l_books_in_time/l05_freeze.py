@@ -5,6 +5,8 @@
 # Outputs: prereg/blind_l/forecasts_origin_2026-08.csv and forecasts_origin_2026-08_meta.json (their SHA-256 go into prereg/README.md and
 #   the public repository before any month after 2026-08 is downloaded).
 #   Run from code/:  ../.venv/bin/python main_study/wiki_led/l_books_in_time/l05_freeze.py
+#   --rehearsal (added 30 Oct, after the freeze; the frozen run above is unchanged): the same fit one month earlier, origin 2026-07 (target
+#   2026-08, a known month), written to data/interim/l_rehearsal/ for rehearsing the scoring script l06_score.py; never to prereg/.
 import sys, os, json, time, hashlib, pathlib, importlib.util
 import numpy as np, pandas as pd
 
@@ -15,15 +17,22 @@ DATA = pathlib.Path(DATA_DIR)
 ROOT = DATA.parent
 REC = ROOT / 'prereg' / 'addenda_wiki_led' / '2026-10-30_l_books_in_time.json'
 assert hashlib.sha256(REC.read_bytes()).hexdigest() == '36778f86ced0550c90e8578813ae476c6ae1d4d7220c430ef140244e5d5e028a', 'addendum l changed'
-NEW = DATA / 'raw' / 'modern' / 'final_test'
-assert not NEW.exists() or not any(NEW.iterdir()), 'a month after 2026-08 has been downloaded: the blind test moves to origin 2026-09 (record, fallback)'
 OUT = DATA / 'db' / 'wiki_led' / 'l_books_in_time'
-FZ = ROOT / 'prereg' / 'blind_l'
-FZ.mkdir(exist_ok=True)
-CSV = FZ / 'forecasts_origin_2026-08.csv'
-assert not CSV.exists(), 'forecasts already frozen; never overwritten'
+REH = '--rehearsal' in sys.argv
+if REH:
+    FZ = DATA / 'interim' / 'l_rehearsal'
+    FZ.mkdir(parents=True, exist_ok=True)
+    ORIGIN, O_YM, T_YM = 2026 * 12 + 6, '2026-07', '2026-08'
+    CSV = FZ / f'forecasts_origin_{O_YM}.csv'
+else:
+    NEW = DATA / 'raw' / 'modern' / 'final_test'
+    assert not NEW.exists() or not any(NEW.iterdir()), 'a month after 2026-08 has been downloaded: the blind test moves to origin 2026-09 (record, fallback)'
+    FZ = ROOT / 'prereg' / 'blind_l'
+    FZ.mkdir(exist_ok=True)
+    ORIGIN, O_YM, T_YM = 2026 * 12 + 7, '2026-08', '2026-09'
+    CSV = FZ / f'forecasts_origin_{O_YM}.csv'
+    assert not CSV.exists(), 'forecasts already frozen; never overwritten'
 T0 = time.time()
-ORIGIN = 2026 * 12 + 7
 
 # the backtest's settings and helpers, read from l04 without running it
 src = (pathlib.Path(__file__).parent / 'l04_backtest.py').read_text()
@@ -35,9 +44,9 @@ LGB, HC, HMC, W14C, FMTS = ns['LGB'], ns['HC'], ns['HMC'], ns['W14C'], ns['FMTS'
 R = pd.read_parquet(OUT / 'rows.parquet')
 R['format'] = R.format.astype(str)
 R['fmt'] = R.format.map({f: i for i, f in enumerate(FMTS)}).astype('int8')
-tr = R[R.mi + 1 <= ORIGIN].copy()                            # target month 2026-08 or earlier
+tr = R[R.mi + 1 <= ORIGIN].copy()                            # target month no later than the origin month
 te = R[R.mi == ORIGIN].copy()
-assert te.D.isna().all() and len(te) > 0
+assert len(te) > 0 and (REH or te.D.isna().all())
 import lightgbm as lgb                                       # noqa: E402
 
 
@@ -47,7 +56,7 @@ def fit(cols, target):
 
 
 out = te[['work_id', 'format', 'mi', 'L_t', 'M6', 'h_lt', 'h_m6', 'has_book_page', 'has_author_page']].copy()
-out['origin'] = '2026-08'; out['target'] = '2026-09'
+out['origin'] = O_YM; out['target'] = T_YM
 out['not_yet'] = ((te.h_lt - te.h_m6) < np.log(1.5)).astype(int)
 out['naive_D'] = (te.h_lt - te.h_m6).to_numpy()
 for name, cols in (('H', HC), ('HM', HMC), ('W14', W14C + ['fmt']), ('HMW14', HMC + W14C)):
@@ -58,12 +67,13 @@ out = out.drop(columns=['mi']).sort_values(['format', 'work_id']).reset_index(dr
 out.to_csv(CSV, index=False, float_format='%.10g')
 sha = hashlib.sha256(CSV.read_bytes()).hexdigest()
 meta = dict(record='prereg/addenda_wiki_led/2026-10-30_l_books_in_time.json', made=time.strftime('%Y-%m-%d %H:%M') + ' +06:30',
-            made_utc=time.strftime('%Y-%m-%d %H:%M', time.gmtime()) + ' UTC', origin='2026-08', target='2026-09',
+            made_utc=time.strftime('%Y-%m-%d %H:%M', time.gmtime()) + ' UTC', origin=O_YM, target=T_YM, rehearsal=REH,
             training_rows=int(len(tr)), forecast_rows=int(len(out)), by_format=out.format.value_counts().to_dict(),
             rows_with_article_feature=int(((out.has_book_page == 1) | (out.has_author_page == 1)).sum()), csv_sha256=sha,
-            no_month_after_2026_08=True, lightgbm_settings=LGB,
-            columns='X_D: predicted change D = ln(1 + L(2026-09)) - ln(1 + M6); X_Y: predicted level ln(1 + L(2026-09)); naive_D: ln(1+L_t) - ln(1+M6)')
-(FZ / 'forecasts_origin_2026-08_meta.json').write_text(json.dumps(meta, indent=1, default=str))
-os.chmod(CSV, 0o444)
+            no_month_after_2026_08=not REH, lightgbm_settings=LGB,
+            columns=f'X_D: predicted change D = ln(1 + L({T_YM})) - ln(1 + M6); X_Y: predicted level ln(1 + L({T_YM})); naive_D: ln(1+L_t) - ln(1+M6)')
+(FZ / f'forecasts_origin_{O_YM}_meta.json').write_text(json.dumps(meta, indent=1, default=str))
+if not REH:
+    os.chmod(CSV, 0o444)
 print(json.dumps(meta, indent=1, default=str))
-print('meta sha256', hashlib.sha256((FZ / 'forecasts_origin_2026-08_meta.json').read_bytes()).hexdigest())
+print('meta sha256', hashlib.sha256((FZ / f'forecasts_origin_{O_YM}_meta.json').read_bytes()).hexdigest())
