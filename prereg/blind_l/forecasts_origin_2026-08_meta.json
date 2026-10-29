@@ -1,0 +1,30 @@
+{
+ "record": "prereg/addenda_wiki_led/2026-10-30_l_books_in_time.json",
+ "made": "2026-10-30 03:07 +06:30",
+ "made_utc": "2026-10-29 20:37 UTC",
+ "origin": "2026-08",
+ "target": "2026-09",
+ "training_rows": 1773531,
+ "forecast_rows": 20122,
+ "by_format": {
+  "ebook": 7213,
+  "audiobook": 6802,
+  "print": 6107
+ },
+ "rows_with_article_feature": 12290,
+ "csv_sha256": "6a86bcec44c1dd904dce47debe4792c044bd501579593b647df3c7cc44fdeffa",
+ "no_month_after_2026_08": true,
+ "lightgbm_settings": {
+  "n_estimators": 300,
+  "learning_rate": 0.05,
+  "num_leaves": 31,
+  "min_child_samples": 50,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.8,
+  "random_state": 20261020,
+  "n_jobs": 4,
+  "verbose": -1
+ },
+ "columns": "X_D: predicted change D = ln(1 + L(2026-09)) - ln(1 + M6); X_Y: predicted level ln(1 + L(2026-09)); naive_D: ln(1+L_t) - ln(1+M6)"
+}
