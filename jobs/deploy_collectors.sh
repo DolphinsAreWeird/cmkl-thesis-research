@@ -5,7 +5,7 @@
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; DST="$HOME/thesis-collectors"
 mkdir -p "$DST/data" "$DST/logs" "$DST/secrets"
-cp "$ROOT"/collectors/{bluesky_sample.py,nyt_bestsellers.py,gdelt_update.py,run_daily.sh,requirements.txt,ol_common.py,openlibrary_reading_log.py} "$DST/"
+cp "$ROOT"/collectors/{bluesky_sample.py,nyt_bestsellers.py,gdelt_update.py,run_daily.sh,requirements.txt,ol_common.py,openlibrary_reading_log.py,seattle_release_watch.py} "$DST/"
 [ -f "$DST/.env" ] || cp "$ROOT/.env" "$DST/.env"
 [ -f "$DST/secrets/gcp_key.json" ] || cp "$ROOT/secrets/gcp_key.json" "$DST/secrets/gcp_key.json"
 chmod 600 "$DST/.env" "$DST/secrets/gcp_key.json"; chmod 700 "$DST/secrets"
