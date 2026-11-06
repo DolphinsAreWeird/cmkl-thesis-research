@@ -75,7 +75,7 @@ def arrow(x0, y0, x1, y1, col=INK2):
 ax.text(50, 59.5, 'Each test year from 2019 to 2026: fit on earlier years only, then predict that year', ha='center', fontsize=8, color=INK2)
 box(1, 37, 24, 13, 'Wikipedia page views\n(book, author, theme\nand linked pages)', edge=BLUE)
 box(1, 12, 24, 13, 'Library loans\n(each work\'s history,\ncalendar month)', edge=ORANGE)
-models = [(48, 'Wikipedia alone', BLUE, True), (37, 'Library and Wikipedia', AQUA, True), (26, 'Library record', ORANGE, True),
+models = [(48, 'Wikipedia alone', BLUE, True), (37, 'Library and Wikipedia', AQUA, True), (26, 'Library model', ORANGE, True),
           (15, 'Persistence rule', '#eda100', False), (4, 'No information', GRAY, False)]
 for y, lab, col, bold in models:
     box(31, y, 27, 6.5, lab, edge=col, bold=bold)

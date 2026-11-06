@@ -1,8 +1,8 @@
-# 94. Figures 5.1 to 5.4 of the rewritten thesis (Chapter 5, draft of 5 Nov 2026: paper/drafts/Thesis_Chapters_3-5_2026-11-05_2009.md).
+# 94. Figures 5.1 to 5.3 of the rewritten thesis (Chapter 5, draft of 5 Nov 2026: paper/drafts/Thesis_Chapters_3-5_2026-11-05_2009.md).
 # Values are read from the result files where they hold them (books chosen in time: data/reports/wiki_led_l_backtest.json; well-known books:
 # wiki_led_test_a_c.json, corrected rerun; new books: wiki_led_test_b.json); the rest are typed in below with the report each comes from.
 # Colours: categorical slots 1 to 4 of the dataviz reference palette (validated, light mode), entity-fixed across figures, with a marker shape
-# per model as a second cue; gray for the random pick. Output: paper/figures/fig5_*_2026-11-05.png (300 dpi).
+# per model as a second cue; gray for the random pick. Output: paper/figures/fig5_1 to fig5_3 *_2026-11-05.png (300 dpi). Figure 5.4 (top 20 by format) was dropped on 6 Nov: Table 5.3 gives the same numbers.
 #   Run from code/:  ../.venv/bin/python main_study/wiki_led/94_thesis_figures_ch5.py
 import sys, json, pathlib
 import matplotlib
@@ -22,7 +22,7 @@ STYLE = {                                                   # entity -> (label, 
     'rand': ('Random pick', '#8a8985', '|'),
     'wiki': ('Wikipedia alone', '#2a78d6', 'o'),
     'pers': ('Persistence rule', '#eda100', '^'),
-    'lib': ('Library record', '#eb6834', 's'),
+    'lib': ('Library model', '#eb6834', 's'),
     'both': ('Library and Wikipedia', '#1baf7a', 'D'),
 }
 plt.rcParams.update({'font.family': 'DejaVu Sans', 'font.size': 9, 'axes.edgecolor': INK2, 'axes.labelcolor': INK,
@@ -83,7 +83,7 @@ def legend(ax, ents, ncol):
 # Figure 5.1: Wikipedia alone, the library record and both
 rows51 = [
     ('Existing books, main set\n(next month\'s change in loans)', {'wiki': from_l('W14'), 'lib': from_l('HM'), 'both': from_l('HMW14')}),
-    ('Existing books, well-known\n(next month\'s change in loans)', {'wiki': from_a('Wlgbm_D'), 'lib': from_a('Hlgbm_D'), 'both': from_a('HWlgbm_D')}),
+    ('Existing books, well-known\n(library model without month)', {'wiki': from_a('Wlgbm_D'), 'lib': from_a('Hlgbm_D'), 'both': from_a('HWlgbm_D')}),
     ('New books\n(loans in the first six months)', {'wiki': from_b('W_lgbm'), 'lib': from_b('L_lgbm'), 'both': from_b('LW_lgbm')}),
     # Wikipedia_Led_Results_2026-10-22_1512.md, Test B table: new books with no earlier Seattle book by the author (45,303)
     ('New books, no earlier book\nby the author', {'wiki': ci(0.090), 'lib': ci(0.045), 'both': ci(0.101)}),
@@ -105,8 +105,8 @@ plt.close(fig)
 # Figure 5.2: borrowing after lasting rises, by page set (synthetic control, months 0 to 2, log share)
 rows52 = [
     # Thesis_Draft_2026-10-17_0411.md, Table B3 (Wikipedia, lasting rises)
-    ('Hand-checked concept pages,\nnarrow themes', ci(0.088, 0.029, 0.156)),
-    ('Hand-checked concept pages,\nmiddle themes', ci(0.105, 0.018, 0.227)),
+    ('Hand-reviewed concept pages,\nnarrow themes', ci(0.088, 0.029, 0.156)),
+    ('Hand-reviewed concept pages,\nmiddle themes', ci(0.105, 0.018, 0.227)),
     # data/reports/testF_results.md and testF_h_concept_results.md, panel a (narrow and middle pooled)
     ('Pages sorted by the AI model,\nall kinds', ci(0.018, 0.0005, 0.035)),
     ('Pages sorted by the AI model,\nconcepts only', ci(0.028, 0.001, 0.055)),
@@ -150,28 +150,8 @@ for y in (2.5, 5.5):
     ax.axhline(y, color=GRID, linewidth=0.8)
 ax.axvline(0, color=INK2, linewidth=0.8)
 ax.set_xlim(-0.002, 0.068)
-ax.set_xlabel('Gain in rank correlation from adding Wikipedia to the library record')
+ax.set_xlabel('Gain in rank correlation from adding Wikipedia to the library model')
 fig.savefig(FIG / f'fig5_3_gain_by_situation_{STAMP}.png')
-plt.close(fig)
-
-# Figure 5.4: share of each month's top 20 that rose, by format (main set, 2019 to 2026)
-fmts = [('print', 'Print'), ('ebook', 'Ebook'), ('audiobook', 'Audiobook'), ('all', 'All formats')]
-fig, ax = plt.subplots(figsize=(6.3, 3.4))
-axes_rows(ax, [f[1] for f in fmts])
-for i, (f, _) in enumerate(fmts):
-    base = P[f]['_base_rose']
-    base = base['est'] if isinstance(base, dict) else base
-    point(ax, ci(base), i, 'rand', size=11)
-    # small vertical offsets so the library and the library-and-Wikipedia marks, often within a point of each other, stay visible
-    for ent, model, off in (('wiki', 'W14', 0), ('pers', 'naive', -0.22), ('lib', 'HM', 0), ('both', 'HMW14', 0.22)):
-        point(ax, ci(P[f][model]['top20']['est']), i + off, ent)
-ax.axvline(0.9, color=INK2, linewidth=0.8, linestyle=(0, (3, 3)))
-ax.annotate('90% target', (0.9, -0.55), xytext=(3, 0), textcoords='offset points', color=INK2, fontsize=8, va='center')
-ax.set_xlim(0, 1)
-ax.xaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
-ax.set_xlabel('Share of each month\'s top 20 that rose next month')
-legend(ax, ['rand', 'wiki', 'pers', 'lib', 'both'], 5)
-fig.savefig(FIG / f'fig5_4_top20_by_format_{STAMP}.png')
 plt.close(fig)
 
 for name, rows in (('5.1', rows51), ('5.2', rows52), ('5.3', rows53)):
@@ -179,5 +159,4 @@ for name, rows in (('5.1', rows51), ('5.2', rows52), ('5.3', rows53)):
     for lab, v in rows:
         print('  ', lab.replace('\n', ' '), {k: tuple(round(x, 4) if x is not None else None for x in t) for k, t in v.items()} if isinstance(v, dict)
               else tuple(round(x, 4) if x is not None else None for x in v))
-print('Figure 5.4', {f: {m: round(P[f][m]['top20']['est'], 3) for m in ('W14', 'naive', 'HM', 'HMW14')} for f, _ in fmts})
 print('written to', FIG)
