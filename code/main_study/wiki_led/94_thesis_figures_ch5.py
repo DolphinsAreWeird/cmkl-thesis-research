@@ -4,6 +4,9 @@
 # Look: thesis_figstyle.py (printed width 6.2 in, Helvetica Neue 8 pt, entity colours and marker shapes fixed across figures).
 # 14 Nov 2026: redrawn in the shared style (same values as the 5 Nov figures); Figure 5.4 (share of the top 20 that rose, all works
 # and works not yet risen) added in place of Table 5.3. Output: paper/figures/fig5_1 to fig5_4 *_2026-11-14.png (300 dpi).
+# 19 Nov 2026: the two author groups of the new books (no earlier Seattle book, an earlier book) take their values and 95% intervals
+# from data/reports/two_way_intervals.json (98_two_way_intervals.py), interval (i), author clusters as for the other new-book rows;
+# Figures 5.1 and 5.3 are saved as *_2026-11-19.png.
 # POSTER_FIGS=1 writes the poster versions of 5.1 to 5.3 (one-line labels, larger type, SVG) to paper/poster/figs/.
 #   Run from code/:  ../.venv/bin/python main_study/wiki_led/94_thesis_figures_ch5.py
 import sys, json, pathlib
@@ -23,6 +26,8 @@ L = json.load(open(REP / 'wiki_led_l_backtest.json'))
 P = L['by_period']['2019-2026']
 A = json.load(open(REP / 'wiki_led_test_a_c.json'))
 B = json.load(open(REP / 'wiki_led_test_b.json'))
+TW = json.load(open(REP / 'two_way_intervals.json'))['new_books']
+STAMP_19 = '2026-11-19'
 
 
 def ci(est, lo=None, hi=None):
@@ -37,6 +42,11 @@ def from_l(model, fmt='all', key='rank'):
 def from_a(model):
     v = A['change_rank'][model]
     return ci(v['mean'], v['lo'], v['hi'])
+
+
+def from_tw(group, key, kind='scores'):
+    v = TW[group][kind][key]
+    return ci(v['est'], v['i'][0], v['i'][1])
 
 
 def from_b(model, part='all'):
@@ -59,9 +69,10 @@ rows51 = [
      {'wiki': from_a('Wlgbm_D'), 'lib': from_a('Hlgbm_D'), 'both': from_a('HWlgbm_D')}),
     (('New books', 'loans in the first six months', 'New books (first six months)'),
      {'wiki': from_b('W_lgbm'), 'lib': from_b('L_lgbm'), 'both': from_b('LW_lgbm')}),
-    # Wikipedia_Led_Results_2026-10-22_1512.md, Test B table: new books with no earlier Seattle book by the author (45,303)
+    # new books with no earlier Seattle book by the author (45,303): two_way_intervals.json, interval (i)
     (('New books, no earlier book by the author', 'loans in the first six months', 'New books, no earlier book by author'),
-     {'wiki': ci(0.090), 'lib': ci(0.045), 'both': ci(0.101)}),
+     {'wiki': from_tw('no earlier Seattle work', 'W_lgbm'), 'lib': from_tw('no earlier Seattle work', 'L_lgbm'),
+      'both': from_tw('no earlier Seattle work', 'LW_lgbm')}),
     # same document, Test E: LibriVox rows with stored Wikipedia views (20.5%)
     (('LibriVox recordings', "next month's change in listening", 'LibriVox listening'),
      {'wiki': ci(0.052), 'lib': ci(0.364), 'both': ci(0.359)}),
@@ -82,7 +93,7 @@ if POSTER:                                                   # the poster figure
     leg.remove()
 else:
     S.legend(ax, ['wiki', 'lib', 'both'])
-S.save(fig, 'fig5_1_alone_library_both', STAMP)
+S.save(fig, 'fig5_1_alone_library_both', STAMP_19)
 
 # Figure 5.2: borrowing after lasting rises, by page set (synthetic control, months 0 to 2, log share)
 rows52 = [
@@ -122,9 +133,9 @@ rows53 = [
     ('#', 'New books'),
     (('All new books', 'loans in the first six months', 'All new books'), from_b('LW_minus_L')),
     (("Author's article viewed", 'before the first loan', "Author's page had earlier views"), from_b('LW_minus_L', 'matched')),
-    # Wikipedia_Led_Results_2026-10-22_1512.md, Test B table
-    (('Author has an earlier', 'Seattle book', 'Earlier book by the author'), ci(0.020)),
-    (('No earlier book', 'by the author', 'No earlier book by the author'), ci(0.056)),
+    # two_way_intervals.json, interval (i) (author clusters)
+    (('Author has an earlier', 'Seattle book', 'Earlier book by the author'), from_tw('some earlier work', 'Wikipedia over L (main)', 'gains')),
+    (('No earlier book', 'by the author', 'No earlier book by the author'), from_tw('no earlier Seattle work', 'Wikipedia over L (main)', 'gains')),
 ]
 if POSTER:                                                   # the short labels name the group, so the headings are left out
     rows53 = [r for r in rows53 if r[0] != '#']
@@ -140,7 +151,7 @@ for i, r in enumerate(rows53):
 ax.axvline(0, color=S.MUTED, linewidth=0.6, zorder=1)
 ax.set_xlim(-0.002, 0.068)
 ax.set_xlabel('Gain in rank correlation from adding Wikipedia' if POSTER else 'Gain in rank correlation from adding Wikipedia to the library model')
-S.save(fig, 'fig5_3_gain_by_situation', STAMP)
+S.save(fig, 'fig5_3_gain_by_situation', STAMP_19)
 
 # Figure 5.4 (thesis only): share of each month's top 20 that rose, all formats, 2019 to 2026 (Table A.1 gives the same numbers by format)
 if not POSTER:
