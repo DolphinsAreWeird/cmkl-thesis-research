@@ -1,0 +1,306 @@
+<title>Link and Theme Check</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one working card at a time under a sticky header with the two tasks and their progress; a strip of item cells for jumping. */
+:root {
+  --bg: #f3f5f6; --panel: #ffffff; --ink: #172026; --ink2: #4b5a63; --muted: #7d8b93; --line: #d9e0e4;
+  --accent: #1f6f78; --accent-soft: #dcecee; --ok: #2f7d4f; --ok-soft: #e0f0e6; --bad: #b0412e; --bad-soft: #f6e1dc;
+  --unsure: #9a6b12; --unsure-soft: #f5ecd6; --focus: #1f6f78;
+  --sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; --mono: "IBM Plex Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12181b; --panel: #1a2226; --ink: #e6ecef; --ink2: #b3c0c6; --muted: #81919a; --line: #2c383e;
+  --accent: #5fb3bc; --accent-soft: #1d3436; --ok: #6cc08e; --ok-soft: #1c3226; --bad: #e98a76; --bad-soft: #3a2420;
+  --unsure: #e0b358; --unsure-soft: #352b17; --focus: #5fb3bc; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12181b; --panel: #1a2226; --ink: #e6ecef; --ink2: #b3c0c6; --muted: #81919a; --line: #2c383e;
+  --accent: #5fb3bc; --accent-soft: #1d3436; --ok: #6cc08e; --ok-soft: #1c3226; --bad: #e98a76; --bad-soft: #3a2420;
+  --unsure: #e0b358; --unsure-soft: #352b17; --focus: #5fb3bc; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel) }
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line);
+  padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.hrow { max-width: 860px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between }
+h1 { font-size: 17px; font-weight: 600; margin: 0; text-wrap: balance }
+.tabs { display: flex; gap: 6px }
+.tab { font: 500 14px var(--sans); border: 1px solid var(--line); background: transparent; color: var(--ink2); padding: 6px 12px; border-radius: 6px; cursor: pointer }
+.tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--panel) }
+.tab .n { font: 12px var(--mono); margin-left: 6px; opacity: .85 }
+.status { font: 12px var(--mono); color: var(--muted) }
+main { max-width: 860px; margin: 0 auto; padding-block: 18px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 16px }
+.howto { color: var(--ink2); font-size: 14px; max-width: 68ch }
+.howto summary { cursor: pointer; color: var(--ink); font-weight: 500 }
+.howto ul { margin: 6px 0 0; padding-left: 20px }
+kbd { font: 12px var(--mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--panel) }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0 }
+.meta { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap }
+.itemid { font: 500 13px var(--mono); color: var(--accent) }
+.q { font-weight: 600; font-size: 16px }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px }
+.pair > div { min-width: 0; border-top: 2px solid var(--line); padding-top: 8px }
+.lbl { font: 500 11px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted) }
+.big { font-size: 18px; font-weight: 600; overflow-wrap: anywhere }
+.sub { color: var(--ink2); overflow-wrap: anywhere }
+.desc { color: var(--ink2); font-style: italic }
+a { color: var(--accent) }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px }
+.answers { display: flex; flex-wrap: wrap; gap: 8px }
+.ans { font: 500 14px var(--sans); padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer }
+.ans[data-v="right"][aria-pressed="true"] { background: var(--ok-soft); border-color: var(--ok); color: var(--ok) }
+.ans[data-v="wrong"][aria-pressed="true"] { background: var(--bad-soft); border-color: var(--bad); color: var(--bad) }
+.ans[data-v="unsure"][aria-pressed="true"] { background: var(--unsure-soft); border-color: var(--unsure); color: var(--unsure) }
+.nav { display: flex; gap: 8px; justify-content: space-between; align-items: center; flex-wrap: wrap }
+.btn { font: 500 14px var(--sans); padding: 7px 12px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--panel) }
+.btn:disabled { opacity: .45; cursor: default }
+.strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(26px, 1fr)); gap: 3px }
+.cell { height: 22px; border-radius: 3px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; padding: 0 }
+.cell.right, .cell.done { background: var(--ok-soft); border-color: var(--ok) }
+.cell.wrong { background: var(--bad-soft); border-color: var(--bad) }
+.cell.unsure { background: var(--unsure-soft); border-color: var(--unsure) }
+.cell.cur { outline: 2px solid var(--accent); outline-offset: 1px }
+.chosen { display: flex; flex-direction: column; gap: 6px }
+.chip { display: flex; gap: 10px; align-items: center; border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 6px 10px; min-width: 0 }
+.chip .rank { font: 500 12px var(--mono); color: var(--accent) }
+.chip .t { flex: 1; min-width: 0; overflow-wrap: anywhere }
+.chip .t small { display: block; color: var(--ink2) }
+.chip button { border: none; background: transparent; color: var(--ink2); cursor: pointer; font: 13px var(--sans); padding: 2px 6px }
+.none-note { color: var(--ink2); font-style: italic }
+.search { width: 100%; font: 15px var(--sans); padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink) }
+.results { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 6px; max-height: 360px; overflow-y: auto }
+.res { text-align: left; border: none; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); padding: 8px 10px; cursor: pointer; font: 14px var(--sans) }
+.res:last-child { border-bottom: none }
+.res:hover, .res.hl { background: var(--accent-soft) }
+.res .path { display: block; font-size: 12px; color: var(--muted) }
+.res .ex { display: block; font-size: 12px; color: var(--ink2) }
+.group { border: none; border-bottom: 1px solid var(--line); background: var(--bg); text-align: left; padding: 7px 10px; font: 600 13px var(--sans); color: var(--ink2); cursor: pointer }
+.notice { border: 1px solid var(--unsure); background: var(--unsure-soft); color: var(--ink); border-radius: 6px; padding: 10px 12px; font-size: 14px }
+.done-box { border: 1px solid var(--ok); background: var(--ok-soft); border-radius: 6px; padding: 10px 12px }
+@media (max-width: 600px) { .pair { grid-template-columns: 1fr } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<header>
+  <div class="hrow">
+    <h1>Link and Theme Check</h1>
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tab-links" role="tab" aria-selected="true">Links<span class="n" id="n-links"></span></button>
+      <button class="tab" id="tab-pages" role="tab" aria-selected="false">Page themes<span class="n" id="n-pages"></span></button>
+    </div>
+    <span class="status" id="status">Connecting…</span>
+  </div>
+</header>
+
+<main>
+  <div id="notice" class="notice" hidden></div>
+
+  <section id="view-links">
+    <details class="howto" open>
+      <summary>How to mark links</summary>
+      <ul>
+        <li>Each card pairs a Seattle library book with the Wikipedia article that a matching rule linked to it, either the book's own article or its author's.</li>
+        <li>Mark <b>Right</b> if the article is about that book (or that author), <b>Wrong</b> if it is about something or someone else, <b>Not sure</b> if you cannot tell. Open the article when the description is not enough.</li>
+        <li>Keys: <kbd>1</kbd> right, <kbd>2</kbd> wrong, <kbd>3</kbd> not sure, <kbd>←</kbd> <kbd>→</kbd> move. Each answer is saved as you go.</li>
+      </ul>
+    </details>
+    <div class="card" id="link-card"></div>
+    <div class="strip" id="link-strip" aria-label="All links"></div>
+  </section>
+
+  <section id="view-pages" hidden>
+    <details class="howto" open>
+      <summary>How to choose themes</summary>
+      <ul>
+        <li>Each card is a Wikipedia page that many people read. Choose the themes whose library books a reader interested in this topic would naturally look for: up to 3, strongest first, or <b>fits no theme</b>.</li>
+        <li>Use the text shown and what you know; please don't look the page up. Search by any word (a theme, its group, or a subject heading), or browse the groups.</li>
+        <li>Keys: <kbd>Enter</kbd> in the search adds the top result, <kbd>⌘</kbd>/<kbd>Ctrl</kbd>+<kbd>Enter</kbd> saves and moves on. Each card is saved when you press Save.</li>
+      </ul>
+    </details>
+    <div class="card" id="page-card"></div>
+    <div class="strip" id="page-strip" aria-label="All pages"></div>
+  </section>
+</main>
+
+<script>
+const LINKS = /*LINKS*/[];
+const PAGES = /*PAGES*/[];
+const GUIDE = /*GUIDE*/[];
+const S = { view: 'links', li: 0, pi: 0, links: {}, pages: {}, draft: null, db: null, writable: true, q: '', open: null };
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const byCode = Object.fromEntries(GUIDE.map(g => [g.code, g]));
+const groups = [...new Set(GUIDE.map(g => g['broadest group']))];
+
+function backup() { try { localStorage.setItem('hc-backup', JSON.stringify({ links: S.links, pages: S.pages })) } catch (e) {} }
+function restore() { try { const b = JSON.parse(localStorage.getItem('hc-backup') || 'null'); if (b) { S.links = b.links || {}; S.pages = b.pages || {} } } catch (e) {} }
+
+function counts() {
+  const nl = LINKS.filter(x => S.links[x.item]).length, np = PAGES.filter(x => S.pages[x.id]).length;
+  $('n-links').textContent = `${nl}/${LINKS.length}`; $('n-pages').textContent = `${np}/${PAGES.length}`;
+}
+
+function setStatus(t) { $('status').textContent = t }
+
+async function save(col, id, body) {
+  backup(); counts();
+  if (!S.db || !S.writable) return;
+  setStatus('Saving…');
+  try { await S.db.collection(col).doc(id).set(body); setStatus('Saved') }
+  catch (e) {
+    if (e && e.code === 'invalid_argument') { S.writable = false; showNotice('This page cannot save answers for you. They are kept in this browser only.') }
+    else setStatus('Not saved, try again');
+  }
+}
+
+function showNotice(t) { const n = $('notice'); n.textContent = t; n.hidden = false }
+
+/* ---------- links ---------- */
+function renderLink() {
+  const x = LINKS[S.li], a = (S.links[x.item] || {}).answer;
+  $('link-card').innerHTML = `
+    <div class="meta"><span class="itemid">${esc(x.item)} · ${S.li + 1} of ${LINKS.length}</span><span class="q">${esc(x.question)}</span></div>
+    <div class="pair">
+      <div><div class="lbl">Book in the library</div><div class="big">${esc(x.work_title)}</div><div class="sub">${esc(x.creator || 'creator not given')}</div></div>
+      <div><div class="lbl">Linked Wikipedia article</div><div class="big">${esc(x.article)}</div>
+        <div class="desc">${esc(x.description || 'no short description')}</div><div class="sub">${esc(x.first_sentence)}</div>
+        <a href="${esc(x.url)}" target="_blank" rel="noopener">Open the article</a></div>
+    </div>
+    <div class="answers">
+      <button class="ans" data-v="right" aria-pressed="${a === 'right'}">1 · Right</button>
+      <button class="ans" data-v="wrong" aria-pressed="${a === 'wrong'}">2 · Wrong</button>
+      <button class="ans" data-v="unsure" aria-pressed="${a === 'unsure'}">3 · Not sure</button>
+    </div>
+    <div class="nav"><button class="btn" id="lprev" ${S.li === 0 ? 'disabled' : ''}>← Previous</button>
+      <button class="btn" id="lnext-open">Next unanswered</button>
+      <button class="btn" id="lnext" ${S.li === LINKS.length - 1 ? 'disabled' : ''}>Next →</button></div>
+    ${LINKS.every(y => S.links[y.item]) ? '<div class="done-box">Every link has an answer. Thank you; you can still change any of them.</div>' : ''}`;
+  $('link-card').querySelectorAll('.ans').forEach(b => b.onclick = () => answerLink(b.dataset.v));
+  $('lprev').onclick = () => { S.li--; renderLink() };
+  $('lnext').onclick = () => { S.li++; renderLink() };
+  $('lnext-open').onclick = () => { const k = nextOpen(LINKS, S.li, y => S.links[y.item]); if (k >= 0) { S.li = k; renderLink() } };
+  strip('link-strip', LINKS, S.li, y => (S.links[y.item] || {}).answer || '', i => { S.li = i; renderLink() });
+}
+function nextOpen(arr, from, has) { for (let k = 1; k <= arr.length; k++) { const i = (from + k) % arr.length; if (!has(arr[i])) return i } return -1 }
+async function answerLink(v) {
+  const x = LINKS[S.li]; S.links[x.item] = { answer: v, at: new Date().toISOString() };
+  const id = x.item;
+  if (S.li < LINKS.length - 1) S.li++;
+  renderLink();
+  await save('links', id, S.links[id]);
+}
+
+function strip(el, arr, cur, cls, go) {
+  const s = $(el); s.innerHTML = '';
+  arr.forEach((y, i) => { const b = document.createElement('button'); b.className = 'cell ' + cls(y) + (i === cur ? ' cur' : '');
+    b.title = (y.item || y.id); b.setAttribute('aria-label', (y.item || y.id) + (cls(y) ? ', answered' : '')); b.onclick = () => go(i); s.appendChild(b) });
+}
+
+/* ---------- pages ---------- */
+function pageDraft() {
+  const x = PAGES[S.pi], saved = S.pages[x.id];
+  if (!S.draft || S.draft.id !== x.id) S.draft = { id: x.id, codes: saved ? [...saved.codes] : [], none: saved ? !!saved.none : false };
+  return S.draft;
+}
+function matches(q) {
+  const w = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!w.length) return [];
+  return GUIDE.filter(g => { const h = (g.theme + ' ' + g['broader group'] + ' ' + g['broadest group'] + ' ' + g['example subject headings']).toLowerCase(); return w.every(t => h.includes(t)) }).slice(0, 40);
+}
+function resRow(g, hl) {
+  return `<button class="res${hl ? ' hl' : ''}" data-code="${esc(g.code)}"><b>${esc(g.theme)}</b><span class="path">${esc(g['broadest group'])} › ${esc(g['broader group'])}</span><span class="ex">${esc(g['example subject headings'])}</span></button>`;
+}
+function renderPage() {
+  const x = PAGES[S.pi], d = pageDraft(), saved = S.pages[x.id];
+  const list = S.q ? matches(S.q) : null;
+  let results = '';
+  if (list) results = list.length ? list.map((g, i) => resRow(g, i === 0)).join('') : '<div class="res">No theme matches these words.</div>';
+  else results = groups.map(gr => `<button class="group" data-g="${esc(gr)}">${S.open === gr ? '▾' : '▸'} ${esc(gr)}</button>` +
+      (S.open === gr ? GUIDE.filter(g => g['broadest group'] === gr).map(g => resRow(g, false)).join('') : '')).join('');
+  const chips = d.none ? '<div class="none-note">Marked as fitting no theme.</div>' : d.codes.map((c, i) => `
+      <div class="chip"><span class="rank">${i + 1}</span><span class="t">${esc(byCode[c].theme)}<small>${esc(byCode[c]['broader group'])}</small></span>
+      ${i > 0 ? `<button data-up="${i}" aria-label="Move up">↑</button>` : ''}<button data-rm="${i}" aria-label="Remove">✕</button></div>`).join('')
+      || '<div class="none-note">No theme chosen yet.</div>';
+  $('page-card').innerHTML = `
+    <div class="meta"><span class="itemid">${esc(x.id)} · ${S.pi + 1} of ${PAGES.length}${saved ? ' · saved' : ''}</span></div>
+    <div><div class="lbl">Wikipedia page</div><div class="big">${esc(x.title)}</div>
+      <div class="desc">${esc(x.description || 'no short description')}</div><div class="sub">${esc(x.first_sentence)}</div></div>
+    <div><div class="lbl">Your themes, strongest first (up to 3)</div><div class="chosen">${chips}</div></div>
+    <input class="search" id="search" type="search" placeholder="Search themes, groups or subject headings" value="${esc(S.q)}" autocomplete="off" ${d.none || d.codes.length >= 3 ? 'disabled' : ''}>
+    <div class="results" id="results">${results}</div>
+    <div class="nav"><button class="btn" id="pprev" ${S.pi === 0 ? 'disabled' : ''}>← Previous</button>
+      <button class="btn" id="pnone">${d.none ? 'Undo "fits no theme"' : 'Fits no theme'}</button>
+      <button class="btn primary" id="psave" ${!d.none && !d.codes.length ? 'disabled' : ''}>Save and next</button></div>
+    ${PAGES.every(y => S.pages[y.id]) ? '<div class="done-box">Every page has an answer. Thank you; you can still change any of them.</div>' : ''}`;
+  const c = $('page-card');
+  c.querySelectorAll('.res[data-code]').forEach(b => b.onclick = () => addCode(b.dataset.code));
+  c.querySelectorAll('.group').forEach(b => b.onclick = () => { S.open = S.open === b.dataset.g ? null : b.dataset.g; renderPage() });
+  c.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { d.codes.splice(+b.dataset.rm, 1); renderPage() });
+  c.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const i = +b.dataset.up; [d.codes[i - 1], d.codes[i]] = [d.codes[i], d.codes[i - 1]]; renderPage() });
+  const s = $('search');
+  s.oninput = () => { S.q = s.value; const pos = s.selectionStart; renderPage(); const t = $('search'); t.focus(); try { t.setSelectionRange(pos, pos) } catch (e) {} };
+  s.onkeydown = e => { if (e.key === 'Enter' && !(e.metaKey || e.ctrlKey)) { e.preventDefault(); const m = matches(S.q); if (m.length) addCode(m[0].code) } };
+  $('pprev').onclick = () => { S.pi--; S.q = ''; renderPage() };
+  $('pnone').onclick = () => { d.none = !d.none; if (d.none) d.codes = []; renderPage() };
+  $('psave').onclick = savePage;
+  strip('page-strip', PAGES, S.pi, y => S.pages[y.id] ? 'done' : '', i => { S.pi = i; S.q = ''; renderPage() });
+}
+function addCode(code) {
+  const d = pageDraft();
+  if (d.none || d.codes.includes(code) || d.codes.length >= 3) return;
+  d.codes.push(code); S.q = ''; renderPage(); const s = $('search'); if (s && !s.disabled) s.focus();
+}
+async function savePage() {
+  const d = pageDraft(); if (!d.none && !d.codes.length) return;
+  const id = d.id; S.pages[id] = { codes: [...d.codes], none: d.none, at: new Date().toISOString() };
+  const k = nextOpen(PAGES, S.pi, y => S.pages[y.id]);
+  S.pi = k >= 0 ? k : Math.min(S.pi + 1, PAGES.length - 1); S.q = ''; S.draft = null;
+  renderPage(); const s = $('search'); if (s && !s.disabled) s.focus();
+  await save('pages', id, S.pages[id]);
+}
+
+/* ---------- views and keys ---------- */
+function show(v) {
+  S.view = v; $('view-links').hidden = v !== 'links'; $('view-pages').hidden = v !== 'pages';
+  $('tab-links').setAttribute('aria-selected', v === 'links'); $('tab-pages').setAttribute('aria-selected', v === 'pages');
+  try { localStorage.setItem('hc-view', v) } catch (e) {}
+  v === 'links' ? renderLink() : renderPage();
+}
+$('tab-links').onclick = () => show('links'); $('tab-pages').onclick = () => show('pages');
+document.addEventListener('keydown', e => {
+  const typing = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA');
+  if (S.view === 'links' && !typing) {
+    if (e.key === '1') answerLink('right'); else if (e.key === '2') answerLink('wrong'); else if (e.key === '3') answerLink('unsure');
+    else if (e.key === 'ArrowLeft' && S.li > 0) { S.li--; renderLink() } else if (e.key === 'ArrowRight' && S.li < LINKS.length - 1) { S.li++; renderLink() }
+  }
+  if (S.view === 'pages' && e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); savePage() }
+});
+
+restore(); counts();
+try { const v = localStorage.getItem('hc-view'); if (v === 'pages') S.view = 'pages' } catch (e) {}
+S.li = Math.max(0, nextOpen(LINKS, LINKS.length - 1, y => S.links[y.item]));
+S.pi = Math.max(0, nextOpen(PAGES, PAGES.length - 1, y => S.pages[y.id]));
+show(S.view);
+
+(async () => {
+  const timer = setTimeout(() => setStatus('Saved answers not reached yet'), 10000);
+  let db = null;
+  try { db = window.claude && window.claude.use ? await window.claude.use('db') : null } catch (e) { db = null }
+  if (!db) { clearTimeout(timer); setStatus('Not connected'); showNotice('Answers cannot be saved to the shared record in this view. They are kept in this browser only; open the page signed in on claude.ai to save them.'); return }
+  S.db = db;
+  let first = { links: true, pages: true };
+  for (const col of ['links', 'pages']) {
+    db.collection(col).onSnapshot(snap => {
+      if (!snap.metadata.fromCache) clearTimeout(timer);
+      snap.docs.forEach(doc => { const v = doc.data(); if (v) S[col][doc.id] = v });
+      if (first[col]) { first[col] = false; if (col === 'links') S.li = Math.max(0, nextOpen(LINKS, LINKS.length - 1, y => S.links[y.item])); else S.pi = Math.max(0, nextOpen(PAGES, PAGES.length - 1, y => S.pages[y.id])) }
+      counts(); backup(); setStatus('Connected');
+      if (S.view === col && !(document.activeElement && document.activeElement.id === 'search')) show(S.view);
+    }, err => { clearTimeout(timer); setStatus('Connection lost'); showNotice('The link to saved answers was lost. Reload the page to reconnect; answers already saved are safe.') });
+  }
+})();
+</script>
