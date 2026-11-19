@@ -1,6 +1,6 @@
 # Index of the numbers in the thesis results chapters
 
-Khant Phyo Wai, student ID 01323050. Written by `code/main_study/wiki_led/99c_thesis_numbers_index.py` for the draft `Thesis_Draft_2026-11-19_1342.md`; it reads stored result files only and reruns no analysis.
+Khant Phyo Wai, student ID 01323050. Written by `code/main_study/wiki_led/99c_thesis_numbers_index.py` for the draft `Thesis_Draft_2026-11-19_1631.md`; it reads stored result files only and reruns no analysis.
 
 ## What it covers
 
@@ -15,21 +15,21 @@ Each row gives the script that wrote the value (path under `code/`), the stored 
 
 ## Counts
 
-250 numbers: 196 yes, 53 derived, 0 no, 1 not found.
+268 numbers: 212 yes, 55 derived, 0 no, 1 not found.
 
 | Chapter | yes | derived | no | not found |
 | --- | ---: | ---: | ---: | ---: |
 | Abstract | 11 | 3 | 0 | 0 |
-| 5 | 163 | 35 | 0 | 0 |
+| 5 | 170 | 35 | 0 | 0 |
 | 6 | 4 | 0 | 0 | 1 |
-| 7 | 16 | 14 | 0 | 0 |
-| 8 | 2 | 1 | 0 | 0 |
+| 7 | 23 | 16 | 0 | 0 |
+| 8 | 4 | 1 | 0 | 0 |
 
 ## Rows that do not match or have no source
 
 | id | Location | Printed | Stored | Note |
 | --- | --- | --- | --- | --- |
-| N217 | 6 paragraph "Status" | both | watcher holds one dataset: last update 2026-09-06 13:19 UTC, latest month 2026-08 | checked by hand on the city open data portal on 19 Nov 2026: Checkouts by Title (tmmm-ytt6) and Checkouts By Title (Physical Items) (5src-czff), both last updated 2026-09-06; no stored file records the second dataset |
+| N224 | 6 paragraph "Status" | both | watcher holds one dataset: last update 2026-09-06 13:19 UTC, latest month 2026-08 | checked by hand on the city open data portal on 19 Nov 2026: Checkouts by Title (tmmm-ytt6) and Checkouts By Title (Physical Items) (5src-czff), both last updated 2026-09-06; no stored file records the second dataset |
 
 ## Notes
 

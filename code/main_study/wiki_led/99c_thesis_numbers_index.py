@@ -3,7 +3,7 @@
 # at full precision, and whether the printed value equals the stored one at the printed precision. Read-only on every input; fits
 # no model and reruns no analysis. Asked for by the outside review of 19 November 2026 (prereg/DEVIATIONS.md, part D).
 #
-# Inputs: the thesis draft (argument; default paper/Thesis_Draft_2026-11-19_1342.md) and the stored results named in each row:
+# Inputs: the thesis draft (argument; default paper/Thesis_Draft_2026-11-19_1631.md) and the stored results named in each row:
 #   data/reports/*.json, *.csv and *.md of the wiki_led, Test F, Study 3, Study 4 and benchmark scripts, data/db/... tables of the
 #   direction scripts (dirs/), the frozen-forecast metadata in prereg/ (read only) and the library-release watcher status.
 # Rows: one per printed number (an estimate printed with its interval is one row, and all its numbers must match). Left out: dates,
@@ -30,7 +30,7 @@ OUT_CSV = DATA / 'reports' / 'thesis_numbers_index.csv'
 OUT_MD = DATA / 'reports' / 'thesis_numbers_index.md'
 
 ap = argparse.ArgumentParser()
-ap.add_argument('thesis', nargs='?', default=str(ROOT / 'paper' / 'Thesis_Draft_2026-11-19_1342.md'))
+ap.add_argument('thesis', nargs='?', default=str(ROOT / 'paper' / 'Thesis_Draft_2026-11-19_1631.md'))
 ARGS = ap.parse_args()
 THESIS = pathlib.Path(ARGS.thesis)
 TEXT = THESIS.read_text()
@@ -194,6 +194,7 @@ O_HBA, O_HBG = 'reports/hidden_book_redo_auc.csv', 'reports/hidden_book_redo_att
 S_LN, O_LN = 'main_study/wiki_led/97_librivox_new_recordings.py', 'reports/librivox_new_recordings.json'
 S_ROB, O_ROB = 'main_study/wiki_led/91_robustness_report.py', 'reports/wiki_led_robustness.json'
 S_TW, O_TW = 'main_study/wiki_led/98_two_way_intervals.py', 'reports/two_way_intervals.json'
+S_HC, O_HC = 'main_study/wiki_led/99_hand_check.py', 'reports/hand_check.json'
 S_TB, O_TB = 'main_study/wiki_led/05_report.py', 'reports/wiki_led_test_b_data.md'
 S_V2, O_V2 = 'main_study/wiki_led/81_improve_v2_report.py', 'reports/wiki_led_improve_v2.md'
 THESIS_REL = '../' + str(THESIS.resolve().relative_to(ROOT.resolve())) if THESIS.resolve().is_relative_to(ROOT.resolve()) else THESIS.name
@@ -600,6 +601,14 @@ g1 = jget(O_TF, 'G1/scores')[0]
 add(CH, s, 'pages judged by a separate model', '400', S_TF, O_TF, 'G1/scores[0]/pages', g1['pages'])
 add(CH, s, 'AI sorting against the judge, precision (narrow level, all pairs)', '0.849', S_TF, O_TF, 'G1/scores[0]/precision', g1['precision'])
 add(CH, s, 'AI sorting against the judge, recall', '0.815', S_TF, O_TF, 'G1/scores[0]/recall', g1['recall'])
+hc_pages = jget(O_HC, 'pages')
+hc = {(r['method'], r['level']): r for r in hc_pages['scores']}
+hk = {r['kind']: r for r in jget(O_HC, 'links/by_kind')}
+add(CH, s, 'pages labelled blind by the author', '31', S_HC, O_HC, 'pages/answered', hc_pages['answered'])
+for (m, lv, k, pr) in (('AI sorter (all pairs)', 'narrow', 'precision', '0.39'), ('AI sorter (all pairs)', 'narrow', 'recall', '0.38'),
+                       ('AI sorter (all pairs)', 'middle', 'precision', '0.45'), ('AI sorter (all pairs)', 'middle', 'recall', '0.46'),
+                       ('judge', 'narrow', 'precision', '0.42'), ('judge', 'narrow', 'recall', '0.41')):
+    add(CH, s, f'{m} against the author, {lv} themes, {k}', pr, S_HC, O_HC, f'pages/scores[{m}, {lv}]/{k}', hc[(m, lv)][k])
 kinds = jget(O_TF, 'sorting/pages/kinds')
 tot = sum(kinds.values())
 for k, pr in (('person', '46%'), ('work', '16%'), ('event', '13%'), ('concept', '8%')):
@@ -855,6 +864,11 @@ add(CH, s, 'AI-sorted effect as a share of the hand-reviewed effect', 'about a f
     [pctlog(gs['effect']) / pctlog(nar[0]), pctlog(gs['effect']) / pctlog(mid[0])], kind='derived',
     check=lambda r: (all(0.15 <= x <= 0.25 for x in r), f'{r[0]:.2f} (narrow), {r[1]:.2f} (middle); hand-reviewed values from {O_S3}'))
 add(CH, s, 'AI sorting against the judge, precision', '0.85', S_TF, O_TF, 'G1/scores[0]/precision', g1['precision'])
+add(CH, s, 'AI sorting against the author, narrow themes, precision and recall', 'about 0.4', S_HC, O_HC,
+    'pages/scores[AI sorter (all pairs), narrow]/precision and recall',
+    [hc[('AI sorter (all pairs)', 'narrow')]['precision'], hc[('AI sorter (all pairs)', 'narrow')]['recall']], kind='derived',
+    check=lambda r: (all(abs(x - 0.4) < 0.05 for x in r), f'{r[0]:.3f}, {r[1]:.3f}'))
+add(CH, s, 'number of narrow themes', '242', S_TF, O_TF, 'theme guide rows', 242, note='prereg/addenda_wiki_led/2026-10-21_g_theme_guide.tsv has 242 themes')
 add(CH, s, 'share of sorted pages about people', '46%', S_TF, O_TF, 'sorting/pages/kinds/person / sum', kinds['person'] / tot, f=pct,
     kind='derived')
 add(CH, '7.3 paragraph "Linked pages"', 'size of the date-placebo comparisons for linked pages and events, points', 'less than one point',
@@ -866,6 +880,21 @@ add(CH, s + ' "LibriVox"', 'share of LibriVox book-months with Wikipedia views',
     EV['share_of_main'], kind='derived', check=lambda r: (abs(r[0] - 0.2) < 0.025, f'{r[0]:.3f}'))
 add(CH, s + ' "Links"', 'works of one author matched by name to a namesake', '66', S_TB, O_TB, 'list of matched names with no writer_type', 66,
     note=md(O_TB, 'James Dean -> James Dean (66 works'))
+ha = hk['all']
+add(CH, s + ' "Links"', 'links decided right or wrong in the hand check', '90', S_HC, O_HC, 'links/by_kind[all]/right + wrong',
+    ha['right'] + ha['wrong'])
+add(CH, s + ' "Links"', 'links marked wrong in the hand check', '2', S_HC, O_HC, 'links/by_kind[all]/wrong', ha['wrong'])
+add(CH, s + ' "Links"', 'share of decided links marked wrong', '2.2%', S_HC, O_HC, 'links/by_kind[all]/share_wrong', ha['share_wrong'], f=pct)
+add_range(CH, s + ' "Links"', 'exact 95% interval of that share', '0.3% to 7.8%', S_HC, O_HC, 'links/by_kind[all]/lo and hi',
+          [100 * ha['lo'], 100 * ha['hi']], ['lo', 'hi'])
+add(CH, s + ' "Sorting checked by one person on few pages"', 'AI sorting against the judge, precision', '0.85', S_TF, O_TF,
+    'G1/scores[0]/precision', g1['precision'])
+add(CH, s + ' "Sorting checked by one person on few pages"', 'AI sorting against the author, narrow themes', 'about 0.4', S_HC, O_HC,
+    'pages/scores[AI sorter (all pairs), narrow]/precision and recall',
+    [hc[('AI sorter (all pairs)', 'narrow')]['precision'], hc[('AI sorter (all pairs)', 'narrow')]['recall']], kind='derived',
+    check=lambda r: (all(abs(x - 0.4) < 0.05 for x in r), f'{r[0]:.3f}, {r[1]:.3f}'))
+add(CH, s + ' "Sorting checked by one person on few pages"', 'pages labelled blind by the author', '31', S_HC, O_HC, 'pages/answered',
+    hc_pages['answered'])
 add(CH, s + ' "Automated traffic"', 'well-known books, Wikipedia alone, without the bot months', '0.134', S_ROB, O_ROB,
     'R4/without_bot_months/change_rank/Wlgbm_D/mean', jget(O_ROB, 'R4/without_bot_months/change_rank/Wlgbm_D/mean'),
     note='the check leaves out origins 2025-04 to 2025-06')
@@ -901,6 +930,9 @@ add(CH, '8 "Added"', 'new books, gain from Wikipedia', '0.024', S_B, O_B, 'all/L
 add(CH, '8 "Added"', 'new books, gain over library models with first-loan catalogue facts', 'about 0.011', S_TW, O_TW,
     tw_key('all', 'Lq') + '; ' + tw_key('all', 'L0'), [tw('all', 'Lq')[0], tw('all', 'L0')[0]], kind='derived',
     check=lambda r: (all(abs(x - 0.011) < 0.0015 for x in r), f'Lq {r[0]:.4f}, L0 {r[1]:.4f}'))
+
+add(CH, '8 "Further work"', 'links decided in the hand check', '90', S_HC, O_HC, 'links/by_kind[all]/right + wrong', ha['right'] + ha['wrong'])
+add(CH, '8 "Further work"', 'pages labelled blind by the author', '31', S_HC, O_HC, 'pages/answered', hc_pages['answered'])
 
 # ================================================================ checks and output
 if MISSING:
