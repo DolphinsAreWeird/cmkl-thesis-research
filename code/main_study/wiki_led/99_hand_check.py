@@ -158,15 +158,21 @@ def score():
         dec = g[g.answer.isin(['right', 'wrong'])]
         k, n = int((dec.answer == 'wrong').sum()), len(dec)
         lo, hi = cp(k, n) if n else (np.nan, np.nan)
-        rows.append(dict(kind=kind, links=len(g), wrong=k, right=n - k, unsure=int((g.answer == 'unsure').sum()),
-                         blank=int((g.answer == '').sum()), share_wrong=k / n if n else np.nan, lo=lo, hi=hi))
+        rows.append(dict(kind=kind, links=len(g), answered=int((g.answer != '').sum()), wrong=k, right=n - k,
+                         unsure=int((g.answer == 'unsure').sum()), blank=int((g.answer == '').sum()), share_wrong=k / n if n else np.nan,
+                         lo=lo, hi=hi))
     pl = K[K.planted]
-    res['links'] = dict(by_kind=rows, planted=len(pl), planted_marked_wrong=int((pl.answer == 'wrong').sum()),
-                        planted_unsure=int((pl.answer == 'unsure').sum()))
-    L += ['## Links between works and articles (made by rule)', '', '| Links | Checked | Wrong | Not sure | Blank | Share wrong (95% interval) |',
+    res['links'] = dict(by_kind=rows, planted=len(pl), planted_answered=int((pl.answer != '').sum()),
+                        planted_marked_wrong=int((pl.answer == 'wrong').sum()), planted_unsure=int((pl.answer == 'unsure').sum()),
+                        items_answered=sorted(K.loc[K.answer != '', 'item'].tolist()))
+    ia = res['links']['items_answered']
+    L += ['## Links between works and articles (made by rule)', '',
+          f"Items answered: {len(ia)} of {len(K)} ({ia[0]} to {ia[-1]} in the shown order)." if ia else 'No item answered.', '',
+          '| Links | In the sample | Answered | Wrong | Not sure | Share wrong among right or wrong (exact 95% interval) |',
           '| --- | --- | --- | --- | --- | --- |']
-    L += [f"| {r['kind']} | {r['links']} | {r['wrong']} | {r['unsure']} | {r['blank']} | {r['share_wrong']:.3f} ({r['lo']:.3f} to {r['hi']:.3f}) |" for r in rows]
-    L += ['', f"Planted wrong links marked wrong: {res['links']['planted_marked_wrong']} of {len(pl)} (not sure: {res['links']['planted_unsure']}).", '']
+    L += [f"| {r['kind']} | {r['links']} | {r['answered']} | {r['wrong']} | {r['unsure']} | {r['share_wrong']:.3f} ({r['lo']:.3f} to {r['hi']:.3f}) |" for r in rows]
+    L += ['', f"Planted wrong links: {res['links']['planted_answered']} answered, {res['links']['planted_marked_wrong']} of them marked wrong "
+          f"(not sure: {res['links']['planted_unsure']}; {len(pl)} were planted in all).", '']
     # pages
     H = pd.read_csv(OUT / 'answers_pages.csv', dtype=str).fillna('')
     H = H[H.codes.str.strip() != '']
