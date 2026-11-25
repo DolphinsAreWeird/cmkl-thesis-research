@@ -5,7 +5,9 @@ cropping, so the type is the same true size in every figure: 8 pt, ticks 7.5 pt,
 missing). Colours: categorical slots 1 to 4 of the dataviz reference palette, checked with its validator on white (all checks pass;
 aqua and yellow sit below 3:1 contrast, so every series also has its own marker shape and a legend or direct label). Each model keeps
 its colour and marker in every figure. Gridlines are solid hairlines; only the axis that carries a scale is drawn.
-POSTER_FIGS=1 switches to the poster sizes and SVG output in paper/poster/figs/ (paper/poster/build_poster.py inlines them)."""
+POSTER_FIGS=1 switches to the poster sizes and SVG output in paper/poster/figs/ (paper/poster/build_poster.py inlines them). Since 20 Nov
+2026 the poster figures follow the theme of the catch-up slides: Public Sans (paper/poster/fonts/), the slides' ink tones and a transparent
+background so they sit on the poster's cream cards; the series colours are the same. Thesis figures are unchanged."""
 import os, pathlib
 import matplotlib
 matplotlib.use('Agg')
@@ -21,6 +23,9 @@ W = 6.2                                        # printed width in inches
 INK, INK2, MUTED, GRID = '#0b0b0b', '#52514e', '#898781', '#e1e0d9'
 BLUE, ORANGE, AQUA, YELLOW, GRAY = '#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#898781'
 LIGHT = '#d9d8d2'                              # neutral fill for context (training years, other months)
+RING = 'white'                                 # marker outline where markers overlap
+if POSTER:                                     # ink, grid and ring in the tones of the catch-up slides (deck.css)
+    INK, INK2, MUTED, GRID, RING = '#1A1F2B', '#444956', '#8A8C93', '#E4DED1', '#FFFDF8'
 
 ENT = {                                        # entity -> (label, colour, marker)
     'rand': ('Random pick', GRAY, '|'),
@@ -32,6 +37,11 @@ ENT = {                                        # entity -> (label, colour, marke
 
 _names = {f.name for f in font_manager.fontManager.ttflist}
 FONT = 'Helvetica Neue' if 'Helvetica Neue' in _names else 'Arial'
+_PS = HERE.parents[3] / 'paper' / 'poster' / 'fonts'
+if POSTER and (_PS / 'PublicSans-Regular.ttf').exists():
+    for _f in ('Regular', 'SemiBold', 'Bold', 'Italic'):
+        font_manager.fontManager.addfont(str(_PS / f'PublicSans-{_f}.ttf'))
+    FONT = 'Public Sans'
 BASE = 11 if POSTER else 8
 plt.rcParams.update({
     'font.family': FONT, 'font.size': BASE, 'axes.titlesize': BASE + 0.5, 'axes.labelsize': BASE,
@@ -42,7 +52,8 @@ plt.rcParams.update({
     'axes.spines.top': False, 'axes.spines.right': False, 'axes.spines.left': False,
     'axes.grid': False, 'grid.color': GRID, 'grid.linewidth': 0.6, 'grid.linestyle': '-',
     'legend.frameon': False, 'legend.handletextpad': 0.4, 'legend.columnspacing': 1.4, 'legend.borderaxespad': 0.2,
-    'figure.facecolor': 'white', 'axes.facecolor': 'white', 'savefig.facecolor': 'white',
+    'figure.facecolor': 'none' if POSTER else 'white', 'axes.facecolor': 'none' if POSTER else 'white',
+    'savefig.facecolor': 'none' if POSTER else 'white', 'savefig.transparent': POSTER,
     'figure.constrained_layout.use': True, 'figure.constrained_layout.h_pad': 0.04, 'figure.constrained_layout.w_pad': 0.04,
     'savefig.dpi': 300, 'svg.fonttype': 'path', 'pdf.fonttype': 42,
     'axes.titlelocation': 'left', 'axes.titleweight': 'bold', 'axes.titlepad': 6,
@@ -86,7 +97,7 @@ def point(ax, est, lo, hi, y, ent, size=None, ring=0):
     if mk == '|':
         ax.plot([est], [y], marker='|', color=col, markersize=size + 2, markeredgewidth=1.8, linestyle='none', zorder=3)
     else:
-        ax.plot([est], [y], marker=mk, color=col, markersize=size * (0.9 if mk == 'D' else 1), markeredgecolor='white',
+        ax.plot([est], [y], marker=mk, color=col, markersize=size * (0.9 if mk == 'D' else 1), markeredgecolor=RING,
                 markeredgewidth=ring, linestyle='none', zorder=3)
 
 
@@ -97,7 +108,7 @@ def legend(ax, ents, ncol=None, loc='lower left', anchor=(0, 1.0)):
         if mk == '|':
             hs.append(plt.Line2D([], [], marker='|', color=col, linestyle='none', markersize=7, markeredgewidth=1.8))
         else:
-            hs.append(plt.Line2D([], [], marker=mk, color=col, linestyle='none', markersize=5.5, markeredgecolor='white', markeredgewidth=0.7))
+            hs.append(plt.Line2D([], [], marker=mk, color=col, linestyle='none', markersize=5.5, markeredgecolor=RING, markeredgewidth=0.7))
     return ax.legend(hs, [ENT[e][0] for e in ents], loc=loc, bbox_to_anchor=anchor, ncol=ncol or len(ents))
 
 
