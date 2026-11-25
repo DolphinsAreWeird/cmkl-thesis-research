@@ -1,6 +1,6 @@
 # Index of the numbers in the thesis results chapters
 
-Khant Phyo Wai, student ID 01323050. Written by `code/main_study/wiki_led/99c_thesis_numbers_index.py` for the draft `Thesis_Draft_2026-11-19_1631.md`; it reads stored result files only and reruns no analysis.
+Khant Phyo Wai, student ID 01323050. Written by `code/main_study/wiki_led/99c_thesis_numbers_index.py` for the draft `Thesis_Draft_2026-11-20_0108.md`; it reads stored result files only and reruns no analysis.
 
 ## What it covers
 

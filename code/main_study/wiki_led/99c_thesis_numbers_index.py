@@ -3,7 +3,7 @@
 # at full precision, and whether the printed value equals the stored one at the printed precision. Read-only on every input; fits
 # no model and reruns no analysis. Asked for by the outside review of 19 November 2026 (prereg/DEVIATIONS.md, part D).
 #
-# Inputs: the thesis draft (argument; default paper/Thesis_Draft_2026-11-19_1631.md) and the stored results named in each row:
+# Inputs: the thesis draft (argument; default paper/Thesis_Draft_2026-11-20_0108.md) and the stored results named in each row:
 #   data/reports/*.json, *.csv and *.md of the wiki_led, Test F, Study 3, Study 4 and benchmark scripts, data/db/... tables of the
 #   direction scripts (dirs/), the frozen-forecast metadata in prereg/ (read only) and the library-release watcher status.
 # Rows: one per printed number (an estimate printed with its interval is one row, and all its numbers must match). Left out: dates,
@@ -30,7 +30,7 @@ OUT_CSV = DATA / 'reports' / 'thesis_numbers_index.csv'
 OUT_MD = DATA / 'reports' / 'thesis_numbers_index.md'
 
 ap = argparse.ArgumentParser()
-ap.add_argument('thesis', nargs='?', default=str(ROOT / 'paper' / 'Thesis_Draft_2026-11-19_1631.md'))
+ap.add_argument('thesis', nargs='?', default=str(ROOT / 'paper' / 'Thesis_Draft_2026-11-20_0108.md'))
 ARGS = ap.parse_args()
 THESIS = pathlib.Path(ARGS.thesis)
 TEXT = THESIS.read_text()
