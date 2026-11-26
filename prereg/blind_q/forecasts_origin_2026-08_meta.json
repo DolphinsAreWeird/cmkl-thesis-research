@@ -1,0 +1,37 @@
+{
+ "record": "prereg/addenda_wiki_led/2026-11-26_q_wikipedia_on_top_of_5_years.json",
+ "made": "2026-11-26 15:27 +0700",
+ "made_utc": "2026-11-26 08:27 UTC",
+ "origin": "2026-08",
+ "target": "2026-09",
+ "training_rows": 1773531,
+ "forecast_rows": 20122,
+ "by_format": {
+  "ebook": 7213,
+  "audiobook": 6802,
+  "print": 6107
+ },
+ "csv_sha256": "c518491861ce531c0fe7e190664506d8f34ff4a7a89596ca99d505a105a0a827",
+ "no_month_after_2026_08": true,
+ "seeds": [
+  20261020,
+  20261021,
+  20261022,
+  20261023,
+  20261024
+ ],
+ "lightgbm_settings": {
+  "n_estimators": 300,
+  "learning_rate": 0.05,
+  "num_leaves": 31,
+  "min_child_samples": 50,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.8,
+  "random_state": 20261020,
+  "n_jobs": 4,
+  "verbose": -1
+ },
+ "check_HM_seed1_equals_blind_l": 4.997668945350142e-10,
+ "columns": "HM60_D: predicted change D = ln(1 + L(2026-09)) - ln(1 + M6) of HM60 (history, calendar and the 35 plain 60-month features, no Wikipedia), mean over five seeds; naive_D: ln(1+L_t) - ln(1+M6). HMW14C_D for the same rows is in prereg/blind_o/."
+}
