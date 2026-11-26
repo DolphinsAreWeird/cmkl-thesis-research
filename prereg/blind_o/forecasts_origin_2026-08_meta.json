@@ -1,0 +1,42 @@
+{
+ "record": "prereg/addenda_wiki_led/2026-11-26_o_transformer_inputs_check.json",
+ "made": "2026-11-26 14:56 +0700",
+ "made_utc": "2026-11-26 07:56 UTC",
+ "origin": "2026-08",
+ "target": "2026-09",
+ "training_rows": 1773531,
+ "forecast_rows": 20122,
+ "by_format": {
+  "ebook": 7213,
+  "audiobook": 6802,
+  "print": 6107
+ },
+ "csv_sha256": "5d2f1b3e1333d1825d03105c0e70735487d234bf1fc09b85e009a45b1d3a7b88",
+ "no_month_after_2026_08": true,
+ "seeds": [
+  20261020,
+  20261021,
+  20261022,
+  20261023,
+  20261024
+ ],
+ "lightgbm_settings": {
+  "n_estimators": 300,
+  "learning_rate": 0.05,
+  "num_leaves": 31,
+  "min_child_samples": 50,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.8,
+  "random_state": 20261020,
+  "n_jobs": 4,
+  "verbose": -1
+ },
+ "chronos": {
+  "model": "amazon/chronos-2",
+  "revision": "29ec3766d36d6f73f0696f85560a422f50e8498c",
+  "context": 60
+ },
+ "check_HMW14_seed1_equals_blind_l": 4.97919261377433e-10,
+ "columns": "X_D: predicted change D = ln(1 + L(2026-09)) - ln(1 + M6), mean over five seeds; Z_c2, Z_c2w: Chronos-2 median forecast minus ln(1 + M6); naive_D: ln(1+L_t) - ln(1+M6)"
+}
